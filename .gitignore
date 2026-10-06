@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.netlify/
+
+# logs
+*.log
+npm-debug.log*
+
+# env / secrets (there should be none: this app has no backend)
+.env
+.env.*
+
+# editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# local scratch
+tmp/
+.claude/settings.local.json
