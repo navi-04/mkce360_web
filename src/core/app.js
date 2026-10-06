@@ -6,6 +6,9 @@ import { OverviewMode } from '../modes/overview.js';
 import { WalkMode } from '../modes/walk.js';
 import { Collider } from '../modes/collision.js';
 import { createHud } from '../ui/hud.js';
+import { createNavUi } from '../ui/nav-ui.js';
+import { Navigator } from '../nav/navigator.js';
+import { RouteLayer } from '../nav/routeLayer.js';
 
 const DEG = Math.PI / 180;
 const STORE_KEY = 'mkce360.settings.v1';
@@ -47,6 +50,8 @@ export class App {
     this._frameMsEma = 16.7;
     this._auto = { t: 0, acc: 0, n: 0 };
     this.walkTouched = false;
+    this.viewShift = { x: 0, y: 0, tx: 0, ty: 0 }; // px: moves the picture clear of a sheet so what matters stays visible
+    this.lastWalk = null; // where the viewer last stood in Walk mode (x, z, yaw): Walk resumes there
     this.extra = []; // per-frame callbacks from debug/calibrate tools
   }
 
@@ -57,6 +62,8 @@ export class App {
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     this.world = await createWorld(this.data, { onProgress });
+    // the route line and beacon live in the scene from the start (hidden), so their shaders are precompiled too
+    this.routeLayer = new RouteLayer(this.world.scene, { reducedMotion: this.reducedMotion });
 
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.2, 4200);
     this.hud = createHud(this);
@@ -65,8 +72,19 @@ export class App {
     this.walk.headBob = this.settings.headBob;
     this.walk.invertLook = this.settings.invertLook;
 
-    this.overview.onTap = (x, z) => {
+    this.nav = new Navigator(this);
+    this.nav.layer = this.routeLayer;
+    this.navUi = createNavUi(this);
+
+    this.overview.onTap = (x, z, e, building) => {
       if (this.calibrator?.handleTap(x, z)) return;
+      if (building) {
+        this.overview.clearTap();
+        this.hud.showChip(false);
+        this.navUi.openBuilding(building.id);
+        return;
+      }
+      this.navUi.closeSheets();
       this.overview.setTap(x, z);
       this.hud.showChip(true);
     };
@@ -121,20 +139,22 @@ export class App {
     if (mode === this.mode || this._switching) return;
     this._switching = true;
     this.hud.sheet.close();
+    this.navUi.closeSheets();
     const swap = () => {
       if (mode === 'walk') {
         this.overview.exit();
         this.hud.showChip(false);
         let s = spawn;
-        if (s) {
+        if (s && s.yaw === undefined) {
           // face the campus centre from a tapped point
           const c = this.overview.home.target;
           s = { x: s.x, z: s.z, yaw: Math.atan2(-(c.x - s.x), -(c.z - s.z)) };
-        } else s = this.gateSpawn();
+        } else if (!s) s = this.lastWalk ?? this.gateSpawn();
         this.world.setMode('walk');
         this.mode = 'walk';
         this.walk.enter(s);
       } else {
+        this.lastWalk = { x: this.walk.pos.x, z: this.walk.pos.z, yaw: this.walk.yaw };
         this.walk.exit();
         this.world.setMode('overview');
         this.mode = 'overview';
@@ -145,6 +165,42 @@ export class App {
     };
     await this.hud.transition(swap, this.reducedMotion || instant);
     this._switching = false;
+  }
+
+  /** Move the picture by (x, y) px, usually half the size of a sheet that covers part of the screen. */
+  setViewShift(x, y = 0) {
+    this.viewShift.tx = x;
+    this.viewShift.ty = y;
+  }
+
+  _updateViewShift(dt) {
+    const v = this.viewShift;
+    if (v.x === v.tx && v.y === v.ty) return;
+    const k = Math.min(1, dt * 9);
+    v.x += (v.tx - v.x) * k;
+    v.y += (v.ty - v.y) * k;
+    if (Math.abs(v.tx - v.x) < 0.5) v.x = v.tx;
+    if (Math.abs(v.ty - v.y) < 0.5) v.y = v.ty;
+    if (v.x === 0 && v.y === 0) this.camera.clearViewOffset();
+    else {
+      const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+      this.camera.setViewOffset(w, h, v.x, v.y, w, h);
+    }
+  }
+
+  /** Move the Walk-mode viewer to a spot (with the usual fade) without leaving Walk mode. */
+  async teleportWalk({ x, z, yaw }) {
+    await this.hud.transition(() => {
+      const w = this.walk;
+      w.pos.x = x;
+      w.pos.z = z;
+      w.collider.resolve(w.pos, PLAYER.radius);
+      w.vel.x = w.vel.z = 0;
+      w.yaw = yaw;
+      w.pitch = -6 * DEG;
+      w.cancelTarget();
+      w._apply(0);
+    }, this.reducedMotion);
   }
 
   toggleFullscreen() {
@@ -222,6 +278,8 @@ export class App {
 
     if (this.mode === 'walk') this.walk.update(dt);
     else this.overview.update(dt);
+    this.nav.update(dt);
+    this._updateViewShift(dt);
     for (const fn of this.extra) fn(dt);
     this.world.update(this.camera);
     this.renderer.render(this.world.scene, this.camera);

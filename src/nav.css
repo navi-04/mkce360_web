@@ -1,0 +1,561 @@
+/* Search, cards, directions, live navigation and arrival (step 6). */
+
+.hbtn.search-btn {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: transparent;
+}
+.hbtn.search-btn small {
+  color: var(--gold-ink);
+  font-weight: 700;
+}
+#hud.sheet-open .hud-col,
+#hud.sheet-open .joy-hint {
+  display: none !important;
+}
+
+.xsheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  max-height: 84%;
+  display: flex;
+  flex-direction: column;
+  background: #0f2742;
+  border-top: 1px solid var(--glass-line);
+  border-radius: 22px 22px 0 0;
+  padding: 10px calc(16px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(16px + var(--safe-left));
+  transform: translateY(105%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: auto;
+  max-width: 560px;
+  margin: 0 auto;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+}
+.xsheet.open {
+  transform: none;
+}
+.xsheet.peek {
+  max-height: 66%;
+}
+.x-scrim {
+  z-index: 7;
+}
+.xs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: var(--tap);
+}
+.xs-head h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.xs-close {
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  cursor: pointer;
+  flex: none;
+}
+.xs-close svg {
+  width: 22px;
+  height: 22px;
+}
+.xs-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  min-height: 0;
+}
+
+.badge {
+  flex: none;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent, #9aa0a6);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+}
+.badge svg {
+  width: 19px;
+  height: 19px;
+}
+
+.btn {
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-line);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.btn svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.btn.primary {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: transparent;
+}
+.btn.small {
+  min-height: 48px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.linkbtn {
+  min-height: 48px;
+  border: 0;
+  background: none;
+  color: var(--gold);
+  font-size: 14px;
+  padding: 0 4px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* search */
+.sbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--tap);
+  padding: 0 4px 0 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--glass-line);
+  margin: 2px 0 10px;
+}
+.sbar > svg {
+  width: 21px;
+  height: 21px;
+  color: var(--muted);
+  flex: none;
+}
+.sbar input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS from zooming the page when the field is focused */
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.sbar input::-webkit-search-cancel-button {
+  display: none;
+}
+.sclear {
+  width: var(--tap);
+  height: var(--tap);
+  border: 0;
+  background: none;
+  color: var(--muted);
+  flex: none;
+  cursor: pointer;
+}
+.sclear svg {
+  width: 20px;
+  height: 20px;
+}
+.schips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 8px;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+.schips::-webkit-scrollbar {
+  display: none;
+}
+.schip {
+  flex: none;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 24px;
+  border: 1px solid var(--glass-line);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+  font-size: 14px;
+  cursor: pointer;
+}
+.schip.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: transparent;
+  font-weight: 700;
+}
+.snote {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.slist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.srow {
+  width: 100%;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.srow:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+.stxt {
+  flex: 1;
+  min-width: 0;
+}
+.stxt b {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.stxt small {
+  display: block;
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+.sdist {
+  flex: none;
+  color: var(--muted);
+  font-size: 13px;
+}
+.sempty {
+  padding: 28px 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+.sempty b {
+  display: block;
+  color: var(--ink);
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+/* cards */
+.chead,
+.pdest {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 10px;
+}
+.ctitle {
+  min-width: 0;
+}
+.ctitle h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.ctitle small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 2px;
+}
+.crows {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.crow {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+.clabel {
+  color: var(--muted);
+  flex: none;
+}
+.cval {
+  text-align: right;
+}
+.cval.muted {
+  color: var(--muted);
+}
+.cdesc {
+  margin: 12px 0 4px;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.cwarn {
+  margin: 8px 0 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(242, 194, 48, 0.12);
+  color: #f6dc8a;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.cacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 4px;
+}
+.cacts .btn {
+  flex: 1 1 140px;
+}
+.cacts .btn.primary {
+  flex-basis: 100%;
+}
+
+/* directions */
+.pfrom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 8px;
+  flex-wrap: wrap;
+}
+.pseg {
+  flex-wrap: wrap;
+}
+.pseg button {
+  font-size: 13px;
+  padding: 0 10px;
+}
+.pseg button:disabled {
+  opacity: 0.4;
+}
+.psum {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0 8px;
+}
+.psum b {
+  font-size: 28px;
+  color: var(--gold);
+}
+.psum span {
+  color: var(--muted);
+  font-size: 14px;
+}
+.psteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.psteps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.psteps li > svg {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--gold);
+}
+.psteps .ptxt b {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.psteps .ptxt small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.psteps.collapsed li.more {
+  display: none;
+}
+.clear-route {
+  display: block;
+  margin: 2px auto 0;
+  color: var(--muted);
+}
+
+/* live guidance card */
+.navcard {
+  position: absolute;
+  top: calc(66px + var(--safe-top));
+  left: 50%;
+  z-index: 6;
+  width: calc(100% - 20px - var(--safe-left) - var(--safe-right));
+  max-width: 460px;
+  padding: 8px 10px 10px;
+  border-radius: 18px;
+  background: rgba(11, 29, 51, 0.93);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translate(-50%, -12px);
+  opacity: 0;
+  pointer-events: none !important;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.navcard.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto !important;
+}
+.nc-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nc-ico {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--gold);
+  color: var(--gold-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nc-ico svg {
+  width: 30px;
+  height: 30px;
+  stroke-width: 2.4;
+}
+.nc-txt {
+  flex: 1;
+  min-width: 0;
+}
+.nc-txt b {
+  display: block;
+  font-size: 18px;
+  line-height: 1.2;
+}
+.nc-txt small {
+  display: block;
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+.nc-x {
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  cursor: pointer;
+}
+.nc-x svg {
+  width: 20px;
+  height: 20px;
+}
+.nc-meta {
+  display: flex;
+  gap: 6px 12px;
+  flex-wrap: wrap;
+  margin: 6px 2px 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.nc-meta span + span::before {
+  content: '\00b7';
+  margin-right: 12px;
+}
+.nc-acts {
+  display: flex;
+  gap: 8px;
+}
+.nc-acts .btn {
+  flex: 1;
+}
+.navcard[data-mode='paused'] .nc-ico {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--ink);
+}
+
+.lbl.dest {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(242, 194, 48, 0.45);
+  z-index: 2;
+}
+
+@media (max-height: 460px) {
+  .nc-meta {
+    display: none;
+  }
+  .nc-ico {
+    width: 40px;
+    height: 40px;
+  }
+  .xsheet.peek {
+    max-height: 70%;
+  }
+}
+
+/* landscape phones: sheets dock to the right so the scene stays visible beside them */
+@media (orientation: landscape) and (max-height: 520px) {
+  .xsheet.dock {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0 !important;
+    width: min(46%, 430px);
+    max-height: none !important;
+    margin: 0;
+    border-radius: 22px 0 0 22px;
+    border-top: 0;
+    border-left: 1px solid var(--glass-line);
+    transform: translateX(105%);
+    padding-top: calc(10px + var(--safe-top));
+  }
+  .xsheet.dock.open {
+    transform: none;
+  }
+  .xsheet.dock .sheet-grab {
+    display: none;
+  }
+}

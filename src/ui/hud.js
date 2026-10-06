@@ -11,6 +11,7 @@ const ICON = {
   sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   reset: '<path d="M20 12a8 8 0 1 1-2.4-5.7M20 4v5h-5"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
   bug: '<path d="M8 8h8v8a4 4 0 0 1-8 0zM9 5l1.5 3M15 5l-1.5 3M4 12h4M16 12h4M5 18l3-2M19 18l-3-2"/>',
 };
 
@@ -65,10 +66,11 @@ export function createHud(app) {
     sync();
   }, 'walk-only');
   const bReset = mkBtn('reset', 'Reset', () => app.overview.reset(), 'over-only');
+  const bSearch = mkBtn('search', 'Search', () => app.navUi?.openSearch(), 'search-btn');
   const bFull = mkBtn('full', 'Full', () => app.toggleFullscreen());
   const bSet = mkBtn('sliders', 'Settings', () => sheet.open());
   if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) bFull.style.display = 'none';
-  col.append(bRun, bGyro, bReset, bFull, bSet);
+  col.append(bSearch, bRun, bGyro, bReset, bFull, bSet);
 
   // ----- toast, walk-here chip, fade -----
   const toastEl = el('div', 'toast');
@@ -112,6 +114,7 @@ export function createHud(app) {
   const scrim = el('div', 'scrim');
   const sheet = {
     open() {
+      app.navUi?.closeSheets();
       sheetEl.classList.add('open');
       scrim.classList.add('on');
       sync();

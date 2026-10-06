@@ -47,6 +47,9 @@ const SCENARIOS = {
   'overview-orbit': { mode: 'overview', action: 'orbit' },
   'walk-idle': { mode: 'walk', action: null },
   'walk-move': { mode: 'walk', action: 'move' },
+  // step 6: the glowing route line is drawn, and in walk-guided the app also drives the camera along it
+  'overview-route': { mode: 'overview', action: 'route' },
+  'walk-guided': { mode: 'walk', action: 'guide' },
 };
 
 /** GPU-related launch args tried first (headless). */
@@ -516,6 +519,15 @@ async function runScenario({ browser, mobile, url, name, cpu, opts, shotPath, pr
     if (scen.action === 'orbit') {
       const drag = startOrbitDrag(page, cdp, opts.drag);
       stopAction = () => drag.stop();
+    } else if (scen.action === 'route' || scen.action === 'guide') {
+      try {
+        await page.evaluate(async (guide) => {
+          const n = window.__mkce.nav;
+          n.planTo({ buildingId: 'radhakrishnan-block' }, 'gate:main-gate');
+          if (guide) await n.start();
+        }, scen.action === 'guide');
+        stopAction = () => page.evaluate(() => window.__mkce.nav.end()).catch(() => {});
+      } catch (e) { result.notes.push(`route setup failed: ${String(e.message || e).split(String.fromCharCode(10))[0]}`); }
     } else if (scen.action === 'move') {
       if (api.present && api.input) {
         await page.evaluate(() => window.__mkce.input({ forward: 1, strafe: 0, turn: 0 }));

@@ -38,14 +38,16 @@ scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs
 privacy-policy/         Static page served at /privacy-policy
 src/
   data/campus.json     The only place campus facts live
-  data/graph.js        Path-graph helpers (Dijkstra, door linking); reused by routing in step 6
+  data/graph.js        Path-graph helpers (Dijkstra, door linking)
+  data/footprint.js    Footprint geometry shared by picking, routing checks and the validator
   config.js            Tunables: player speeds, quality presets, type colours (no campus facts)
   core/app.js          App shell: renderer, auto quality fallback, mode switching
   world/               textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
   modes/               overview (orbit), walk (first person), collision, gyro
-  ui/                  hud, joystick
+  ui/                  hud, joystick, sheets (one bottom sheet), nav-ui (search, cards, directions, nav card, arrival)
+  nav/                 search (index + scoring), route (plan, turns, hints), routeLayer (3D line + beacon), navigator (state machine, guided walk)
   tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
-  (nav/, interiors/ added in later steps)
+  (interiors/ added in step 7)
 index.html, vite.config.js   base './' (relative) for GitHub Pages / Netlify / WebView; two HTML entries
 ```
 
@@ -57,12 +59,15 @@ npm run dev        dev server (reachable on LAN for phone testing), http://local
 npm run build      validate campus.json, then production build into dist/
 npm run validate   campus.json validation only
 npm run preview    serve the production build locally
+npm run test:nav   search and routing unit checks on the real campus.json (no browser)
 npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; run build first)
 npm run perf       frame-rate measurement at 390x844
 ```
 
 Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export).
-Test hook: `window.__mkce` (`setMode`, `stats`, `input`), used by the scripts.
+Test hook: `window.__mkce` (`setMode`, `stats`, `input`, `nav`, `app`), used by the scripts.
+
+Navigation (step 6): `Navigator` states are none, preview, guided, paused, manual, arrived. The guided walk drives `WalkMode` through its `driver` hook; joystick, keys or a tap hand control back. Routes only run on `campus.paths` edges and the validator warns when an edge crosses a building. Guidance never invents campus facts: turn hints use building names from campus.json.
 
 ## Performance rules (keep when adding features)
 

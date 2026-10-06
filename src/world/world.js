@@ -6,6 +6,7 @@ import { createBuildings } from './buildings.js';
 import { createRoads } from './roads.js';
 import { createScenery } from './scenery.js';
 import { DEG } from './geo.js';
+import { insideFootprint } from '../data/footprint.js';
 
 function loadTexture(url, onProgress) {
   return new Promise((resolve) => {
@@ -210,6 +211,23 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
         if (Math.abs(lx) <= b.size.w / 2 && Math.abs(lz) <= b.size.d / 2) return b;
       }
       return null;
+    },
+    /** The building a ray hits (roof plane first, then ground), or null. Used for taps in Overview. */
+    pickBuilding(origin, dir) {
+      let best = null, bt = Infinity;
+      if (Math.abs(dir.y) < 1e-6) return null;
+      for (const b of data.buildings) {
+        const h = b.form === 'court' || b.form === 'field' ? 0.1 : Math.max(b.heightM ?? 3, 1);
+        for (const y of [h, 0.05]) {
+          const t = (y - origin.y) / dir.y;
+          if (t <= 0 || t >= bt) continue;
+          if (insideFootprint(b, origin.x + dir.x * t, origin.z + dir.z * t, -0.4)) {
+            best = b;
+            bt = t;
+          }
+        }
+      }
+      return best;
     },
     dispose() {
       scene.traverse((o) => {

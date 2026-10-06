@@ -1,4 +1,5 @@
 import './style.css';
+import './nav.css';
 import rawData from './data/campus.json';
 import { App } from './core/app.js';
 
@@ -25,6 +26,15 @@ function webglAvailable() {
   } catch {
     return false;
   }
+}
+
+// the app container never scrolls (focusing a field inside a sliding sheet could otherwise scroll it away)
+for (const id of ['app', 'hud']) {
+  const n = document.getElementById(id);
+  n?.addEventListener('scroll', () => {
+    n.scrollTop = 0;
+    n.scrollLeft = 0;
+  });
 }
 
 // block page-level gestures on touch devices (pinch/double-tap zoom, pull-to-refresh)
@@ -59,6 +69,7 @@ async function boot() {
   // test / automation hook (see scripts/perf-test.mjs)
   window.__mkce = {
     app,
+    nav: app.nav,
     ready: Promise.resolve(true),
     setMode: (m) => app.setMode(m, { instant: true }),
     stats: () => app.stats(),

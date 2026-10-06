@@ -3,6 +3,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { insideFootprint } from '../src/data/footprint.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const file = resolve(root, process.argv[2] ?? 'src/data/campus.json');
@@ -263,6 +264,39 @@ for (const u of data.updates ?? []) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(u.date ?? '') || Number.isNaN(Date.parse(u.date))) err(`update "${u.id}": date must be YYYY-MM-DD`);
 }
 if (!Array.isArray(data.updates)) err('campus.updates must be an array');
+
+// gates that name a path node (used as route start points)
+for (const g of data.gates ?? []) {
+  if (g.node != null && !nodes.has(g.node)) err(`gate "${g.id}": node "${g.node}" is not in the paths graph`);
+  if (g.node != null && !pathDist.has(g.node)) err(`gate "${g.id}": node "${g.node}" is not reachable from the main gate`);
+}
+
+// ---------- routes must not cut through buildings ----------
+// Buildings that block walking (see world/buildings.js): ring, block, closed shed, kiosk, plant. Courts, fields,
+// open parking sheds and canopies can be crossed.
+const OBSTACLE_FORMS = new Set(['ring', 'block', 'shed', 'kiosk', 'plant']);
+{
+  const doorOwner = new Map(buildings.map((b) => [b.doorNode, b]));
+  const crossings = new Map();
+  for (const e of data.paths?.edges ?? []) {
+    const a = nodes.get(e.from), c = nodes.get(e.to);
+    if (!a || !c) continue;
+    const spurOf = doorOwner.get(e.from) ?? doorOwner.get(e.to);
+    const len = dist(a, c);
+    for (let s = 0; s <= len; s += 0.75) {
+      const p = { x: a.x + ((c.x - a.x) * s) / len, z: a.z + ((c.z - a.z) * s) / len };
+      for (const b of buildings) {
+        if (!OBSTACLE_FORMS.has(b.form) || (b.form === 'shed' && b.type === 'parking')) continue;
+        if (spurOf === b) {
+          const dn = nodes.get(b.doorNode);
+          if (dist(p, dn) < 4) continue; // the last few metres reach the door
+        }
+        if (insideFootprint(b, p.x, p.z, 0.8)) crossings.set(`${e.id} (${e.from} to ${e.to}) crosses "${b.id}"`, true);
+      }
+    }
+  }
+  for (const k of crossings.keys()) warn(`path ${k}`);
+}
 
 // ---------- warnings ----------
 for (let i = 0; i < buildings.length; i++) {

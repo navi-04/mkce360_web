@@ -115,7 +115,23 @@ export class OverviewMode {
     };
   }
 
-  /** Fly to look at a point (used by search later). */
+  /** Fly the camera so a route (or any rectangle in metres) fills the view. */
+  frame({ cx, cz, size }, visible = 1) {
+    const fov = this.camera.fov * (Math.PI / 180);
+    const aspect = this.camera.aspect;
+    const half = Math.max(60, (size * 0.62) / visible); // `visible`: share of the screen not covered by a sheet
+    const need = half / Math.tan(Math.min(fov / 2, Math.atan(Math.tan(fov / 2) * aspect)));
+    const dist = Math.min(OVERVIEW.maxDistance, Math.max(150, need * 1.15));
+    const target = new THREE.Vector3(cx, 0, cz);
+    const dir = new THREE.Vector3(0, Math.cos(this.home.polar), Math.sin(this.home.polar)).normalize(); // the home tilt, looking north
+    this._tween = {
+      t: 0, dur: 0.9,
+      fromPos: this.camera.position.clone(), toPos: target.clone().add(dir.multiplyScalar(dist)),
+      fromTarget: this.controls.target.clone(), toTarget: target,
+    };
+  }
+
+  /** Fly to look at a point. */
   focus(x, z, distance = 160) {
     const target = new THREE.Vector3(x, 0, z);
     const dir = this.camera.position.clone().sub(this.controls.target).normalize();
@@ -150,7 +166,9 @@ export class OverviewMode {
   _tap(e) {
     const g = this.pickGround(e.clientX, e.clientY);
     if (!g) return;
-    this.onTap?.(g.x, g.z, e);
+    // the roof or wall of a building under the finger wins over the ground point behind it
+    const { origin, direction } = this._ray.ray;
+    this.onTap?.(g.x, g.z, e, this.world.pickBuilding(origin, direction));
   }
 
   update(dt) {
@@ -188,7 +206,7 @@ class OverviewLabels {
     this.visible = false;
     this._rects = [];
     this.items = [];
-    this._lastCam = new Float32Array(18);
+    this._lastCam = new Float32Array(19);
     this.setLabels(world.labels);
   }
 
@@ -215,18 +233,25 @@ class OverviewLabels {
     this.root.style.display = on ? '' : 'none';
   }
 
+  /** mark one label (the destination of a route) */
+  setHighlight(id) {
+    for (const it of this.items) it.el.classList.toggle('dest', it.id === id);
+  }
+
   update() {
     if (!this.visible) return;
     const cam = this.camera;
     const w = this.canvas.clientWidth, h = this.canvas.clientHeight;
     // nothing to do while the camera and canvas are unchanged (saves DOM writes on phones)
     const e = cam.matrixWorld.elements, last = this._lastCam;
-    let same = last[16] === w && last[17] === h;
+    const vs = cam.view?.offsetY ?? 0; // a sheet may lift the picture
+    let same = last[16] === w && last[17] === h && last[18] === vs;
     for (let i = 0; i < 16 && same; i++) if (last[i] !== e[i]) same = false;
     if (same) return;
     for (let i = 0; i < 16; i++) last[i] = e[i];
     last[16] = w;
     last[17] = h;
+    last[18] = vs;
     const showText = cam.position.y < 380;
     const placed = this._rects;
     placed.length = 0;

@@ -109,11 +109,12 @@
         "headingDeg": 270
       },
       "verified": false,
-      "note": "Faces East onto NH-44 (user supplied). Position is the origin by definition; its exact spot on the highway wall is a candidate."
+      "note": "Faces East onto NH-44 (user supplied). Position is the origin by definition; its exact spot on the highway wall is a candidate.",
+      "node": "gate"
     },
     {
       "id": "side-gate",
-      "name": "Unlabelled-1",
+      "name": "Side gate",
       "type": "pedestrian",
       "position": {
         "x": 0,
@@ -122,7 +123,8 @@
       "facing": "east",
       "width": 2.5,
       "verified": false,
-      "note": "Small iron gate and name board south of the Security Office on the board; may be a pedestrian gate."
+      "note": "Small iron gate and name board south of the Security Office on the board. The board gives it no name, so \"Side gate\" is a placeholder until the college confirms one.",
+      "node": "gate-side"
     }
   ],
   "paths": {
@@ -460,7 +462,7 @@
       {
         "id": "door-canteen",
         "x": -99.6,
-        "z": 154,
+        "z": 147.5,
         "kind": "door"
       },
       {
@@ -495,8 +497,8 @@
       },
       {
         "id": "door-power-house",
-        "x": -237.4,
-        "z": 13,
+        "x": -224,
+        "z": 19,
         "kind": "door"
       },
       {
@@ -581,6 +583,24 @@
         "id": "p77",
         "x": -10.8,
         "z": -1.2,
+        "kind": "path"
+      },
+      {
+        "id": "p78",
+        "x": -233,
+        "z": 122,
+        "kind": "path"
+      },
+      {
+        "id": "gate-side",
+        "x": -1,
+        "z": 17,
+        "kind": "gate"
+      },
+      {
+        "id": "pwh1",
+        "x": -221.5,
+        "z": 5,
         "kind": "path"
       }
     ],
@@ -784,7 +804,7 @@
       {
         "id": "e30",
         "from": "p31",
-        "to": "wd",
+        "to": "p78",
         "type": "walkway",
         "width": 3.5
       },
@@ -792,13 +812,6 @@
         "id": "e31",
         "from": "p31",
         "to": "door-laboratories-shed-1",
-        "type": "walkway",
-        "width": 2.5
-      },
-      {
-        "id": "e32",
-        "from": "door-laboratories-shed-1",
-        "to": "door-laboratories-shed-2",
         "type": "walkway",
         "width": 2.5
       },
@@ -943,13 +956,6 @@
         "width": 7
       },
       {
-        "id": "e57",
-        "from": "p57",
-        "to": "door-canteen",
-        "type": "walkway",
-        "width": 2.5
-      },
-      {
         "id": "e59",
         "from": "p60",
         "to": "w3",
@@ -960,13 +966,6 @@
         "id": "e61",
         "from": "plz",
         "to": "door-storage-yard",
-        "type": "walkway",
-        "width": 2.5
-      },
-      {
-        "id": "e62",
-        "from": "door-storage-yard",
-        "to": "door-power-house",
         "type": "walkway",
         "width": 2.5
       },
@@ -1097,13 +1096,6 @@
         "width": 2.5
       },
       {
-        "id": "e84",
-        "from": "p60",
-        "to": "door-staff-quarters",
-        "type": "walkway",
-        "width": 2.5
-      },
-      {
         "id": "e85",
         "from": "p69",
         "to": "door-four-wheeler-parking",
@@ -1114,6 +1106,55 @@
         "id": "e86",
         "from": "p69",
         "to": "door-two-wheeler-parking",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e87",
+        "from": "p60",
+        "to": "door-staff-quarters",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e88",
+        "from": "p57",
+        "to": "door-canteen",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e89",
+        "from": "p78",
+        "to": "wd",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e90",
+        "from": "p78",
+        "to": "door-laboratories-shed-2",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e92",
+        "from": "gate",
+        "to": "gate-side",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e93",
+        "from": "p75",
+        "to": "pwh1",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e94",
+        "from": "pwh1",
+        "to": "door-power-house",
         "type": "walkway",
         "width": 2.5
       }
@@ -1969,7 +2010,7 @@
       "form": "block",
       "position": {
         "x": -100,
-        "z": 148
+        "z": 141.5
       },
       "size": {
         "w": 16,
@@ -1980,7 +2021,7 @@
       "floors": 1,
       "doorPosition": {
         "x": -99.6,
-        "z": 154
+        "z": 147.5
       },
       "description": "Facility, legend item 20. Footprint is a placeholder.",
       "floorPlans": [],
@@ -2052,16 +2093,16 @@
       "floors": 1,
       "parts": [
         {
-          "x": 0,
-          "z": -11.5,
-          "w": 14,
-          "d": 20
+          "x": 1.2,
+          "z": -5.2,
+          "w": 11.4,
+          "d": 19.6
         },
         {
-          "x": 0,
-          "z": 11.5,
-          "w": 14,
-          "d": 20
+          "x": -0.1,
+          "z": 9.8,
+          "w": 13.6,
+          "d": 10.4
         }
       ],
       "doorPosition": {
@@ -2137,8 +2178,8 @@
       "heightM": 6,
       "floors": 1,
       "doorPosition": {
-        "x": -237.4,
-        "z": 13
+        "x": -224,
+        "z": 19
       },
       "description": "Facility, legend item 26.",
       "floorPlans": [],
@@ -2151,7 +2192,7 @@
       },
       "confidence": "low",
       "source": "board + satellite candidate (small compound)",
-      "doorFacing": "north",
+      "doorFacing": "east",
       "doorNode": "door-power-house"
     },
     {

@@ -43,6 +43,8 @@ export class WalkMode {
     this.sim = null; // test/automation input {forward, strafe, turn}
     this.target = null;
     this.turnAssist = false;
+    this.driver = null; // guided walk (src/nav/navigator.js): { step(dt), interrupt(reason) } moves the player along a route
+    this.lastLookAt = 0; // when the user last turned the view (the guide leaves the view alone for a moment)
 
     this.gyro = new Gyro();
     this.gyroOn = false; // true only once the sensor works AND the offset to the current view is captured
@@ -90,6 +92,7 @@ export class WalkMode {
   }
 
   exit() {
+    this.driver?.interrupt('exit');
     this.active = false;
     this.keys.clear();
     this._endJoy();
@@ -133,6 +136,7 @@ export class WalkMode {
   }
 
   walkTo(x, z) {
+    this.driver?.interrupt('tap');
     const p = { x, z };
     this.collider.resolve(p, PLAYER.radius + 0.1);
     this.target = p;
@@ -183,6 +187,14 @@ export class WalkMode {
     let str = this.joy.x + ks + (this.sim?.strafe ?? 0);
     let mag = Math.hypot(fwd, str);
     const manual = mag > 0.06;
+    if (this.driver) {
+      if (manual) this.driver.interrupt('manual'); // joystick or keys: the user takes over
+      else {
+        this.driver.step(dt); // guided walk places the player and steers the view
+        this._apply(dt);
+        return;
+      }
+    }
     if (mag > 1) {
       fwd /= mag;
       str /= mag;
@@ -248,6 +260,7 @@ export class WalkMode {
   }
 
   _addLook(dyaw, dpitch) {
+    this.lastLookAt = performance.now();
     if (this.gyroOn) {
       this.gyroBase.yaw += dyaw;
       this.gyroBase.pitch += dpitch;

@@ -163,7 +163,7 @@ async function main() {
     await sleep(600);
     const g0 = await walkState(page);
     await page.evaluate(() => window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 40, beta: 90, gamma: 0 })));
-    await sleep(250);
+    await sleep(500);
     const g1 = await walkState(page);
     check('gyro: enabling keeps the current view (no jump)', Math.abs(g0.yaw - y0) < 1.5, `${y0.toFixed(1)} -> ${g0.yaw.toFixed(1)}`);
     check('gyro: turning the phone 30 deg turns the view 30 deg', Math.abs(g1.yaw - g0.yaw - 30) < 1.5, `${(g1.yaw - g0.yaw).toFixed(1)} deg`);
@@ -190,6 +190,125 @@ async function main() {
     check('camera stays above ground in Overview', await page.evaluate(() => window.__mkce.app.camera.position.y >= 5));
     await ctx.close();
   }
+
+  // ================= phone: search, directions, guided walk =================
+  console.log('Search and navigation');
+  {
+    const { ctx, page } = await newPage();
+    const cdp = await ctx.newCDPSession(page);
+    const tp = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y, id]) => ({ x, y, id, radiusX: 1, radiusY: 1, force: 1 })) });
+    const nav = () => page.evaluate(() => { const n = window.__mkce.nav, w = window.__mkce.app.walk; return { mode: n.mode, s: n.s, len: n.route?.length ?? 0, x: w.pos.x, z: w.pos.z, yaw: (w.yaw * 180) / Math.PI, app: window.__mkce.app.mode, hint: n.hint?.text ?? '', layer: window.__mkce.app.routeLayer.group.visible }; });
+    const programs = () => page.evaluate(() => window.__mkce.app.renderer.info.programs.length);
+    const rows = () => page.evaluate(() => [...document.querySelectorAll('.srow .stxt b')].map((e) => e.textContent));
+    const p0 = await programs();
+
+    await page.tap('.search-btn');
+    await sleep(500);
+    check('Search button opens the search sheet', await page.evaluate(() => document.querySelector('.xsheet.open .sbar input') !== null));
+    check('empty search lists every building', (await rows()).length >= 30, `${(await rows()).length} rows`);
+    await page.fill('.sbar input', 'hostel');
+    await sleep(200);
+    const hostels = await rows();
+    check('typing "hostel" lists the three hostels', hostels.length === 3 && hostels.every((h) => /hostel/i.test(h)), hostels.join(' | '));
+    await page.fill('.sbar input', '');
+    await page.tap('.schip:has-text("Sports")');
+    await sleep(200);
+    check('category chip filters the list', (await rows()).length >= 5 && (await page.evaluate(() => [...document.querySelectorAll('.srow .stxt small')].every((e) => /sports/i.test(e.textContent)))));
+    await page.tap('.schip:has-text("All")');
+    await page.fill('.sbar input', 'kalam');
+    await sleep(200);
+    await page.tap('.srow');
+    await sleep(400);
+    check('tapping a result opens the building card', await page.evaluate(() => /KALAM/.test(document.querySelector('.card h3')?.textContent ?? '')));
+    check('card states the confirmed 4 floors', await page.evaluate(() => /Floors4/.test(document.querySelector('.crows').textContent.replace(/\s/g, ''))));
+    await page.tap('.cacts .btn.primary');
+    await sleep(1200);
+    let n = await nav();
+    check('Directions plans the route from the main gate to the door (~102 m)', n.mode === 'preview' && Math.abs(n.len - 102.5) < 3, `${n.len.toFixed(1)} m`);
+    check('route line is shown', n.layer);
+    check('planner sheet lists the steps', await page.evaluate(() => document.querySelectorAll('.psteps li').length >= 2));
+
+    await page.tap('.planner .cacts .btn.primary');
+    await sleep(2800);
+    n = await nav();
+    check('Start guided walk switches to Walk mode and starts guiding', n.app === 'walk' && n.mode === 'guided');
+    check('top card shows a turn hint', await page.evaluate(() => document.querySelector('.navcard.on .nc-txt b')?.textContent.length > 3), n.hint);
+    const g0 = await nav();
+    await sleep(3000);
+    const g1 = await nav();
+    const gv = Math.hypot(g1.x - g0.x, g1.z - g0.z) / 3;
+    check('guided walk moves at walking speed (~1.4 m/s)', gv > 1.2 && gv < 1.5, `${gv.toFixed(2)} m/s`);
+
+    await page.tap('.nc-acts .btn:has-text("Pause")');
+    await sleep(900);
+    const q0 = await nav();
+    await sleep(1200);
+    const q1 = await nav();
+    check('Pause stops the guided walk', q0.mode === 'paused' && Math.hypot(q1.x - q0.x, q1.z - q0.z) < 0.2);
+    await page.tap('.nc-acts .btn:has-text("Resume")');
+    await sleep(1500);
+    const q2 = await nav();
+    check('Resume continues along the route', q2.mode === 'guided' && q2.s > q1.s + 1);
+
+    // look around while being guided: the view is not fought over for a moment
+    const yawBefore = (await nav()).yaw;
+    await tp('touchStart', [[300, 420, 2]]);
+    for (let i = 1; i <= 8; i++) { await tp('touchMove', [[300 - i * 14, 420, 2]]); await sleep(40); }
+    await tp('touchEnd', []);
+    const yawAfter = (await nav()).yaw;
+    check('dragging to look around works during the guided walk', Math.abs(yawAfter - yawBefore) > 8 && (await nav()).mode === 'guided', `${(yawAfter - yawBefore).toFixed(0)} deg`);
+
+    // take control with the joystick
+    await tp('touchStart', [[80, 700, 1]]);
+    await tp('touchMove', [[80, 650, 1]]);
+    await sleep(400);
+    n = await nav();
+    await tp('touchEnd', []);
+    check('joystick input takes control; the route stays', n.mode === 'manual' && n.layer);
+    await sleep(700);
+    check('hint card offers to guide again', await page.evaluate(() => [...document.querySelectorAll('.navcard.on .btn')].some((b) => /Guide me/.test(b.textContent))));
+
+    // far off the route: re-plan from where the walker stands
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -40; w.pos.z = 110; w.cancelTarget(); });
+    await sleep(3600);
+    n = await nav();
+    const startNow = await page.evaluate(() => window.__mkce.nav.route.poly.p[0]);
+    check('wandering far off the route re-plans from where you stand', n.mode === 'manual' && Math.hypot(startNow.x + 40, startNow.z - 110) < 1.5, `new route starts ${Math.hypot(startNow.x + 40, startNow.z - 110).toFixed(1)} m from the walker, ${n.len.toFixed(0)} m long`);
+
+    // guide again, at running speed, all the way to the door
+    await page.tap('.navcard.on .btn:has-text("Guide me")');
+    await page.evaluate(() => { window.__mkce.app.walk.run = true; });
+    for (let i = 0; i < 60 && (await nav()).mode !== 'arrived'; i++) await sleep(1000);
+    n = await nav();
+    check('guided walk arrives at the door', n.mode === 'arrived');
+    await sleep(900);
+    const d = await page.evaluate(() => {
+      const r = window.__mkce.nav.route, w = window.__mkce.app.walk, t = r.to.point;
+      const want = Math.atan2(-(t.x - w.pos.x), -(t.z - w.pos.z));
+      let dlt = Math.abs(w.yaw - want) % (2 * Math.PI);
+      if (dlt > Math.PI) dlt = 2 * Math.PI - dlt;
+      return { dist: Math.hypot(t.x - w.pos.x, t.z - w.pos.z), faced: (dlt * 180) / Math.PI };
+    });
+    check('stops about 2 m before the door and faces it', d.dist > 1.6 && d.dist < 3.2 && d.faced < 12, `${d.dist.toFixed(1)} m from the door, ${d.faced.toFixed(0)} deg off`);
+    check('arrival card has a (disabled) Enter button until interiors exist', await page.evaluate(() => { const b = document.querySelector('.arrival .btn.primary'); return !!b && b.disabled && /arrived/i.test(document.querySelector('.arrival h3').textContent); }));
+    await page.tap('.arrival .btn:has-text("Done")');
+    await sleep(500);
+    n = await nav();
+    check('Done ends the route and removes the line', n.mode === 'none' && !n.layer);
+    check('no new shader programs were compiled while navigating (precompiled)', (await programs()) === p0, `${p0} -> ${await programs()}`);
+
+    // back in Overview, tapping a building opens its card
+    await page.evaluate(() => window.__mkce.setMode('overview'));
+    await sleep(500);
+    await page.evaluate(() => { const a = window.__mkce.app; a.overview.controls.target.set(-125, 0, 68); a.camera.position.set(-125, 330, 150); });
+    await sleep(500);
+    const scr2 = await page.evaluate(() => { const a = window.__mkce.app; const v = new a.camera.position.constructor(-150, 15, 60).project(a.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight]; });
+    await page.touchscreen.tap(scr2[0], scr2[1]);
+    await sleep(500);
+    check('tapping a building in Overview opens its card', await page.evaluate(() => /KALAM/.test(document.querySelector('.xsheet.open .card h3')?.textContent ?? '')));
+    await ctx.close();
+  }
+
 
   // ================= desktop =================
   console.log('Desktop');
