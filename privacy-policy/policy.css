@@ -1,0 +1,145 @@
+:root {
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --ink: #14202e;
+  --muted: #566475;
+  --brand: #0b3a6e;
+  --accent: #e0a100;
+  --line: #dbe2ea;
+  --todo-bg: #fff3cd;
+  --todo-ink: #6b4e00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1520;
+    --card: #12202f;
+    --ink: #e7edf4;
+    --muted: #9fb0c2;
+    --brand: #8cc0ff;
+    --line: #223548;
+    --todo-bg: #3a2f08;
+    --todo-ink: #ffd666;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: #0b1d33;
+  color: #fff;
+}
+
+.brand {
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.back {
+  color: #0b1d33;
+  background: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 8px;
+}
+
+h1 {
+  font-size: 1.9rem;
+  line-height: 1.2;
+  margin: 8px 0 4px;
+  color: var(--brand);
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 28px 0 6px;
+  color: var(--brand);
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 20px;
+}
+
+.summary {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 12px;
+  padding: 4px 18px 10px;
+}
+
+.summary h2 {
+  margin-top: 14px;
+}
+
+ul {
+  padding-left: 1.2rem;
+}
+
+li {
+  margin: 6px 0;
+}
+
+a {
+  color: var(--brand);
+}
+
+code {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 0.9em;
+}
+
+.todo {
+  background: var(--todo-bg);
+  color: var(--todo-ink);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-weight: 600;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+}

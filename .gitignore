@@ -23,3 +23,10 @@ Thumbs.db
 # local scratch
 tmp/
 .claude/settings.local.json
+
+# Reference photos of the real campus (contain students/staff, large). Kept local only.
+assets/class rooms/
+assets/inside of APJ Block/
+assets/out side of RK block/
+assets/the floors and steps of all block/
+assets/the roads and pathways/
