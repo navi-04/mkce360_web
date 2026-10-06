@@ -1,28 +1,74 @@
-// Step 1 placeholder: proves the Vite + Three.js toolchain builds and renders.
-// Replaced by the real campus world in Step 4.
-import * as THREE from 'three';
+import './style.css';
+import rawData from './data/campus.json';
+import { App } from './core/app.js';
 
-const canvas = document.getElementById('scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const params = new URLSearchParams(location.search);
+const loader = document.getElementById('loader');
+const fill = document.getElementById('loader-fill');
+const msg = document.getElementById('loader-msg');
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87b8e6);
-
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-camera.position.set(8, 6, 8);
-camera.lookAt(0, 0, 0);
-
-scene.add(new THREE.GridHelper(40, 40, 0x1b4b7a, 0x3a77b0));
-scene.add(new THREE.HemisphereLight(0xffffff, 0x446644, 1.2));
-
-function resize() {
-  const { clientWidth: w, clientHeight: h } = canvas;
-  renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+function progress(f, text) {
+  fill.style.width = `${Math.round(f * 100)}%`;
+  if (text) msg.textContent = text;
 }
-window.addEventListener('resize', resize);
-resize();
 
-renderer.setAnimationLoop(() => renderer.render(scene, camera));
+function fail(text, detail) {
+  loader.classList.add('error');
+  msg.textContent = text;
+  if (detail) console.error(detail);
+}
+
+function webglAvailable() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
+// block page-level gestures on touch devices (pinch/double-tap zoom, pull-to-refresh)
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault());
+document.addEventListener('dblclick', (e) => e.preventDefault());
+
+async function boot() {
+  if (!webglAvailable()) {
+    fail('Your browser does not support WebGL, which MKCE 360 needs. Try a recent Chrome, Edge, Firefox or Safari.');
+    return;
+  }
+  let data = structuredClone(rawData);
+  const debug = params.get('debug') === '1';
+  const calibrate = params.get('calibrate') === '1';
+
+  if (calibrate) {
+    const { applyOverrides } = await import('./tools/overrides.js');
+    data = applyOverrides(data);
+  }
+
+  const app = new App({ canvas: document.getElementById('scene'), data, params });
+  try {
+    await app.start(progress);
+  } catch (e) {
+    fail('Something went wrong while building the campus. Please reload the page.', e);
+    return;
+  }
+
+  if (debug) (await import('./tools/debug.js')).initDebug(app);
+  if (calibrate) (await import('./tools/calibrate.js')).initCalibrate(app, rawData);
+
+  // test / automation hook (see scripts/perf-test.mjs)
+  window.__mkce = {
+    app,
+    ready: Promise.resolve(true),
+    setMode: (m) => app.setMode(m, { instant: true }),
+    stats: () => app.stats(),
+    input: (v) => {
+      app.walk.sim = v;
+    },
+  };
+
+  loader.classList.add('done');
+  setTimeout(() => loader.remove(), 500);
+}
+
+boot();

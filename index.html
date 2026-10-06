@@ -7,12 +7,25 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta name="theme-color" content="#0b1d33" />
+    <meta name="description" content="MKCE 360: a 3D walkthrough of M. Kumarasamy College of Engineering, Karur." />
     <title>MKCE 360</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <div id="app">
-      <canvas id="scene"></canvas>
+      <canvas id="scene" aria-label="3D campus view" role="img"></canvas>
+      <div id="hud"></div>
+      <div id="loader" role="status" aria-live="polite">
+        <div class="loader-card">
+          <div class="loader-logo"><b>MKCE</b> 360</div>
+          <div class="loader-sub">M. Kumarasamy College of Engineering, Karur</div>
+          <div class="loader-bar"><i id="loader-fill"></i></div>
+          <div class="loader-msg" id="loader-msg">Loading…</div>
+          <noscript><p class="loader-err">MKCE 360 needs JavaScript to run.</p></noscript>
+          <a class="loader-link" href="privacy-policy/">Privacy policy</a>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

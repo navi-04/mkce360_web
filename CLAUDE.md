@@ -31,16 +31,22 @@ App name shown everywhere in the UI: **MKCE 360**.
 
 ```
 assets/                 Input images (satellite map, signboard photos). Not served by the app.
-docs/                   blueprint-extraction.md, android-webview.md, ...
-public/                 Static files copied as-is into the build (textures used at runtime)
-scripts/                Node scripts (campus.json validator)
+                        Reference photos of the real campus live here too but are git-ignored (they show people).
+docs/                   blueprint-extraction.md, satellite-candidates.png, android-webview.md (step 9)
+public/                 Static files copied as-is: textures/campus-map.png, debug/signboard.jpg, CNAME, favicon
+scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs
+privacy-policy/         Static page served at /privacy-policy
 src/
-  data/campus.json      The only place campus facts live
-  main.js               Entry point
-  style.css
-  (world/, modes/, ui/, nav/, interiors/ added in later steps)
-index.html
-vite.config.js          base './' (relative) for GitHub Pages / Netlify / WebView
+  data/campus.json     The only place campus facts live
+  data/graph.js        Path-graph helpers (Dijkstra, door linking); reused by routing in step 6
+  config.js            Tunables: player speeds, quality presets, type colours (no campus facts)
+  core/app.js          App shell: renderer, auto quality fallback, mode switching
+  world/               textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
+  modes/               overview (orbit), walk (first person), collision, gyro
+  ui/                  hud, joystick
+  tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
+  (nav/, interiors/ added in later steps)
+index.html, vite.config.js   base './' (relative) for GitHub Pages / Netlify / WebView; two HTML entries
 ```
 
 ## Commands
@@ -48,11 +54,21 @@ vite.config.js          base './' (relative) for GitHub Pages / Netlify / WebVie
 ```
 npm install        install dependencies
 npm run dev        dev server (reachable on LAN for phone testing), http://localhost:5173
-npm run build      production build into dist/
+npm run build      validate campus.json, then production build into dist/
+npm run validate   campus.json validation only
 npm run preview    serve the production build locally
+npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; run build first)
+npm run perf       frame-rate measurement at 390x844
 ```
 
-Debug query flags (added in Step 4): `?debug=1` (alignment overlay), `?calibrate=1` (position calibration and export).
+Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export).
+Test hook: `window.__mkce` (`setMode`, `stats`, `input`), used by the scripts.
+
+## Performance rules (keep when adding features)
+
+- Merge static geometry (few draw calls); use instanced meshes for repeated scenery.
+- All shaders are precompiled for both modes at start-up (`compileAsync`), so nothing hitches the first time it appears. New material types must be reachable from `world.scene` at start-up.
+- Pixel ratio is capped at 2 and drops with the quality level; the app lowers quality automatically below 30 fps.
 
 ## Steps (see the project brief)
 

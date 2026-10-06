@@ -1,0 +1,228 @@
+// Assembles the whole campus scene from campus.json.
+import * as THREE from 'three';
+import { COLORS, QUALITY } from '../config.js';
+import * as TX from './textures.js';
+import { createBuildings } from './buildings.js';
+import { createRoads } from './roads.js';
+import { createScenery } from './scenery.js';
+import { DEG } from './geo.js';
+
+function loadTexture(url, onProgress) {
+  return new Promise((resolve) => {
+    new THREE.TextureLoader().load(
+      url,
+      (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = 8;
+        resolve(t);
+      },
+      (e) => e.total && onProgress?.(e.loaded / e.total),
+      () => resolve(null), // offline or missing: the app still works with a plain ground
+    );
+  });
+}
+
+export async function createWorld(data, { onProgress = () => {} } = {}) {
+  onProgress(0.05, 'Preparing textures');
+  const T = {
+    facadeBlock: TX.facadeBlock(),
+    facadeShed: TX.facadeShed(),
+    facadePlain: TX.facadePlain(),
+    roofFlat: TX.roofFlat(),
+    roofTile: TX.roofTile(),
+    concrete: TX.concreteTexture(),
+    fence: TX.fenceTexture(),
+    asphaltRoad: TX.asphaltRoad(),
+    asphaltPlain: TX.asphaltPlain(),
+    paver: TX.paverTexture(),
+    kerb: TX.kerbTexture(),
+    grass: TX.grassTexture(),
+  };
+
+  onProgress(0.15, 'Loading satellite image');
+  const satTex = await loadTexture(import.meta.env.BASE_URL + data.satellite.url, (f) => onProgress(0.15 + f * 0.4, 'Loading satellite image'));
+
+  onProgress(0.6, 'Building campus');
+  const scene = new THREE.Scene();
+  const root = new THREE.Group();
+  root.name = 'campus-root';
+  scene.add(root);
+
+  // ---------- ground ----------
+  T.grass.repeat.set(250, 250);
+  const grass = new THREE.Mesh(
+    new THREE.PlaneGeometry(2000, 2000).rotateX(-Math.PI / 2),
+    new THREE.MeshLambertMaterial({ map: T.grass }),
+  );
+  grass.position.set(-260, 0, 80);
+  grass.receiveShadow = true;
+  grass.name = 'ground';
+  root.add(grass);
+
+  const sat = new THREE.Mesh(
+    new THREE.PlaneGeometry(data.satellite.size.w, data.satellite.size.d).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ map: satTex, color: satTex ? 0xffffff : 0x6b8a4a }),
+  );
+  sat.position.set(data.satellite.centre.x, 0.012, data.satellite.centre.z);
+  sat.name = 'satellite';
+  root.add(sat);
+
+  // ---------- buildings & roads (rebuildable for calibration) ----------
+  let built, roads;
+  const disposeGroup = (g) => {
+    g.traverse((o) => {
+      o.geometry?.dispose?.();
+      const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      for (const m of mats) m.dispose?.(); // shared canvas textures (T.*) are kept
+    });
+  };
+  const buildBuildings = () => {
+    const builder = createBuildings(data, T);
+    for (const b of data.buildings) builder.addBuilding(b);
+    built = builder.finalize(data.buildings, data.points);
+    root.add(built.group);
+  };
+  const buildRoads = () => {
+    roads = createRoads(data, T, built.doorFrames);
+    root.add(roads.group);
+  };
+  buildBuildings();
+  onProgress(0.75, 'Laying roads');
+  buildRoads();
+
+  onProgress(0.85, 'Planting trees');
+  const scenery = createScenery(data, T, { doorFrames: built.doorFrames, colliders: built.colliders });
+  root.add(scenery.group);
+
+  // ---------- sky, light, fog ----------
+  const skyTex = TX.skyTexture();
+  const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(2400, 24, 10, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, fog: false, depthWrite: false }),
+  );
+  sky.renderOrder = -10;
+  sky.frustumCulled = false;
+  scene.add(sky);
+
+  const hemi = new THREE.HemisphereLight(0xe6f2ff, 0x6a8a4c, 1.15);
+  scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff0d4, 1.55);
+  sun.position.set(-90, 260, 170);
+  sun.target.position.set(0, 0, 0);
+  sun.shadow.mapSize.set(2048, 2048);
+  const sc = sun.shadow.camera;
+  sc.left = -110;
+  sc.right = 110;
+  sc.top = 110;
+  sc.bottom = -110;
+  sc.near = 10;
+  sc.far = 700;
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.4;
+  scene.add(sun, sun.target);
+
+  scene.fog = new THREE.Fog(COLORS.fog, 100, 650);
+  scene.background = new THREE.Color(COLORS.skyHorizon);
+
+  // ---------- bounds ----------
+  const bp = data.boundary.points;
+  const bounds = {
+    minX: Math.min(...bp.map((p) => p.x)), maxX: Math.max(...bp.map((p) => p.x)),
+    minZ: Math.min(...bp.map((p) => p.z)), maxZ: Math.max(...bp.map((p) => p.z)),
+  };
+
+  let mode = 'overview';
+  let quality = QUALITY.high;
+  let shadows = false;
+
+  const world = {
+    scene, root, sun, hemi, sky, bounds,
+    colliders: built.colliders,
+    boundary: bp,
+    labels: built.labels,
+    doorFrames: built.doorFrames,
+    data,
+    parts: { grass, satellite: sat, roads: roads.group, buildings: built.group, scenery: scenery.group },
+    get mode() { return mode; },
+
+    setMode(m) {
+      mode = m;
+      const walk = m === 'walk';
+      sat.visible = !walk;
+      roads.group.visible = walk;
+      this.applyFog();
+    },
+    /** Rebuild buildings and roads from `data` (after calibration edits). Scenery is left as is. */
+    rebuild() {
+      root.remove(built.group);
+      root.remove(roads.group);
+      disposeGroup(built.group);
+      disposeGroup(roads.group);
+      buildBuildings();
+      buildRoads();
+      roads.group.visible = mode === 'walk';
+      this.colliders = built.colliders;
+      this.labels = built.labels;
+      this.doorFrames = built.doorFrames;
+      this.parts.buildings = built.group;
+      this.parts.roads = roads.group;
+      if (shadows) this.setShadows(true);
+    },
+    setQuality(q) {
+      quality = q;
+      scenery.setQuality(q);
+      this.applyFog();
+    },
+    applyFog() {
+      if (mode === 'walk') {
+        scene.fog.near = 90;
+        scene.fog.far = quality.fogFar;
+      } else {
+        scene.fog.near = 2600;
+        scene.fog.far = 7000;
+      }
+    },
+    setShadows(on) {
+      shadows = on;
+      sun.castShadow = on;
+      scene.traverse((o) => {
+        if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => (m.needsUpdate = true));
+      });
+    },
+    get shadows() { return shadows; },
+    /** Per-frame upkeep: keep the sky centred on the camera and the shadow window around the viewer. */
+    update(camera) {
+      sky.position.set(camera.position.x, 0, camera.position.z);
+      if (shadows) {
+        const p = camera.position;
+        sun.target.position.set(p.x, 0, p.z);
+        sun.position.set(p.x - 90, 260, p.z + 170);
+        sun.target.updateMatrixWorld();
+      }
+    },
+    /** Which building (by ground footprint) is at x/z, or null. */
+    buildingAt(x, z) {
+      for (const b of data.buildings) {
+        const dx = x - b.position.x, dz = z - b.position.z, r = -b.rotationDeg * DEG;
+        const c = Math.cos(r), s = Math.sin(r);
+        const lx = dx * c - dz * s, lz = dx * s + dz * c;
+        if (Math.abs(lx) <= b.size.w / 2 && Math.abs(lz) <= b.size.d / 2) return b;
+      }
+      return null;
+    },
+    dispose() {
+      scene.traverse((o) => {
+        o.geometry?.dispose?.();
+        const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+        for (const m of mats) {
+          m.map?.dispose?.();
+          m.dispose?.();
+        }
+      });
+    },
+  };
+  world.setQuality(quality);
+  world.setMode('overview');
+  onProgress(1, 'Ready');
+  return world;
+}
