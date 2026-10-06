@@ -18,11 +18,11 @@ App name shown everywhere in the UI: **MKCE 360**.
 ## Source material (inputs, read-only)
 
 - `assets/campus-map.png`: satellite image. Visual reference and cross-check only.
-- `assets/layout/*.jpeg`: photos of the printed "COLLEGE LAYOUT" signboard. **Primary** source for what exists on campus and how it relates spatially. It is an oblique perspective illustration, not a top-down plan, so it has no uniform scale. See `docs/blueprint-extraction.md` for what was read from it and how confident each reading is.
+- `assets/layout/*.jpeg`: photos of the printed "COLLEGE LAYOUT" signboard (1-5 the board, 6-7 the legend). **Primary** source for what exists on campus and how it relates spatially. It is an oblique perspective illustration, not a top-down plan, so it has no uniform scale. The board is viewed from the gate looking West (board front = East, left = South). See `docs/blueprint-extraction.md` for what was read from it and how confident each reading is.
 
 ## Conventions
 
-- Units: metres. Axes: +x east-ish (to be fixed in calibration), +z toward the viewer, +y up. Origin at the main gate.
+- Units: metres. Origin at the main gate. Axes: **+x = East, +z = South, +y = up** (so a top-down view has north at the top). The main gate faces East onto NH-44 and the campus extends toward negative x. Satellite pixel (px, py) in `assets/campus-map.png` converts to `x = (px - 497) * 0.792`, `z = (py - 128) * 0.792` (scale from building 1 = 113 x 92 m; gate pixel is a candidate until the user confirms it).
 - Locale-specific text (labels) is copied exactly as printed on the blueprint.
 - localStorage is only for per-user conveniences (welcome-screen details). Every access is wrapped in try/catch.
 - Mobile first: 360-430 px portrait, touch targets at least 48 px, pixel ratio capped at 2, low-poly assets, instanced meshes for repeated scenery, shadows off by default.
