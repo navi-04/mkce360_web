@@ -31,3 +31,6 @@ assets/out side of RK block/
 assets/the floors and steps of all block/
 assets/the roads and pathways/
 .claude/worktrees/
+# Zoomed satellite / Street View screenshots (Google content, people in frames, ~10 MB). The committed
+# result is public/textures/campus-map.jpg, rebuilt with scripts/satellite-mosaic.py.
+assets/satellite/

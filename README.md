@@ -4,7 +4,7 @@ A frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering
 
 Walk through the campus in first person from your phone, or orbit over it from above. No backend, no login, no API calls: everything is static files.
 
-> **Status:** under construction (steps 1 to 5 of 9 done). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
+> **Status:** under construction (steps 1 to 5 of 9 done, step 6 next). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
 
 ## Stack
 
@@ -59,7 +59,7 @@ npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU 
 | `assets/` | Source images: satellite map and signboard photos (inputs only). Reference photos of the real campus are kept local and are git-ignored |
 | `docs/` | Blueprint extraction notes (`blueprint-extraction.md`), alignment check image |
 | `public/` | Static files: satellite texture, signboard photo for the debug overlay, `CNAME`, favicon |
-| `scripts/` | `validate-campus.mjs`, `e2e.mjs`, `perf-test.mjs` |
+| `scripts/` | `validate-campus.mjs`, `e2e.mjs`, `perf-test.mjs`, `satellite-mosaic.py` (optional dev tool that rebuilds the overview ground texture from the satellite crops; needs Python and OpenCV) |
 | `src/data/campus.json` | All campus content; code contains no campus facts |
 | `src/world/` | Scene: textures, buildings, roads, scenery, sky and lighting |
 | `src/modes/` | Overview orbit, first-person walk, collision, gyro |

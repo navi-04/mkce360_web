@@ -52,7 +52,8 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
   T.grass.repeat.set(250, 250);
   const grass = new THREE.Mesh(
     new THREE.PlaneGeometry(2000, 2000).rotateX(-Math.PI / 2),
-    new THREE.MeshLambertMaterial({ map: T.grass }),
+    // pushed back so the satellite plane (0.012 m above) never z-fights with it when seen from far away
+    new THREE.MeshLambertMaterial({ map: T.grass, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 }),
   );
   grass.position.set(-260, 0, 80);
   grass.receiveShadow = true;

@@ -17,7 +17,7 @@ App name shown everywhere in the UI: **MKCE 360**.
 
 ## Source material (inputs, read-only)
 
-- `assets/campus-map.png`: satellite image. Visual reference and cross-check only.
+- `assets/campus-map.png`: satellite image (north up, 0.792 m per pixel). `assets/satellite/*.png` (git-ignored): zoomed satellite crops and Street View frames of the gate. `scripts/satellite-mosaic.py` registers the crops to the base image and writes the overview ground texture `public/textures/campus-map.jpg`. Visual reference and cross-check for building footprints.
 - `assets/layout/*.jpeg`: photos of the printed "COLLEGE LAYOUT" signboard (1-5 the board, 6-7 the legend). **Primary** source for what exists on campus and how it relates spatially. It is an oblique perspective illustration, not a top-down plan, so it has no uniform scale. The board is viewed from the gate looking West (board front = East, left = South). See `docs/blueprint-extraction.md` for what was read from it and how confident each reading is.
 
 ## Conventions
@@ -33,8 +33,8 @@ App name shown everywhere in the UI: **MKCE 360**.
 assets/                 Input images (satellite map, signboard photos). Not served by the app.
                         Reference photos of the real campus live here too but are git-ignored (they show people).
 docs/                   blueprint-extraction.md, satellite-candidates.png, android-webview.md (step 9)
-public/                 Static files copied as-is: textures/campus-map.png, debug/signboard.jpg, CNAME, favicon
-scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs
+public/                 Static files copied as-is: textures/campus-map.jpg (mosaic), debug/signboard.jpg, CNAME, favicon
+scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs, satellite-mosaic.py (dev tool, needs Python + OpenCV)
 privacy-policy/         Static page served at /privacy-policy
 src/
   data/campus.json     The only place campus facts live

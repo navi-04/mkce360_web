@@ -283,3 +283,43 @@ The overlay `docs/satellite-candidates.png` draws all of these so you can check 
 1. Does the 4-level reading for building 1 match reality? (Floors for every other building are 1 by default.)
 2. Please check the candidate matches on `docs/satellite-candidates.png` using the calibration mode (`?calibrate=1`) once the world is running.
 3. A wider satellite image would remove most of the extrapolation uncertainty in the west.
+
+---
+
+## 11. Revision 4 (satellite crops added by the user)
+
+Nine screenshots were added in `assets/satellite/`: six zoomed satellite crops (`whole`, `apj block`, `rk block`,
+`canteen and courts and half of apj`, `boys hostel`, `girl hostel`) and three Street View frames of the main gate
+(`college front*.png`, looked at but not used as imagery).
+
+**Registration.** All six crops were matched to `assets/campus-map.png` with SIFT features and a RANSAC similarity
+transform (78 to 1535 inliers each, all consistent). Every crop is the base image rotated by 98.6 degrees (the
+highway runs along the bottom of the crops) and shows 0.18 to 0.54 m per pixel against 0.79 m for the base image.
+`scripts/satellite-mosaic.py` blends them into one north-up image, `public/textures/campus-map.jpg`
+(1280 x 1288 px, 0.386 m per pixel, 494 x 497 m, 280 KB). It now also covers about 40 m more of the north and west
+than the base image did. Margins are filled with the grass colour.
+
+**What the crops settled.**
+
+| Question | Answer from the crops |
+| --- | --- |
+| Which building is the "girl hostel"? | The four-wing courtyard block at the north of the field (centre -227, -73), previously drawn as `Unlabelled-2`. It sits next to the Girls Mess (28) and matches board item 7, so `unlabelled-2` was merged into `muthulakshmi-reddy-hostel`. The board-only position (north of the satellite, 0 to 100 m off) was dropped. |
+| Which building is the "boys hostel"? | The C-shaped building at the west edge (centre -371, 162), which is `octa-hostel` (6). |
+| Veda hostel (5) | Two separate parallel wings with a 14 m gap, now modelled as two parts, 47 x 106 m overall. |
+| Radhakrishnan block (2) | 66 x 101 m rotated 8.5 degrees, not 85 x 107 at 4 degrees. One inner courtyard. |
+| Olympia block (19) | L-shaped, three parts, 56 x 50 m. |
+| Boys mess (23) | 60 x 60 m. |
+| Fuel station (32) | Tighter on the paved apron with the two pump islands (19 x 24 m). |
+| Staff quarters (24) | Two white houses, 14 x 31 m. |
+| Parking (30, 31) | One long blue-roof shed 7 m wide along the east edge of the field, so both are now 8 m wide. |
+
+Identities of the two hostels rest on the crop names, the board positions and the neighbouring messes. Please
+confirm them.
+
+**Scale check.** On the new mosaic building 1 measures 88 x 111 m (roof) and 96 x 111 m including the east verandah, against
+the user's 92 x 113 m. That is within 3 to 4 percent of the 0.792 m per pixel scale, so the scale is kept.
+
+**Not settled.** Small items without a clear satellite match stay at their board-derived positions: laboratory sheds
+(3, 4), storage yard, power house, snack corner, girls mess, canteen (20), the kiosks and ATMs, the cricket net, and the
+far-west items (STP, transformer, boundary), which lie outside all imagery. The satellite shows a dry field without the
+oval running track that the board draws for the play ground (8).
