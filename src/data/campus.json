@@ -1168,12 +1168,12 @@
         "position": false,
         "size": true,
         "door": false,
-        "floors": false,
+        "floors": true,
         "height": false
       },
       "confidence": "medium",
       "source": "satellite + user dimensions (113 x 92 m)",
-      "floorsNote": "4 levels (Ground to Third) read from the low-resolution directory sign photo at the entrance; unverified.",
+      "floorsNote": "4 levels (Ground to Third), read from the directory sign at the entrance and confirmed by the user.",
       "doorFacing": "east",
       "doorNode": "door-apj-block"
     },
