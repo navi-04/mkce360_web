@@ -200,3 +200,86 @@ The overlay `docs/satellite-candidates.png` draws all of these so you can check 
 5. **Door sides** (Step 3 needs them): which side is the main door on for 1 (east face?), 2, 3, 4, 5, 6, 7 and the other buildings? Otherwise I place doors on the side nearest the road and flag them for calibration.
 6. **Schema additions** I propose beyond the brief, unless you object: optional `rotationDeg` on buildings (building 1 needs 8.7°), and `kind: "point"` for the wells, bio gas, solar and emergency assembly markers (34–49) so they are points of interest, not buildings. The brief's type list has no `library` entry and the board lists none, so none will be created.
 7. **Proposed types** in §5: please correct (for example is "Security Office" `admin` or `other`, and are the messes `canteen`?).
+
+
+---
+
+## 10. Revision 3 (Step 3): what went into `src/data/campus.json`
+
+`campus.json` is now the **single source of truth**. This document records how it was derived; if they disagree, the JSON wins.
+
+**Corrections to §8.** Several centre coordinates in §8 were computed by hand and were wrong (for example the clay court is centred at x = −57, z = +125.5, and the grey court at x = −21.4, z = +126, not the values shown). The generated tables below replace them.
+
+**How positions were derived**
+- *Satellite-matched buildings* use the pixel box converted at 0.792 m/px with the gate at pixel (497, 128).
+- *Board-only buildings* use a perspective (homography) fit of the signboard photo `1.jpeg` onto metres, anchored on four ground corners of building 1, the gate, the fuel station and the two courts (residuals 1–10 m). It was **validated on points that were not used as anchors**: block 2 landed 22 m from the multi-wing block, 19 within 19 m of the L-shaped building, 6 within 29 m of the long west block, and 24 near the two small white buildings. Beyond about 300 m west of the gate the fit is extrapolation, so far-west items (29, 33, hostel 7's exact position, the west boundary) are the least reliable.
+- *Building 1's main door* is placed on the east face at z = 31 m, which makes the road distance from the gate **102.5 m**, matching your measurement of about 102 m.
+- Doors of all other buildings are on the side nearest the path (flagged unverified, as asked).
+- Heights (`heightM`) are visual estimates from the board and your photos and are flagged unverified. Only building 1 has `floors` other than 1: **4**, read from the directory sign photographed at its entrance (levels Ground to Third; the photo is low-resolution, so flagged unverified).
+- Schema additions beyond the brief: `rotationDeg`, `heightM`, `form`, optional `ring` and `parts`, a `verified` flag set, `confidence`/`source`, and a separate `points[]` list for markers 21, 22 and 34–49.
+
+### Buildings (x East, z South, metres; origin = main gate)
+
+| No. | Name (as printed) | Type | Centre x, z | Size w × d (m) | Height (m) | Conf. | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Dr.A.P.J.ABDUL KALAM BLOCK | department | -125.1, 67.7 | 92 × 113 (rot 8.7°) | 15 | medium | satellite + user dimensions (113 x 92 m) |
+| 2 | Dr.S.RADHAKRISHNAN BLOCK | department | -188.9, 180.2 | 84.7 × 106.9 (rot 4°) | 12 | low | satellite candidate (multi-wing block SW of block 1) |
+| 3 | LABORATORIES SHED I | lab | -207, 61 | 20 × 95 | 5 | low | board + satellite (long dark strip west of block 1) |
+| 4 | LABORATORIES SHED II | lab | -233, 58 | 15 × 60 | 5 | low | board only |
+| 5 | VEDA HOSTEL | hostel | -106.9, 290.7 | 47.5 × 103 | 15 | low | board + satellite candidate (two parallel solar-roof wings) |
+| 6 | OCTA HOSTEL | hostel | -369.9, 162 | 47.5 × 122.8 | 15 | low | board + satellite candidate (long block at the west edge of the crop) |
+| 7 | Dr. MUTHULAKSHMI REDDY HOSTEL | hostel | -270, -125 | 125 × 35 | 28 | low | board only (outside the satellite crop) |
+| 8 | PLAY GROUND | sports | -103.4, -53.9 | 160.8 × 95 | 0 | medium | satellite candidate (bare field NE of block 1; top edge clipped by the crop) |
+| 9 | BALL BADMINTON COURT | sports | -44, 28 | 20 × 18 | 0 | low | board only |
+| 10 | KABADDI COURT | sports | -53.5, 85 | 12 × 12 | 0 | low | board only |
+| 11 | KHO-KHO COURT | sports | -53.5, 66 | 12 × 22 | 0 | low | board only |
+| 12 | BASKET BALL COURT | sports | -23.4, 78 | 43.6 × 49.9 | 0 | low | satellite candidate (painted court pair) |
+| 13 | CRICKET PRACTICE NET | sports | -12, 154 | 28 × 10 | 0 | low | board only |
+| 14 | VOLLEY BALL COURT | sports | -57.8, 126.7 | 30.1 × 42.8 | 0 | low | satellite candidate (clay-coloured court) |
+| 15 | TENNIS COURT | sports | -21, 126.3 | 38.8 × 38.8 | 0 | low | satellite candidate (grey court) |
+| 16 | SECURITY OFFICE | admin | -4, 10 | 5 × 5 | 3.2 | low | board (next to the main gate) |
+| 17 | AXIS ATM | other | -8, -38.5 | 5 × 5 | 3 | low | board (front wall between 30 and 31) |
+| 18 | SBI ATM | other | -58, 30 | 4 × 4 | 3 | low | board (near the front of block 1) |
+| 19 | OLYMPIA BLOCK | other | -67.7, 184.1 | 57.8 × 51.5 | 12 | low | satellite candidate (L-shaped building); contains legend items 21 GYM and 22 GUEST HOUSE |
+| 20 | CANTEEN | canteen | -100, 148 | 16 × 12 | 4 | low | board marker only; footprint is a placeholder |
+| 23 | BOYS MESS | canteen | -169.9, 293.8 | 59.4 × 57 | 8 | low | board + satellite candidate (grey flat-roof building) |
+| 24 | STAFF QUARTERS | other | -253, 93.5 | 14 × 43 | 9 | low | board + satellite candidate (two small white buildings) |
+| 25 | STORAGE YARD | other | -236, 5 | 24 × 12 | 6 | low | board + satellite candidate (small compound) |
+| 26 | POWER HOUSE | other | -236, 19 | 24 × 12 | 6 | low | board + satellite candidate (small compound) |
+| 27 | SNACK CORNER | canteen | -214, 4 | 8 × 6 | 3.5 | low | board only |
+| 28 | GIRLS MESS | canteen | -250, -22 | 20 × 14 | 5 | low | board only |
+| 29 | MAIN TRANSFORMER | other | -485, -70 | 6 × 6 | 4 | low | board only (outside the satellite crop) |
+| 30 | TWO WHEELER PARKING | parking | -11, -24 | 18 × 22 | 3.5 | low | board + satellite candidate (shed along the highway wall) |
+| 31 | FOUR WHEELER PARKING | parking | -11, -58 | 18 × 32 | 3.5 | low | board + satellite candidate (shed along the highway wall) |
+| 32 | FUEL STATION | other | -17.4, 30.1 | 26.9 × 31.7 | 5.5 | low | board + satellite candidate; the canopy prints PETROL BUNK |
+| 33 | SEWAGE TREATMENT PLANT | other | -470, -45 | 30 × 22 | 4 | low | board only (outside the satellite crop) |
+| – | Unlabelled-2 | other | -229.7, -67.7 | 87.1 × 67.3 | 10 | low | satellite only; courtyard block with no matching board number (top edge clipped by the crop) |
+
+### Points
+
+| No. | Name (as printed) | Kind | x, z |
+| --- | --- | --- | --- |
+| 21 | GYM | room-marker | -67.7, 184.2 |
+| 22 | GUEST HOUSE | room-marker | -67.7, 190.2 |
+| 34 | BIO GAS POINT | biogas | -268, -18 |
+| 35 | BIO GAS POINT | biogas | -370, 92 |
+| 36 | BIO GAS POINT | biogas | -170, 335 |
+| 37 | SOLAR PV 250 kW | solar-pv | -132.1, 113.2 |
+| 38 | SOLAR PV 250 kW | solar-pv | -163.7, 82 |
+| 39 | SOLAR PV 250 kW | solar-pv | -157.7, 42.5 |
+| 40 | SOLAR PV 250 kW | solar-pv | -110.2, 23.4 |
+| 41 | SOLAR PV 250 kW | solar-pv | -119.6, 290.7 |
+| 42 | SOLAR PV 250 kW | solar-pv | -91.9, 291.5 |
+| 43 | EMERGENCY ASSEMBLY POINT | assembly | -45, -12 |
+| 44 | EMERGENCY ASSEMBLY POINT | assembly | -225, -30 |
+| 45 | EMERGENCY ASSEMBLY POINT | assembly | -136, 150 |
+| 46 | EMERGENCY ASSEMBLY POINT | assembly | -78, 220 |
+| 47 | WELL | well | -290, 100 |
+| 48 | WELL | well | -215, 38 |
+| 49 | WELL | well | -140, 205 |
+
+### Still open
+
+1. Does the 4-level reading for building 1 match reality? (Floors for every other building are 1 by default.)
+2. Please check the candidate matches on `docs/satellite-candidates.png` using the calibration mode (`?calibrate=1`) once the world is running.
+3. A wider satellite image would remove most of the extrapolation uncertainty in the west.

@@ -1,0 +1,2505 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "units": "metres",
+    "origin": "main gate",
+    "axes": {
+      "x": "east",
+      "z": "south",
+      "y": "up"
+    },
+    "scaleMetresPerPixel": 0.792,
+    "scaleBasis": "Building 1 = 113 m x 92 m (user supplied); satellite measurement 141.4 x 117.4 px, two scales agree within 1.9%.",
+    "northIsTopOfSatelliteImage": true,
+    "sources": [
+      "assets/layout/*.jpeg (college layout signboard photos)",
+      "assets/campus-map.png (satellite)",
+      "user-supplied dimensions and orientation"
+    ],
+    "generatedFrom": "docs/blueprint-extraction.md revision 2",
+    "note": "All positions are first estimates. Anything with verified.* = false must be checked and corrected in calibration mode (?calibrate=1)."
+  },
+  "id": "mkce",
+  "name": "M. Kumarasamy College of Engineering",
+  "shortName": "MKCE",
+  "appName": "MKCE 360",
+  "tagline": "Autonomous | Affiliated to Anna University Chennai",
+  "accreditation": "Approved by AICTE, Accredited by NBA and NAAC",
+  "location": {
+    "locality": "Thalavapalayam",
+    "city": "Karur",
+    "postalCode": "639113",
+    "state": "Tamil Nadu",
+    "country": "India",
+    "printedAddress": "Thalavapalayam, Karur - 639 113, Tamilnadu, India.",
+    "highway": "NH-44 (Salem-Karur), along the east side"
+  },
+  "satellite": {
+    "url": "textures/campus-map.png",
+    "pixelSize": [
+      540,
+      578
+    ],
+    "metresPerPixel": 0.792,
+    "gatePixel": [
+      497,
+      128
+    ],
+    "centre": {
+      "x": -179.8,
+      "z": 127.5
+    },
+    "size": {
+      "w": 427.7,
+      "d": 457.8
+    },
+    "northUp": true
+  },
+  "boundary": {
+    "points": [
+      {
+        "x": 0,
+        "z": -165
+      },
+      {
+        "x": -520,
+        "z": -165
+      },
+      {
+        "x": -520,
+        "z": 380
+      },
+      {
+        "x": 0,
+        "z": 380
+      }
+    ],
+    "verified": false,
+    "note": "Rectangle derived from the board and a homography fit; the east edge follows the highway wall. Approximate."
+  },
+  "gates": [
+    {
+      "id": "main-gate",
+      "name": "Main Gate",
+      "type": "main",
+      "position": {
+        "x": 0,
+        "z": 0
+      },
+      "facing": "east",
+      "width": 10,
+      "spawn": {
+        "x": -3,
+        "z": 0,
+        "headingDeg": 270
+      },
+      "verified": false,
+      "note": "Faces East onto NH-44 (user supplied). Position is the origin by definition; its exact spot on the highway wall is a candidate."
+    },
+    {
+      "id": "side-gate",
+      "name": "Unlabelled-1",
+      "type": "pedestrian",
+      "position": {
+        "x": 0,
+        "z": 17
+      },
+      "facing": "east",
+      "width": 2.5,
+      "verified": false,
+      "note": "Small iron gate and name board south of the Security Office on the board; may be a pedestrian gate."
+    }
+  ],
+  "paths": {
+    "nodes": [
+      {
+        "id": "gate",
+        "x": -1,
+        "z": 0,
+        "kind": "gate"
+      },
+      {
+        "id": "r1",
+        "x": -17,
+        "z": -2,
+        "kind": "path"
+      },
+      {
+        "id": "j1",
+        "x": -64,
+        "z": -2,
+        "kind": "path"
+      },
+      {
+        "id": "r2",
+        "x": -130,
+        "z": -9,
+        "kind": "path"
+      },
+      {
+        "id": "r3",
+        "x": -200,
+        "z": -10,
+        "kind": "path"
+      },
+      {
+        "id": "plz",
+        "x": -240,
+        "z": -8,
+        "kind": "path"
+      },
+      {
+        "id": "w1",
+        "x": -300,
+        "z": -8,
+        "kind": "path"
+      },
+      {
+        "id": "w2",
+        "x": -300,
+        "z": 60,
+        "kind": "path"
+      },
+      {
+        "id": "w3",
+        "x": -300,
+        "z": 125,
+        "kind": "path"
+      },
+      {
+        "id": "w4",
+        "x": -300,
+        "z": 162,
+        "kind": "path"
+      },
+      {
+        "id": "s1",
+        "x": -66,
+        "z": 20,
+        "kind": "path"
+      },
+      {
+        "id": "s2",
+        "x": -71,
+        "z": 60,
+        "kind": "path"
+      },
+      {
+        "id": "s3",
+        "x": -76,
+        "z": 100,
+        "kind": "path"
+      },
+      {
+        "id": "s4",
+        "x": -80,
+        "z": 131,
+        "kind": "path"
+      },
+      {
+        "id": "s5",
+        "x": -84,
+        "z": 152,
+        "kind": "path"
+      },
+      {
+        "id": "e1",
+        "x": -140,
+        "z": 156,
+        "kind": "path"
+      },
+      {
+        "id": "wa",
+        "x": -110,
+        "z": 130,
+        "kind": "path"
+      },
+      {
+        "id": "wb",
+        "x": -150,
+        "z": 124.5,
+        "kind": "path"
+      },
+      {
+        "id": "wc",
+        "x": -185,
+        "z": 122,
+        "kind": "path"
+      },
+      {
+        "id": "wd",
+        "x": -240,
+        "z": 122,
+        "kind": "path"
+      },
+      {
+        "id": "t1",
+        "x": -34,
+        "z": 150,
+        "kind": "path"
+      },
+      {
+        "id": "t2",
+        "x": -34,
+        "z": 225,
+        "kind": "path"
+      },
+      {
+        "id": "t3",
+        "x": -95,
+        "z": 230,
+        "kind": "path"
+      },
+      {
+        "id": "m1",
+        "x": -150,
+        "z": 248,
+        "kind": "path"
+      },
+      {
+        "id": "h1",
+        "x": -300,
+        "z": -60,
+        "kind": "path"
+      },
+      {
+        "id": "h2",
+        "x": -298,
+        "z": -100,
+        "kind": "path"
+      },
+      {
+        "id": "door-apj-block",
+        "x": -72.9,
+        "z": 31.0,
+        "kind": "door"
+      },
+      {
+        "id": "p28",
+        "x": -67.5,
+        "z": 31.7,
+        "kind": "path"
+      },
+      {
+        "id": "door-radhakrishnan-block",
+        "x": -144.7,
+        "z": 155.7,
+        "kind": "door"
+      },
+      {
+        "id": "door-laboratories-shed-1",
+        "x": -207.0,
+        "z": 108.5,
+        "kind": "door"
+      },
+      {
+        "id": "p31",
+        "x": -207.0,
+        "z": 122.0,
+        "kind": "path"
+      },
+      {
+        "id": "door-laboratories-shed-2",
+        "x": -233.0,
+        "z": 88.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-veda-hostel",
+        "x": -123.7,
+        "z": 239.2,
+        "kind": "door"
+      },
+      {
+        "id": "p34",
+        "x": -123.6,
+        "z": 239.4,
+        "kind": "path"
+      },
+      {
+        "id": "door-octa-hostel",
+        "x": -346.1,
+        "z": 162.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-muthulakshmi-reddy-hostel",
+        "x": -298.0,
+        "z": -107.5,
+        "kind": "door"
+      },
+      {
+        "id": "door-play-ground",
+        "x": -108.4,
+        "z": -6.4,
+        "kind": "door"
+      },
+      {
+        "id": "p38",
+        "x": -108.4,
+        "z": -6.7,
+        "kind": "path"
+      },
+      {
+        "id": "door-ball-badminton-court",
+        "x": -54.0,
+        "z": 25.2,
+        "kind": "door"
+      },
+      {
+        "id": "p40",
+        "x": -66.5,
+        "z": 23.6,
+        "kind": "path"
+      },
+      {
+        "id": "door-kabaddi-court",
+        "x": -59.5,
+        "z": 82.5,
+        "kind": "door"
+      },
+      {
+        "id": "p42",
+        "x": -73.6,
+        "z": 80.7,
+        "kind": "path"
+      },
+      {
+        "id": "door-kho-kho-court",
+        "x": -59.5,
+        "z": 63.8,
+        "kind": "door"
+      },
+      {
+        "id": "door-basket-ball-court",
+        "x": -45.2,
+        "z": 71.9,
+        "kind": "door"
+      },
+      {
+        "id": "door-cricket-practice-net",
+        "x": -26.0,
+        "z": 154.0,
+        "kind": "door"
+      },
+      {
+        "id": "p46",
+        "x": -34.0,
+        "z": 154.0,
+        "kind": "path"
+      },
+      {
+        "id": "door-volley-ball-court",
+        "x": -72.8,
+        "z": 124.0,
+        "kind": "door"
+      },
+      {
+        "id": "p48",
+        "x": -79.0,
+        "z": 123.2,
+        "kind": "path"
+      },
+      {
+        "id": "door-tennis-court",
+        "x": -34.0,
+        "z": 145.7,
+        "kind": "door"
+      },
+      {
+        "id": "door-security-office",
+        "x": -2.7,
+        "z": 7.5,
+        "kind": "door"
+      },
+      {
+        "id": "door-axis-atm",
+        "x": -10.5,
+        "z": -36.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-sbi-atm",
+        "x": -60.0,
+        "z": 28.9,
+        "kind": "door"
+      },
+      {
+        "id": "p53",
+        "x": -59.4,
+        "z": 24.5,
+        "kind": "path"
+      },
+      {
+        "id": "door-olympia-block",
+        "x": -69.0,
+        "z": 158.3,
+        "kind": "door"
+      },
+      {
+        "id": "p55",
+        "x": -69.3,
+        "z": 151.4,
+        "kind": "path"
+      },
+      {
+        "id": "door-canteen",
+        "x": -99.6,
+        "z": 154.0,
+        "kind": "door"
+      },
+      {
+        "id": "p57",
+        "x": -99.7,
+        "z": 153.1,
+        "kind": "path"
+      },
+      {
+        "id": "door-boys-mess",
+        "x": -150.0,
+        "z": 265.3,
+        "kind": "door"
+      },
+      {
+        "id": "door-staff-quarters",
+        "x": -251.5,
+        "z": 115.0,
+        "kind": "door"
+      },
+      {
+        "id": "p60",
+        "x": -251.1,
+        "z": 122.6,
+        "kind": "path"
+      },
+      {
+        "id": "door-storage-yard",
+        "x": -236.7,
+        "z": -1.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-power-house",
+        "x": -237.4,
+        "z": 13.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-snack-corner",
+        "x": -214.7,
+        "z": 1.0,
+        "kind": "door"
+      },
+      {
+        "id": "p64",
+        "x": -215.2,
+        "z": -9.2,
+        "kind": "path"
+      },
+      {
+        "id": "door-girls-mess",
+        "x": -250.0,
+        "z": -15.0,
+        "kind": "door"
+      },
+      {
+        "id": "p66",
+        "x": -250.0,
+        "z": -8.0,
+        "kind": "path"
+      },
+      {
+        "id": "door-main-transformer",
+        "x": -482.0,
+        "z": -67.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-two-wheeler-parking",
+        "x": -13.8,
+        "z": -13.0,
+        "kind": "door"
+      },
+      {
+        "id": "p69",
+        "x": -14.9,
+        "z": -13.2,
+        "kind": "path"
+      },
+      {
+        "id": "door-four-wheeler-parking",
+        "x": -17.0,
+        "z": -42.0,
+        "kind": "door"
+      },
+      {
+        "id": "door-fuel-station",
+        "x": -13.4,
+        "z": 14.3,
+        "kind": "door"
+      },
+      {
+        "id": "door-sewage-treatment-plant",
+        "x": -455.0,
+        "z": -45.0,
+        "kind": "door"
+      },
+      {
+        "id": "p73",
+        "x": -454.2,
+        "z": -65.9,
+        "kind": "path"
+      },
+      {
+        "id": "door-unlabelled-2",
+        "x": -226.7,
+        "z": -34.1,
+        "kind": "door"
+      },
+      {
+        "id": "p75",
+        "x": -225.5,
+        "z": -8.7,
+        "kind": "path"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "gate",
+        "to": "r1",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e2",
+        "from": "r1",
+        "to": "j1",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e3",
+        "from": "j1",
+        "to": "p38",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e4",
+        "from": "r2",
+        "to": "r3",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e5",
+        "from": "r3",
+        "to": "p64",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e6",
+        "from": "plz",
+        "to": "p66",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e7",
+        "from": "w1",
+        "to": "w2",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e8",
+        "from": "w2",
+        "to": "w3",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e9",
+        "from": "w3",
+        "to": "w4",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e10",
+        "from": "j1",
+        "to": "s1",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e11",
+        "from": "s1",
+        "to": "p40",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e12",
+        "from": "s2",
+        "to": "p42",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e13",
+        "from": "s3",
+        "to": "p48",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e14",
+        "from": "s4",
+        "to": "s5",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e15",
+        "from": "s5",
+        "to": "p57",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e16",
+        "from": "w1",
+        "to": "h1",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e17",
+        "from": "h1",
+        "to": "h2",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e18",
+        "from": "s4",
+        "to": "wa",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e19",
+        "from": "wa",
+        "to": "wb",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e20",
+        "from": "wb",
+        "to": "wc",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e21",
+        "from": "wc",
+        "to": "p31",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e22",
+        "from": "wd",
+        "to": "p60",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e23",
+        "from": "s5",
+        "to": "p55",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e24",
+        "from": "t1",
+        "to": "p46",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e25",
+        "from": "t2",
+        "to": "t3",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e26",
+        "from": "t3",
+        "to": "p34",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e27",
+        "from": "p28",
+        "to": "s2",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e28",
+        "from": "p28",
+        "to": "door-apj-block",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e29",
+        "from": "e1",
+        "to": "door-radhakrishnan-block",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e30",
+        "from": "p31",
+        "to": "wd",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e31",
+        "from": "p31",
+        "to": "door-laboratories-shed-1",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e32",
+        "from": "door-laboratories-shed-1",
+        "to": "door-laboratories-shed-2",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e33",
+        "from": "p34",
+        "to": "m1",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e34",
+        "from": "p34",
+        "to": "door-veda-hostel",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e35",
+        "from": "w4",
+        "to": "door-octa-hostel",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e36",
+        "from": "h2",
+        "to": "door-muthulakshmi-reddy-hostel",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e37",
+        "from": "p38",
+        "to": "r2",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e38",
+        "from": "p38",
+        "to": "door-play-ground",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e39",
+        "from": "p40",
+        "to": "p28",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e40",
+        "from": "p40",
+        "to": "p53",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e41",
+        "from": "p42",
+        "to": "s3",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e42",
+        "from": "p42",
+        "to": "door-kabaddi-court",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e43",
+        "from": "s2",
+        "to": "door-kho-kho-court",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e44",
+        "from": "door-kho-kho-court",
+        "to": "door-basket-ball-court",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e45",
+        "from": "p46",
+        "to": "t2",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e46",
+        "from": "p46",
+        "to": "door-cricket-practice-net",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e47",
+        "from": "p48",
+        "to": "s4",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e48",
+        "from": "p48",
+        "to": "door-volley-ball-court",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e49",
+        "from": "t1",
+        "to": "door-tennis-court",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e50",
+        "from": "gate",
+        "to": "door-security-office",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e51",
+        "from": "r1",
+        "to": "p69",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e52",
+        "from": "p53",
+        "to": "door-ball-badminton-court",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e53",
+        "from": "p53",
+        "to": "door-sbi-atm",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e54",
+        "from": "p55",
+        "to": "t1",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e55",
+        "from": "p55",
+        "to": "door-olympia-block",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e56",
+        "from": "p57",
+        "to": "e1",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e57",
+        "from": "p57",
+        "to": "door-canteen",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e58",
+        "from": "m1",
+        "to": "door-boys-mess",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e59",
+        "from": "p60",
+        "to": "w3",
+        "type": "walkway",
+        "width": 3.5
+      },
+      {
+        "id": "e60",
+        "from": "p60",
+        "to": "door-staff-quarters",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e61",
+        "from": "plz",
+        "to": "door-storage-yard",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e62",
+        "from": "door-storage-yard",
+        "to": "door-power-house",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e63",
+        "from": "p64",
+        "to": "p75",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e64",
+        "from": "p64",
+        "to": "door-snack-corner",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e65",
+        "from": "p66",
+        "to": "w1",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e66",
+        "from": "p66",
+        "to": "door-girls-mess",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e67",
+        "from": "h1",
+        "to": "p73",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e68",
+        "from": "p69",
+        "to": "door-axis-atm",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e69",
+        "from": "p69",
+        "to": "door-two-wheeler-parking",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e70",
+        "from": "door-axis-atm",
+        "to": "door-four-wheeler-parking",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e71",
+        "from": "door-security-office",
+        "to": "door-fuel-station",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e72",
+        "from": "p73",
+        "to": "door-main-transformer",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e73",
+        "from": "p73",
+        "to": "door-sewage-treatment-plant",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e74",
+        "from": "p75",
+        "to": "plz",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e75",
+        "from": "p75",
+        "to": "door-unlabelled-2",
+        "type": "walkway",
+        "width": 2.5
+      }
+    ]
+  },
+  "updates": [
+    {
+      "id": "upd-placeholder-1",
+      "date": "2026-10-06",
+      "title": "Sample update (placeholder)",
+      "body": "College updates will appear here. This entry is a placeholder and not an announcement from the college.",
+      "placeholder": true
+    }
+  ],
+  "buildings": [
+    {
+      "id": "apj-block",
+      "number": 1,
+      "name": "Dr.A.P.J.ABDUL KALAM BLOCK",
+      "shortName": "Dr. A.P.J. Abdul Kalam Block",
+      "type": "department",
+      "form": "ring",
+      "position": {
+        "x": -125.1,
+        "z": 67.7
+      },
+      "size": {
+        "w": 92,
+        "d": 113
+      },
+      "rotationDeg": 8.7,
+      "heightM": 15,
+      "floors": 4,
+      "ring": {
+        "thickness": 20
+      },
+      "doorPosition": {
+        "x": -72.9,
+        "z": 31.0
+      },
+      "description": "Academic area, legend item 1. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": true,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "medium",
+      "source": "satellite + user dimensions (113 x 92 m)",
+      "floorsNote": "4 levels (Ground to Third) read from the low-resolution directory sign photo at the entrance; unverified.",
+      "doorFacing": "east",
+      "doorNode": "door-apj-block"
+    },
+    {
+      "id": "radhakrishnan-block",
+      "number": 2,
+      "name": "Dr.S.RADHAKRISHNAN BLOCK",
+      "shortName": "Dr. S. Radhakrishnan Block",
+      "type": "department",
+      "form": "block",
+      "position": {
+        "x": -188.9,
+        "z": 180.2
+      },
+      "size": {
+        "w": 84.7,
+        "d": 106.9
+      },
+      "rotationDeg": 4,
+      "heightM": 12,
+      "floors": 1,
+      "doorPosition": {
+        "x": -144.7,
+        "z": 155.7
+      },
+      "description": "Academic area, legend item 2. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "satellite candidate (multi-wing block SW of block 1)",
+      "doorFacing": "east",
+      "doorNode": "door-radhakrishnan-block"
+    },
+    {
+      "id": "laboratories-shed-1",
+      "number": 3,
+      "name": "LABORATORIES SHED I",
+      "shortName": "Laboratories Shed I",
+      "type": "lab",
+      "form": "shed",
+      "position": {
+        "x": -207,
+        "z": 61
+      },
+      "size": {
+        "w": 20,
+        "d": 95
+      },
+      "rotationDeg": 0,
+      "heightM": 5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -207.0,
+        "z": 108.5
+      },
+      "description": "Academic area, legend item 3. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite (long dark strip west of block 1)",
+      "doorFacing": "south",
+      "doorNode": "door-laboratories-shed-1"
+    },
+    {
+      "id": "laboratories-shed-2",
+      "number": 4,
+      "name": "LABORATORIES SHED II",
+      "shortName": "Laboratories Shed II",
+      "type": "lab",
+      "form": "shed",
+      "position": {
+        "x": -233,
+        "z": 58
+      },
+      "size": {
+        "w": 15,
+        "d": 60
+      },
+      "rotationDeg": 0,
+      "heightM": 5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -233.0,
+        "z": 88.0
+      },
+      "description": "Academic area, legend item 4. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "south",
+      "doorNode": "door-laboratories-shed-2"
+    },
+    {
+      "id": "veda-hostel",
+      "number": 5,
+      "name": "VEDA HOSTEL",
+      "shortName": "Veda Hostel",
+      "type": "hostel",
+      "form": "block",
+      "position": {
+        "x": -106.9,
+        "z": 290.7
+      },
+      "size": {
+        "w": 47.5,
+        "d": 103.0
+      },
+      "rotationDeg": 0,
+      "heightM": 15,
+      "floors": 1,
+      "parts": [
+        {
+          "x": -12.7,
+          "z": 0.0,
+          "w": 22.2,
+          "d": 103.0
+        },
+        {
+          "x": 15.0,
+          "z": 0.8,
+          "w": 17.4,
+          "d": 101.4
+        }
+      ],
+      "doorPosition": {
+        "x": -123.7,
+        "z": 239.2
+      },
+      "description": "Hostel, legend item 5. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (two parallel solar-roof wings)",
+      "doorFacing": "north",
+      "doorNode": "door-veda-hostel"
+    },
+    {
+      "id": "octa-hostel",
+      "number": 6,
+      "name": "OCTA HOSTEL",
+      "shortName": "Octa Hostel",
+      "type": "hostel",
+      "form": "block",
+      "position": {
+        "x": -369.9,
+        "z": 162.0
+      },
+      "size": {
+        "w": 47.5,
+        "d": 122.8
+      },
+      "rotationDeg": 0,
+      "heightM": 15,
+      "floors": 1,
+      "doorPosition": {
+        "x": -346.1,
+        "z": 162.0
+      },
+      "description": "Hostel, legend item 6. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (long block at the west edge of the crop)",
+      "doorFacing": "east",
+      "doorNode": "door-octa-hostel"
+    },
+    {
+      "id": "muthulakshmi-reddy-hostel",
+      "number": 7,
+      "name": "Dr. MUTHULAKSHMI REDDY HOSTEL",
+      "shortName": "Dr. Muthulakshmi Reddy Hostel",
+      "type": "hostel",
+      "form": "block",
+      "position": {
+        "x": -270,
+        "z": -125
+      },
+      "size": {
+        "w": 125,
+        "d": 35
+      },
+      "rotationDeg": 0,
+      "heightM": 28,
+      "floors": 1,
+      "doorPosition": {
+        "x": -298.0,
+        "z": -107.5
+      },
+      "description": "Hostel, legend item 7. Drawn as the tallest block on the board. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only (outside the satellite crop)",
+      "doorFacing": "west",
+      "doorNode": "door-muthulakshmi-reddy-hostel"
+    },
+    {
+      "id": "play-ground",
+      "number": 8,
+      "name": "PLAY GROUND",
+      "shortName": "Play Ground",
+      "type": "sports",
+      "form": "field",
+      "position": {
+        "x": -103.4,
+        "z": -53.9
+      },
+      "size": {
+        "w": 160.8,
+        "d": 95.0
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -108.4,
+        "z": -6.4
+      },
+      "description": "Sports facility, legend item 8. A running track is drawn on the board; its exact size is unverified.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "medium",
+      "source": "satellite candidate (bare field NE of block 1; top edge clipped by the crop)",
+      "doorFacing": "south",
+      "doorNode": "door-play-ground"
+    },
+    {
+      "id": "ball-badminton-court",
+      "number": 9,
+      "name": "BALL BADMINTON COURT",
+      "shortName": "Ball Badminton Court",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -44,
+        "z": 28
+      },
+      "size": {
+        "w": 20,
+        "d": 18
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -54.0,
+        "z": 25.2
+      },
+      "description": "Sports facility, legend item 9.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "west",
+      "doorNode": "door-ball-badminton-court"
+    },
+    {
+      "id": "kabaddi-court",
+      "number": 10,
+      "name": "KABADDI COURT",
+      "shortName": "Kabaddi Court",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -53.5,
+        "z": 85
+      },
+      "size": {
+        "w": 12,
+        "d": 12
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -59.5,
+        "z": 82.5
+      },
+      "description": "Sports facility, legend item 10.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "west",
+      "doorNode": "door-kabaddi-court"
+    },
+    {
+      "id": "kho-kho-court",
+      "number": 11,
+      "name": "KHO-KHO COURT",
+      "shortName": "Kho-Kho Court",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -53.5,
+        "z": 66
+      },
+      "size": {
+        "w": 12,
+        "d": 22
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -59.5,
+        "z": 63.8
+      },
+      "description": "Sports facility, legend item 11.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "west",
+      "doorNode": "door-kho-kho-court"
+    },
+    {
+      "id": "basket-ball-court",
+      "number": 12,
+      "name": "BASKET BALL COURT",
+      "shortName": "Basket Ball Court",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -23.4,
+        "z": 78.0
+      },
+      "size": {
+        "w": 43.6,
+        "d": 49.9
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -45.2,
+        "z": 71.9
+      },
+      "description": "Sports facility, legend item 12.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "satellite candidate (painted court pair)",
+      "doorFacing": "west",
+      "doorNode": "door-basket-ball-court"
+    },
+    {
+      "id": "cricket-practice-net",
+      "number": 13,
+      "name": "CRICKET PRACTICE NET",
+      "shortName": "Cricket Practice Net",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -12,
+        "z": 154
+      },
+      "size": {
+        "w": 28,
+        "d": 10
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -26.0,
+        "z": 154.0
+      },
+      "description": "Sports facility, legend item 13.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "west",
+      "doorNode": "door-cricket-practice-net"
+    },
+    {
+      "id": "volley-ball-court",
+      "number": 14,
+      "name": "VOLLEY BALL COURT",
+      "shortName": "Volley Ball Court",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -57.8,
+        "z": 126.7
+      },
+      "size": {
+        "w": 30.1,
+        "d": 42.8
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -72.8,
+        "z": 124.0
+      },
+      "description": "Sports facility, legend item 14.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "satellite candidate (clay-coloured court)",
+      "doorFacing": "west",
+      "doorNode": "door-volley-ball-court"
+    },
+    {
+      "id": "tennis-court",
+      "number": 15,
+      "name": "TENNIS COURT",
+      "shortName": "Tennis Court",
+      "type": "sports",
+      "form": "court",
+      "position": {
+        "x": -21.0,
+        "z": 126.3
+      },
+      "size": {
+        "w": 38.8,
+        "d": 38.8
+      },
+      "rotationDeg": 0,
+      "heightM": 0,
+      "floors": 1,
+      "doorPosition": {
+        "x": -34.0,
+        "z": 145.7
+      },
+      "description": "Sports facility, legend item 15.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "satellite candidate (grey court)",
+      "doorFacing": "south",
+      "doorNode": "door-tennis-court"
+    },
+    {
+      "id": "security-office",
+      "number": 16,
+      "name": "SECURITY OFFICE",
+      "shortName": "Security Office",
+      "type": "admin",
+      "form": "kiosk",
+      "position": {
+        "x": -4,
+        "z": 10
+      },
+      "size": {
+        "w": 5,
+        "d": 5
+      },
+      "rotationDeg": 0,
+      "heightM": 3.2,
+      "floors": 1,
+      "doorPosition": {
+        "x": -2.7,
+        "z": 7.5
+      },
+      "description": "Facility, legend item 16.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board (next to the main gate)",
+      "doorFacing": "north",
+      "doorNode": "door-security-office"
+    },
+    {
+      "id": "axis-atm",
+      "number": 17,
+      "name": "AXIS ATM",
+      "shortName": "Axis ATM",
+      "type": "other",
+      "form": "kiosk",
+      "position": {
+        "x": -8,
+        "z": -38.5
+      },
+      "size": {
+        "w": 5,
+        "d": 5
+      },
+      "rotationDeg": 0,
+      "heightM": 3,
+      "floors": 1,
+      "doorPosition": {
+        "x": -10.5,
+        "z": -36.0
+      },
+      "description": "Facility, legend item 17.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board (front wall between 30 and 31)",
+      "doorFacing": "south",
+      "doorNode": "door-axis-atm"
+    },
+    {
+      "id": "sbi-atm",
+      "number": 18,
+      "name": "SBI ATM",
+      "shortName": "SBI ATM",
+      "type": "other",
+      "form": "kiosk",
+      "position": {
+        "x": -58,
+        "z": 30
+      },
+      "size": {
+        "w": 4,
+        "d": 4
+      },
+      "rotationDeg": 0,
+      "heightM": 3,
+      "floors": 1,
+      "doorPosition": {
+        "x": -60.0,
+        "z": 28.9
+      },
+      "description": "Facility, legend item 18.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board (near the front of block 1)",
+      "doorFacing": "west",
+      "doorNode": "door-sbi-atm"
+    },
+    {
+      "id": "olympia-block",
+      "number": 19,
+      "name": "OLYMPIA BLOCK",
+      "shortName": "Olympia Block",
+      "type": "other",
+      "form": "block",
+      "position": {
+        "x": -67.7,
+        "z": 184.1
+      },
+      "size": {
+        "w": 57.8,
+        "d": 51.5
+      },
+      "rotationDeg": 0,
+      "heightM": 12,
+      "floors": 1,
+      "doorPosition": {
+        "x": -69.0,
+        "z": 158.3
+      },
+      "description": "Facility, legend item 19. Legend items 21 (GYM) and 22 (GUEST HOUSE) are marked on this block. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "satellite candidate (L-shaped building); contains legend items 21 GYM and 22 GUEST HOUSE",
+      "doorFacing": "north",
+      "doorNode": "door-olympia-block"
+    },
+    {
+      "id": "canteen",
+      "number": 20,
+      "name": "CANTEEN",
+      "shortName": "Canteen",
+      "type": "canteen",
+      "form": "block",
+      "position": {
+        "x": -100,
+        "z": 148
+      },
+      "size": {
+        "w": 16,
+        "d": 12
+      },
+      "rotationDeg": 0,
+      "heightM": 4,
+      "floors": 1,
+      "doorPosition": {
+        "x": -99.6,
+        "z": 154.0
+      },
+      "description": "Facility, legend item 20. Footprint is a placeholder.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board marker only; footprint is a placeholder",
+      "doorFacing": "south",
+      "doorNode": "door-canteen"
+    },
+    {
+      "id": "boys-mess",
+      "number": 23,
+      "name": "BOYS MESS",
+      "shortName": "Boys Mess",
+      "type": "canteen",
+      "form": "block",
+      "position": {
+        "x": -169.9,
+        "z": 293.8
+      },
+      "size": {
+        "w": 59.4,
+        "d": 57.0
+      },
+      "rotationDeg": 0,
+      "heightM": 8,
+      "floors": 1,
+      "doorPosition": {
+        "x": -150.0,
+        "z": 265.3
+      },
+      "description": "Facility, legend item 23. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (grey flat-roof building)",
+      "doorFacing": "north",
+      "doorNode": "door-boys-mess"
+    },
+    {
+      "id": "staff-quarters",
+      "number": 24,
+      "name": "STAFF QUARTERS",
+      "shortName": "Staff Quarters",
+      "type": "other",
+      "form": "block",
+      "position": {
+        "x": -253,
+        "z": 93.5
+      },
+      "size": {
+        "w": 14,
+        "d": 43
+      },
+      "rotationDeg": 0,
+      "heightM": 9,
+      "floors": 1,
+      "parts": [
+        {
+          "x": 0,
+          "z": -11.5,
+          "w": 14,
+          "d": 20
+        },
+        {
+          "x": 0,
+          "z": 11.5,
+          "w": 14,
+          "d": 20
+        }
+      ],
+      "doorPosition": {
+        "x": -251.5,
+        "z": 115.0
+      },
+      "description": "Facility, legend item 24. Placeholder: description to be provided by the college.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (two small white buildings)",
+      "doorFacing": "south",
+      "doorNode": "door-staff-quarters"
+    },
+    {
+      "id": "storage-yard",
+      "number": 25,
+      "name": "STORAGE YARD",
+      "shortName": "Storage Yard",
+      "type": "other",
+      "form": "shed",
+      "position": {
+        "x": -236,
+        "z": 5
+      },
+      "size": {
+        "w": 24,
+        "d": 12
+      },
+      "rotationDeg": 0,
+      "heightM": 6,
+      "floors": 1,
+      "doorPosition": {
+        "x": -236.7,
+        "z": -1.0
+      },
+      "description": "Facility, legend item 25.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (small compound)",
+      "doorFacing": "north",
+      "doorNode": "door-storage-yard"
+    },
+    {
+      "id": "power-house",
+      "number": 26,
+      "name": "POWER HOUSE",
+      "shortName": "Power House",
+      "type": "other",
+      "form": "shed",
+      "position": {
+        "x": -236,
+        "z": 19
+      },
+      "size": {
+        "w": 24,
+        "d": 12
+      },
+      "rotationDeg": 0,
+      "heightM": 6,
+      "floors": 1,
+      "doorPosition": {
+        "x": -237.4,
+        "z": 13.0
+      },
+      "description": "Facility, legend item 26.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (small compound)",
+      "doorFacing": "north",
+      "doorNode": "door-power-house"
+    },
+    {
+      "id": "snack-corner",
+      "number": 27,
+      "name": "SNACK CORNER",
+      "shortName": "Snack Corner",
+      "type": "canteen",
+      "form": "kiosk",
+      "position": {
+        "x": -214,
+        "z": 4
+      },
+      "size": {
+        "w": 8,
+        "d": 6
+      },
+      "rotationDeg": 0,
+      "heightM": 3.5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -214.7,
+        "z": 1.0
+      },
+      "description": "Facility, legend item 27.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "north",
+      "doorNode": "door-snack-corner"
+    },
+    {
+      "id": "girls-mess",
+      "number": 28,
+      "name": "GIRLS MESS",
+      "shortName": "Girls Mess",
+      "type": "canteen",
+      "form": "block",
+      "position": {
+        "x": -250,
+        "z": -22
+      },
+      "size": {
+        "w": 20,
+        "d": 14
+      },
+      "rotationDeg": 0,
+      "heightM": 5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -250.0,
+        "z": -15.0
+      },
+      "description": "Facility, legend item 28.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only",
+      "doorFacing": "south",
+      "doorNode": "door-girls-mess"
+    },
+    {
+      "id": "main-transformer",
+      "number": 29,
+      "name": "MAIN TRANSFORMER",
+      "shortName": "Main Transformer",
+      "type": "other",
+      "form": "kiosk",
+      "position": {
+        "x": -485,
+        "z": -70
+      },
+      "size": {
+        "w": 6,
+        "d": 6
+      },
+      "rotationDeg": 0,
+      "heightM": 4,
+      "floors": 1,
+      "doorPosition": {
+        "x": -482.0,
+        "z": -67.0
+      },
+      "description": "Facility, legend item 29.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only (outside the satellite crop)",
+      "doorFacing": "south",
+      "doorNode": "door-main-transformer"
+    },
+    {
+      "id": "two-wheeler-parking",
+      "number": 30,
+      "name": "TWO WHEELER PARKING",
+      "shortName": "Two Wheeler Parking",
+      "type": "parking",
+      "form": "shed",
+      "position": {
+        "x": -11,
+        "z": -24
+      },
+      "size": {
+        "w": 18,
+        "d": 22
+      },
+      "rotationDeg": 0,
+      "heightM": 3.5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -13.8,
+        "z": -13.0
+      },
+      "description": "Parking, legend item 30.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (shed along the highway wall)",
+      "doorFacing": "south",
+      "doorNode": "door-two-wheeler-parking"
+    },
+    {
+      "id": "four-wheeler-parking",
+      "number": 31,
+      "name": "FOUR WHEELER PARKING",
+      "shortName": "Four Wheeler Parking",
+      "type": "parking",
+      "form": "shed",
+      "position": {
+        "x": -11,
+        "z": -58
+      },
+      "size": {
+        "w": 18,
+        "d": 32
+      },
+      "rotationDeg": 0,
+      "heightM": 3.5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -17.0,
+        "z": -42.0
+      },
+      "description": "Parking, legend item 31.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate (shed along the highway wall)",
+      "doorFacing": "south",
+      "doorNode": "door-four-wheeler-parking"
+    },
+    {
+      "id": "fuel-station",
+      "number": 32,
+      "name": "FUEL STATION",
+      "shortName": "Fuel Station",
+      "type": "other",
+      "form": "canopy",
+      "position": {
+        "x": -17.4,
+        "z": 30.1
+      },
+      "size": {
+        "w": 26.9,
+        "d": 31.7
+      },
+      "rotationDeg": 0,
+      "heightM": 5.5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -13.4,
+        "z": 14.3
+      },
+      "description": "Utility, legend item 32. The canopy on the board prints PETROL BUNK.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board + satellite candidate; the canopy prints PETROL BUNK",
+      "doorFacing": "north",
+      "doorNode": "door-fuel-station"
+    },
+    {
+      "id": "sewage-treatment-plant",
+      "number": 33,
+      "name": "SEWAGE TREATMENT PLANT",
+      "shortName": "Sewage Treatment Plant",
+      "type": "other",
+      "form": "plant",
+      "position": {
+        "x": -470,
+        "z": -45
+      },
+      "size": {
+        "w": 30,
+        "d": 22
+      },
+      "rotationDeg": 0,
+      "heightM": 4,
+      "floors": 1,
+      "doorPosition": {
+        "x": -455.0,
+        "z": -45.0
+      },
+      "description": "Utility, legend item 33.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "board only (outside the satellite crop)",
+      "doorFacing": "east",
+      "doorNode": "door-sewage-treatment-plant"
+    },
+    {
+      "id": "unlabelled-2",
+      "number": null,
+      "name": "Unlabelled-2",
+      "shortName": "Unlabelled-2",
+      "type": "other",
+      "form": "block",
+      "position": {
+        "x": -229.7,
+        "z": -67.7
+      },
+      "size": {
+        "w": 87.1,
+        "d": 67.3
+      },
+      "rotationDeg": 0,
+      "heightM": 10,
+      "floors": 1,
+      "doorPosition": {
+        "x": -226.7,
+        "z": -34.1
+      },
+      "description": "Unidentified building seen in the satellite image. Name to be provided.",
+      "floorPlans": [],
+      "verified": {
+        "position": false,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "low",
+      "source": "satellite only; courtyard block with no matching board number (top edge clipped by the crop)",
+      "doorFacing": "south",
+      "doorNode": "door-unlabelled-2"
+    }
+  ],
+  "points": [
+    {
+      "id": "gym-21",
+      "number": 21,
+      "name": "GYM",
+      "kind": "room-marker",
+      "position": {
+        "x": -67.7,
+        "z": 184.2
+      },
+      "verified": false,
+      "parent": "olympia-block",
+      "note": "Marked on the Olympia Block (legend item 21)."
+    },
+    {
+      "id": "guest-house-22",
+      "number": 22,
+      "name": "GUEST HOUSE",
+      "kind": "room-marker",
+      "position": {
+        "x": -67.7,
+        "z": 190.2
+      },
+      "verified": false,
+      "parent": "olympia-block",
+      "note": "Marked on the Olympia Block (legend item 22)."
+    },
+    {
+      "id": "bio-gas-34",
+      "number": 34,
+      "name": "BIO GAS POINT",
+      "kind": "biogas",
+      "position": {
+        "x": -268,
+        "z": -18
+      },
+      "verified": false
+    },
+    {
+      "id": "bio-gas-35",
+      "number": 35,
+      "name": "BIO GAS POINT",
+      "kind": "biogas",
+      "position": {
+        "x": -370,
+        "z": 92
+      },
+      "verified": false
+    },
+    {
+      "id": "bio-gas-36",
+      "number": 36,
+      "name": "BIO GAS POINT",
+      "kind": "biogas",
+      "position": {
+        "x": -170,
+        "z": 335
+      },
+      "verified": false
+    },
+    {
+      "id": "solar-pv-37",
+      "number": 37,
+      "name": "SOLAR PV 250 kW",
+      "kind": "solar-pv",
+      "position": {
+        "x": -132.1,
+        "z": 113.2
+      },
+      "verified": false,
+      "parent": "apj-block",
+      "note": "Legend: items 37-42 SOLAR PV 250 kW. Roof marker; location approximate."
+    },
+    {
+      "id": "solar-pv-38",
+      "number": 38,
+      "name": "SOLAR PV 250 kW",
+      "kind": "solar-pv",
+      "position": {
+        "x": -163.7,
+        "z": 82.0
+      },
+      "verified": false,
+      "parent": "apj-block",
+      "note": "Roof marker; location approximate."
+    },
+    {
+      "id": "solar-pv-39",
+      "number": 39,
+      "name": "SOLAR PV 250 kW",
+      "kind": "solar-pv",
+      "position": {
+        "x": -157.7,
+        "z": 42.5
+      },
+      "verified": false,
+      "parent": "apj-block",
+      "note": "Roof marker; location approximate."
+    },
+    {
+      "id": "solar-pv-40",
+      "number": 40,
+      "name": "SOLAR PV 250 kW",
+      "kind": "solar-pv",
+      "position": {
+        "x": -110.2,
+        "z": 23.4
+      },
+      "verified": false,
+      "parent": "apj-block",
+      "note": "Roof marker; location approximate."
+    },
+    {
+      "id": "solar-pv-41",
+      "number": 41,
+      "name": "SOLAR PV 250 kW",
+      "kind": "solar-pv",
+      "position": {
+        "x": -119.6,
+        "z": 290.7
+      },
+      "verified": false,
+      "parent": "veda-hostel",
+      "note": "Roof marker; location approximate."
+    },
+    {
+      "id": "solar-pv-42",
+      "number": 42,
+      "name": "SOLAR PV 250 kW",
+      "kind": "solar-pv",
+      "position": {
+        "x": -91.9,
+        "z": 291.5
+      },
+      "verified": false,
+      "parent": "veda-hostel",
+      "note": "Roof marker; location approximate."
+    },
+    {
+      "id": "assembly-43",
+      "number": 43,
+      "name": "EMERGENCY ASSEMBLY POINT",
+      "kind": "assembly",
+      "position": {
+        "x": -45,
+        "z": -12
+      },
+      "verified": false
+    },
+    {
+      "id": "assembly-44",
+      "number": 44,
+      "name": "EMERGENCY ASSEMBLY POINT",
+      "kind": "assembly",
+      "position": {
+        "x": -225,
+        "z": -30
+      },
+      "verified": false
+    },
+    {
+      "id": "assembly-45",
+      "number": 45,
+      "name": "EMERGENCY ASSEMBLY POINT",
+      "kind": "assembly",
+      "position": {
+        "x": -136,
+        "z": 150
+      },
+      "verified": false
+    },
+    {
+      "id": "assembly-46",
+      "number": 46,
+      "name": "EMERGENCY ASSEMBLY POINT",
+      "kind": "assembly",
+      "position": {
+        "x": -78,
+        "z": 220
+      },
+      "verified": false
+    },
+    {
+      "id": "well-47",
+      "number": 47,
+      "name": "WELL",
+      "kind": "well",
+      "position": {
+        "x": -290,
+        "z": 100
+      },
+      "verified": false
+    },
+    {
+      "id": "well-48",
+      "number": 48,
+      "name": "WELL",
+      "kind": "well",
+      "position": {
+        "x": -215,
+        "z": 38
+      },
+      "verified": false
+    },
+    {
+      "id": "well-49",
+      "number": 49,
+      "name": "WELL",
+      "kind": "well",
+      "position": {
+        "x": -140,
+        "z": 205
+      },
+      "verified": false
+    }
+  ]
+}
