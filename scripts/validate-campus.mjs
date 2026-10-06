@@ -210,6 +210,7 @@ for (const b of buildings) {
   if (!Array.isArray(b.floorPlans)) err(`${w}: floorPlans must be an array`);
   for (const f of b.floorPlans ?? []) validateFloor(f, w);
   if (b.form === 'ring' && !(isNum(b.ring?.thickness) && b.ring.thickness > 0)) err(`${w}: ring form needs ring.thickness`);
+  if (b.sport != null && !isStr(b.sport)) err(`${w}: sport must be a non-empty string when present`);
   for (const [i, p] of (b.parts ?? []).entries()) {
     if (!(isNum(p.x) && isNum(p.z) && isNum(p.w) && isNum(p.d) && p.w > 0 && p.d > 0)) err(`${w}: parts[${i}] invalid`);
   }
@@ -240,6 +241,18 @@ for (const p of data.points ?? []) {
   if (!isStr(p.name)) err(`${w}: name required`);
   if (p.parent && !bIds.has(p.parent)) err(`${w}: parent "${p.parent}" is not a building id`);
 }
+
+// open areas (optional): kept free of trees
+for (const o of data.openAreas ?? []) {
+  if (!isStr(o.id) || !isXZ(o.position) || !(isNum(o.size?.w) && isNum(o.size?.d))) err(`openArea "${o.id}" needs id, position, size`);
+}
+
+// debug (optional)
+const sb = data.debug?.signboard;
+if (sb && !(Array.isArray(sb.imageToMetres) && sb.imageToMetres.length === 9 && sb.imageToMetres.every(isNum))) {
+  err('debug.signboard.imageToMetres must be 9 numbers');
+}
+if (sb && !existsSync(resolve(root, 'public', sb.image ?? ''))) err(`debug.signboard.image "${sb.image}" not found under public/`);
 
 // updates
 const uIds = new Set();

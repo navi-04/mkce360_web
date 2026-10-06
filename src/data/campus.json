@@ -77,6 +77,21 @@
     "verified": false,
     "note": "Rectangle derived from the board and a homography fit; the east edge follows the highway wall. Approximate."
   },
+  "openAreas": [
+    {
+      "id": "open-field-sw",
+      "name": "Open field (unlabelled)",
+      "position": {
+        "x": -300.6,
+        "z": 291.1
+      },
+      "size": {
+        "w": 186.1,
+        "d": 99.0
+      },
+      "source": "satellite: bare brown field, south-west of the crop"
+    }
+  ],
   "gates": [
     {
       "id": "main-gate",
@@ -1100,6 +1115,27 @@
       "placeholder": true
     }
   ],
+  "debug": {
+    "signboard": {
+      "image": "debug/signboard.jpg",
+      "imageSize": [
+        1156,
+        867
+      ],
+      "imageToMetres": [
+        -1.02870562,
+        2.76578302,
+        -1478.38030955,
+        -2.05856756,
+        -2.16674969,
+        2453.46482695,
+        -0.00093811,
+        0.01166939,
+        1.0
+      ],
+      "note": "Ground-plane homography (image px -> metres, x East, z South) fitted from 8 anchors; residuals 1-10 m. Used only by the ?debug=1 overlay."
+    }
+  },
   "buildings": [
     {
       "id": "apj-block",
@@ -1405,7 +1441,8 @@
       "confidence": "medium",
       "source": "satellite candidate (bare field NE of block 1; top edge clipped by the crop)",
       "doorFacing": "south",
-      "doorNode": "door-play-ground"
+      "doorNode": "door-play-ground",
+      "sport": "athletics"
     },
     {
       "id": "ball-badminton-court",
@@ -1441,7 +1478,8 @@
       "confidence": "low",
       "source": "board only",
       "doorFacing": "west",
-      "doorNode": "door-ball-badminton-court"
+      "doorNode": "door-ball-badminton-court",
+      "sport": "ball-badminton"
     },
     {
       "id": "kabaddi-court",
@@ -1477,7 +1515,8 @@
       "confidence": "low",
       "source": "board only",
       "doorFacing": "west",
-      "doorNode": "door-kabaddi-court"
+      "doorNode": "door-kabaddi-court",
+      "sport": "kabaddi"
     },
     {
       "id": "kho-kho-court",
@@ -1513,7 +1552,8 @@
       "confidence": "low",
       "source": "board only",
       "doorFacing": "west",
-      "doorNode": "door-kho-kho-court"
+      "doorNode": "door-kho-kho-court",
+      "sport": "kho-kho"
     },
     {
       "id": "basket-ball-court",
@@ -1549,7 +1589,8 @@
       "confidence": "low",
       "source": "satellite candidate (painted court pair)",
       "doorFacing": "west",
-      "doorNode": "door-basket-ball-court"
+      "doorNode": "door-basket-ball-court",
+      "sport": "basketball"
     },
     {
       "id": "cricket-practice-net",
@@ -1585,7 +1626,8 @@
       "confidence": "low",
       "source": "board only",
       "doorFacing": "west",
-      "doorNode": "door-cricket-practice-net"
+      "doorNode": "door-cricket-practice-net",
+      "sport": "cricket-nets"
     },
     {
       "id": "volley-ball-court",
@@ -1621,7 +1663,8 @@
       "confidence": "low",
       "source": "satellite candidate (clay-coloured court)",
       "doorFacing": "west",
-      "doorNode": "door-volley-ball-court"
+      "doorNode": "door-volley-ball-court",
+      "sport": "volleyball"
     },
     {
       "id": "tennis-court",
@@ -1657,7 +1700,8 @@
       "confidence": "low",
       "source": "satellite candidate (grey court)",
       "doorFacing": "south",
-      "doorNode": "door-tennis-court"
+      "doorNode": "door-tennis-court",
+      "sport": "tennis"
     },
     {
       "id": "security-office",
