@@ -178,27 +178,36 @@ export function createMinimap(app) {
     ctx.fillStyle = '#17212c';
     ctx.fillRect(0, 0, w, h);
     if (!cur) return;
-    const o = cur.plan.outline;
+    const o = cur.plan.outline, c = cur.plan.court;
     const pad = big ? 36 : 10;
     const s = Math.min((w - pad * 2) / (o.x1 - o.x0), (h - pad * 2) / (o.z1 - o.z0));
     const sx = (x) => w / 2 + (x - (o.x0 + o.x1) / 2) * s, sz = (z) => h / 2 + (z - (o.z0 + o.z1) / 2) * s;
-    ctx.fillStyle = '#5b2c25';
+    ctx.fillStyle = '#7a4a3c'; // verandah and corridors
     ctx.fillRect(sx(o.x0), sz(o.z0), (o.x1 - o.x0) * s, (o.z1 - o.z0) * s);
+    if (c) {
+      ctx.fillStyle = '#3f6b3a'; // the courtyard garden
+      ctx.fillRect(sx(c.x0), sz(c.z0), (c.x1 - c.x0) * s, (c.z1 - c.z0) * s);
+    }
     for (const r of cur.floor.rooms) {
       const b = r.bounds;
-      ctx.fillStyle = '#e9e2cf';
-      ctx.fillRect(sx(b.x0) + 1, sz(b.z0) + 1, (b.x1 - b.x0) * s - 2, (b.z1 - b.z0) * s - 2);
+      ctx.fillStyle = r.type === 'lobby' ? '#d9d2c2' : '#e9e2cf';
+      ctx.fillRect(sx(b.x0) + 0.5, sz(b.z0) + 0.5, (b.x1 - b.x0) * s - 1, (b.z1 - b.z0) * s - 1);
       if (big) {
         ctx.fillStyle = '#0b1d33';
-        ctx.font = '700 12px system-ui, sans-serif';
+        ctx.font = '700 10px system-ui, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(r.number, sx((b.x0 + b.x1) / 2), sz((b.z0 + b.z1) / 2) + 4);
+        ctx.fillText(r.number, sx((b.x0 + b.x1) / 2), sz((b.z0 + b.z1) / 2) + 3);
       }
     }
     for (const q of [...cur.plan.stairs, ...cur.plan.lifts]) {
       const b = q.bounds;
       ctx.fillStyle = '#9db4c9';
-      ctx.fillRect(sx(b.x0), sz(b.z0), (b.x1 - b.x0) * s, (b.z1 - b.z0) * s);
+      ctx.fillRect(sx(b.x0), sz(b.z0), Math.max(3, (b.x1 - b.x0) * s), Math.max(3, (b.z1 - b.z0) * s));
+    }
+    const e = cur.plan.entrance;
+    if (e) {
+      ctx.fillStyle = '#f2c230';
+      ctx.fillRect(sx(e.x) - 3, sz(e.z) - 5, 6, 10);
     }
     marker(ctx, sx(app.walk.pos.x), sz(app.walk.pos.z), heading(), big ? 1.1 : 0.8);
   }

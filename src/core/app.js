@@ -80,6 +80,7 @@ export class App {
     this.nav.layer = this.routeLayer;
     this.navUi = createNavUi(this);
     this.interiors = new Interiors(this); // adds its (hidden) materials to the scene before the shader precompile below
+    this.interiors.warmTextures(this.renderer); // upload its textures now so the first visit inside does not hitch
     this.interiorUi = createInteriorUi(this);
     this.minimap = createMinimap(this);
     this.updatesUi = createUpdatesUi(this);

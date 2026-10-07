@@ -35,7 +35,7 @@ assets/                 Input images (satellite map, signboard photos). Not serv
                         Reference photos of the real campus live here too but are git-ignored (they show people).
 docs/                   blueprint-extraction.md, interiors.md, android-webview.md, satellite-candidates.png
 public/                 Static files copied as-is: textures/campus-map.jpg (mosaic), debug/signboard.jpg, CNAME, favicon
-scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs, satellite-mosaic.py (dev tool, needs Python + OpenCV)
+scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs, generate-sample-interior.mjs (writes the SAMPLE floors of block 1), satellite-mosaic.py (dev tool, needs Python + OpenCV)
 privacy-policy/         Static page served at /privacy-policy
 src/
   data/campus.json     The only place campus facts live
@@ -45,13 +45,13 @@ src/
   core/app.js          App shell: renderer, auto quality fallback, mode switching
   core/env.js          isEmbedded(): Android WebView detection (hides the Fullscreen button)
   core/profile.js      localStorage conveniences (welcome details, last seen update), all in try/catch
-  world/               textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
+  world/               textures and interior-textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
   modes/               overview (orbit), walk (first person), collision, gyro
   ui/                  hud, joystick, sheets (one bottom sheet), nav-ui (search, cards, directions, nav card, arrival),
                        interior-ui, welcome (first visit), minimap (+ expanded map), updates (about and college updates)
   nav/                 search (index + scoring), route (plan, turns, hints), routeLayer (3D line + beacon), navigator (state machine, guided walk)
   tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
-  interiors/           plan (floor plan to walls, doors, furniture; pure), interiors (meshes, enter/exit, floors, stairs, lift)
+  interiors/           plan (floor plan to walls, doors, windows, furniture, stairs, garden; pure), interiors (meshes, enter/exit, floors, stairs, lift, courtyard garden)
 index.html, vite.config.js   base './' (relative) for GitHub Pages / Netlify / WebView; two HTML entries
 netlify.toml           Netlify build, caching and security headers (CSP). The e2e suite passes under these headers.
 public/404.html        GitHub Pages not-found page
@@ -66,7 +66,7 @@ npm run build      validate campus.json, then production build into dist/
 npm run validate   campus.json validation only
 npm run preview    serve the production build locally
 npm run test:nav   search and routing unit checks on the real campus.json (no browser)
-npm run test:interiors   floor plan checks (walls, doors, walkability, timetable) on the real campus.json
+npm run test:interiors   floor plan checks (walls, doors, walkability of the whole ring, courtyard, timetable) on the real campus.json (about 40 s)
 npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; run build first)
 npm run perf       frame-rate measurement at 390x844
 ```
@@ -74,7 +74,7 @@ npm run perf       frame-rate measurement at 390x844
 Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export), `?welcome=0` (skip the welcome screen).
 Test hook: `window.__mkce` (`setMode`, `stats`, `input`, `nav`, `app`), used by the scripts.
 
-Interiors (step 7): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them and it is SAMPLE data (flagged `sample: true`, shown as such on the room card). Entering hides the outdoor scene (`world.setInterior`), swaps the walk collider and fades; no new shader programs (the interior materials are precompiled at start-up).
+Interiors (step 7): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them. Its look follows the photos supplied for the block (courtyard ring, open verandahs, granite corridors, marble hall, green classrooms) but which room is where is unknown, so layout, room names and timetables are SAMPLE data (flagged `sample: true`, shown as such on the room card); regenerate with `node scripts/generate-sample-interior.mjs`. A building with an interior offers an Enter prompt within 8 m of its door. Entering hides the outdoor scene (`world.setInterior`, which keeps the sky for open courtyards), swaps the walk collider and fades; no new shader programs (the interior materials are precompiled at start-up and their textures uploaded then).
 
 Mobile UX (step 8): every control is at least 48 px (an e2e check audits this in each screen), the welcome screen stores optional email/college/location only in localStorage (`mkce360.profile.v1`), the mini-map and expanded map draw the satellite texture on a 2D canvas (floor plan indoors), the brand pill opens About and updates (read from `campus.json` `updates`), `prefers-reduced-motion` turns off camera flights, route and beacon animation and head bob.
 

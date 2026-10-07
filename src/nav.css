@@ -638,6 +638,12 @@
   transform: translate(-50%, 0);
   pointer-events: auto !important;
 }
+/* a card or the search list is open: the prompt steps aside so it never covers it */
+#hud.sheet-open .iprompt.on {
+  opacity: 0;
+  transform: translate(-50%, 20px);
+  pointer-events: none !important;
+}
 .iprompt .btn {
   min-height: 52px;
   border-radius: 26px;

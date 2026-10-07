@@ -155,7 +155,7 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
     setInterior(on, look = null) {
       interior = on;
       root.visible = !on;
-      sky.visible = !on;
+      sky.visible = !on || !!look?.sky; // an open courtyard shows the sky
       if (on && look) {
         indoor = look;
         scene.background = new THREE.Color(look.bg);
@@ -163,8 +163,8 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
         outdoorLights = { hemi: hemi.intensity, sun: sun.intensity, sky: hemi.color.getHex(), ground: hemi.groundColor.getHex() };
         hemi.intensity = look.hemi;
         sun.intensity = look.sun;
-        hemi.color.set(0xfff4e2); // warm indoor light; the green ground bounce of the lawn must not tint the ceiling
-        hemi.groundColor.set(0xc9c1b2);
+        hemi.color.set(look.hemiSky ?? 0xfff4e2); // warm indoor light; the green ground bounce of the lawn must not tint the ceiling
+        hemi.groundColor.set(look.hemiGround ?? 0xc9c1b2);
       } else {
         scene.background = new THREE.Color(COLORS.skyHorizon);
         scene.fog.color.set(COLORS.fog);

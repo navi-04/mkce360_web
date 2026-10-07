@@ -243,8 +243,12 @@ export function createNavUi(app) {
     root.appendChild(rows);
     const act = el('div', 'cacts');
     const target = it.pointId ? { pointId: it.pointId } : { buildingId: it.buildingId };
+    if (it.kind === 'room' && app.interiors?.has(it.buildingId)) {
+      // a room inside a building: stand in front of its door
+      act.append(button('btn primary', 'enter', 'Go to room', () => { sheets.close(); app.interiors.showRoom(it.buildingId, it.roomId, it.level); }));
+    }
     act.append(
-      button('btn primary', 'route', 'Directions', () => directionsTo(target)),
+      button(it.kind === 'room' ? 'btn' : 'btn primary', 'route', it.kind === 'room' ? 'Directions to the building' : 'Directions', () => directionsTo(target)),
       button('btn', 'map', 'Show on map', () => showOnMap(parent ?? { position: { x: it.x, z: it.z }, id: null })),
     );
     root.appendChild(act);

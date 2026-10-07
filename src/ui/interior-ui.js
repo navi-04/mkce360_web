@@ -43,14 +43,22 @@ export function createInteriorUi(app) {
   function renderPrompt() {
     prompt.replaceChildren();
     const p = interiors.prompt;
-    prompt.classList.toggle('on', !!p && interiors.active);
-    if (!p || !interiors.active) return;
+    prompt.classList.toggle('on', !!p);
+    if (!p) return;
+    if (p.kind === 'enter') {
+      // standing at the door of a building that has an interior
+      const b = interiors.building(p.id);
+      prompt.append(button('btn primary', 'enter', `Enter ${b?.shortName ?? 'the building'}`, () => interiors.enter(p.id)));
+      prompt.setAttribute('aria-label', 'Go inside');
+      return;
+    }
+    if (!interiors.active) return;
     if (p.kind === 'exit') {
       prompt.append(button('btn primary', 'exit', 'Exit building', () => interiors.exit()));
     } else if (p.kind === 'stairs') {
       const t = interiors.stairTargets();
-      if (t.up !== null) prompt.append(button('btn primary', 'up', `Stairs up to ${interiors.floorInfo(t.up).label}`, () => interiors.goToFloor(t.up, 'stairs')));
-      if (t.down !== null) prompt.append(button('btn', 'down', `Stairs down to ${interiors.floorInfo(t.down).label}`, () => interiors.goToFloor(t.down, 'stairs')));
+      if (t.up !== null) prompt.append(button('btn primary', 'up', `Stairs up to ${interiors.floorInfo(t.up).label}`, () => interiors.goToFloor(t.up, 'stairs', p.id)));
+      if (t.down !== null) prompt.append(button('btn', 'down', `Stairs down to ${interiors.floorInfo(t.down).label}`, () => interiors.goToFloor(t.down, 'stairs', p.id)));
     } else if (p.kind === 'lift') {
       const row = el('div', 'liftrow');
       row.append(el('span', 'liftlabel', 'Lift to'));

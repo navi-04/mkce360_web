@@ -12,7 +12,8 @@ const BUILDING_TYPES = ['department', 'lab', 'library', 'canteen', 'parking', 's
 const FORMS = ['ring', 'block', 'shed', 'court', 'field', 'kiosk', 'canopy', 'plant'];
 const POINT_KINDS = ['room-marker', 'biogas', 'solar-pv', 'assembly', 'well'];
 const PATH_TYPES = ['road', 'walkway'];
-const ROOM_TYPES = ['classroom', 'lab', 'office', 'seminar', 'library', 'washroom', 'store', 'other'];
+const ROOM_TYPES = ['classroom', 'lab', 'office', 'seminar', 'library', 'washroom', 'store', 'lobby', 'other'];
+const FLOOR_KINDS = ['granite', 'marble', 'green', 'concrete'];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MAX_COORD = 5000;
 
@@ -176,6 +177,12 @@ function validateFloor(f, where) {
   if (f.sample != null && typeof f.sample !== 'boolean') err(`${where}: floor.sample must be true or false`);
   const outlineOk = rectOk(f.outline);
   if (!outlineOk) err(`${where} floor ${f.level}: outline {x0,z0,x1,z1} is required`);
+  const court = f.court ?? null;
+  if (court) {
+    if (!rectOk(court)) err(`${where} floor ${f.level}: court needs {x0,z0,x1,z1}`);
+    else if (outlineOk && !(inRect({ x: court.x0, z: court.z0 }, f.outline) && inRect({ x: court.x1, z: court.z1 }, f.outline))) err(`${where} floor ${f.level}: court leaves the outline`);
+  }
+  if (f.corridorFloor != null && !FLOOR_KINDS.includes(f.corridorFloor)) err(`${where} floor ${f.level}: corridorFloor must be one of ${FLOOR_KINDS.join('|')}`);
   const parts = [];
   const roomIds = new Set();
   for (const r of f.rooms ?? []) {
@@ -184,12 +191,17 @@ function validateFloor(f, where) {
     else {
       if (outlineOk && !(inRect({ x: r.bounds.x0, z: r.bounds.z0 }, f.outline, 0.01) && inRect({ x: r.bounds.x1, z: r.bounds.z1 }, f.outline, 0.01))) err(`${w}: bounds leave the floor outline`);
       for (const q of parts) if (rectsOverlap(r.bounds, q.bounds)) err(`${w}: overlaps room "${q.id}"`);
+      if (rectOk(court) && rectsOverlap(r.bounds, court)) err(`${w}: stands in the courtyard`);
       parts.push(r);
-      const d = r.door;
-      if (!d || !['n', 's', 'e', 'w'].includes(d.side) || !isNum(d.at)) err(`${w}: door {side: n|s|e|w, at} required`);
-      else {
-        const [lo, hi] = d.side === 'n' || d.side === 's' ? [r.bounds.x0, r.bounds.x1] : [r.bounds.z0, r.bounds.z1];
-        if (d.at - 0.6 < lo || d.at + 0.6 > hi) err(`${w}: door does not fit on its wall`);
+      const doors = Array.isArray(r.doors) && r.doors.length ? r.doors : r.door ? [r.door] : [];
+      if (!doors.length) err(`${w}: a door {side: n|s|e|w, at} is required`);
+      for (const d of doors) {
+        if (!['n', 's', 'e', 'w'].includes(d.side) || !isNum(d.at)) err(`${w}: door {side: n|s|e|w, at} required`);
+        else {
+          const [lo, hi] = d.side === 'n' || d.side === 's' ? [r.bounds.x0, r.bounds.x1] : [r.bounds.z0, r.bounds.z1];
+          const half = (d.w ?? 1.2) / 2;
+          if (d.at - half < lo + 0.2 || d.at + half > hi - 0.2) err(`${w}: door does not fit on its wall`);
+        }
       }
     }
     if (r.department != null && !isStr(r.department)) err(`${w}: department must be text or null`);
@@ -215,10 +227,14 @@ function validateFloor(f, where) {
       const w = `${where} ${kind} "${x.id}"`;
       if (!isStr(x.id)) err(`${where}: a ${kind} entry has no id`);
       if (!rectOk(x.bounds)) err(`${w}: bounds required`);
+      if (x.rise != null && !['n', 's', 'e', 'w'].includes(x.rise)) err(`${w}: rise must be n|s|e|w`);
+      if (x.facing != null && !['n', 's', 'e', 'w'].includes(x.facing)) err(`${w}: facing must be n|s|e|w`);
+      if (x.arrive != null && !['n', 's', 'e', 'w'].includes(x.arrive)) err(`${w}: arrive must be n|s|e|w`);
       if (!isXZ(x.landing)) err(`${w}: landing {x,z} required`);
       else {
         if (outlineOk && !inRect(x.landing, f.outline)) err(`${w}: landing is outside the floor`);
         for (const r of f.rooms ?? []) if (rectOk(r.bounds) && inRect(x.landing, r.bounds)) err(`${w}: landing is inside room "${r.id}"`);
+        if (rectOk(court) && inRect(x.landing, court)) err(`${w}: landing is in the courtyard`);
         if (rectOk(x.bounds) && inRect(x.landing, x.bounds)) err(`${w}: landing is inside its own block`);
       }
     }

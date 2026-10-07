@@ -50,7 +50,7 @@ const SCENARIOS = {
   // step 6: the glowing route line is drawn, and in walk-guided the app also drives the camera along it
   'overview-route': { mode: 'overview', action: 'route' },
   'walk-guided': { mode: 'walk', action: 'guide' },
-  // step 7: inside the sample interior of block 1, walking down the corridor
+  // step 7: inside the sample interior of block 1, walking along the verandah beside the courtyard
   'interior-move': { mode: 'walk', action: 'interior' },
 };
 
@@ -535,6 +535,8 @@ async function runScenario({ browser, mobile, url, name, cpu, opts, shotPath, pr
       try {
         await page.evaluate(() => window.__mkce.interiors.enter('apj-block'));
         await sleep(800);
+        // stand at the north end of the east verandah and walk south along it (a 90 m run beside the courtyard)
+        await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 35.4; w.pos.z = -43; w.yaw = Math.PI; w.pitch = 0; w.vel.x = w.vel.z = 0; w.cancelTarget(); });
         await page.evaluate(() => window.__mkce.input({ forward: 1, strafe: 0, turn: 0 }));
         stopAction = () => page.evaluate(() => window.__mkce.input(null)).catch(() => {});
       } catch (e) { result.notes.push('interior setup failed'); }

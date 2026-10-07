@@ -3,14 +3,14 @@ import * as THREE from 'three';
 import { COLORS } from '../config.js';
 import { rng } from './geo.js';
 
-function mk(w, h) {
+export function mk(w, h) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
   return [c, c.getContext('2d')];
 }
 
-function tex(canvas, { repeat = true, repeatS = true, srgb = true, aniso = 4 } = {}) {
+export function tex(canvas, { repeat = true, repeatS = true, srgb = true, aniso = 4 } = {}) {
   const t = new THREE.CanvasTexture(canvas);
   if (repeat) {
     t.wrapS = repeatS ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
@@ -21,7 +21,7 @@ function tex(canvas, { repeat = true, repeatS = true, srgb = true, aniso = 4 } =
   return t;
 }
 
-function speckle(g, w, h, n, alpha, seed, light = '255,255,255', dark = '0,0,0') {
+export function speckle(g, w, h, n, alpha, seed, light = '255,255,255', dark = '0,0,0') {
   const r = rng(seed);
   for (let i = 0; i < n; i++) {
     const x = r() * w, y = r() * h, s = 1 + r() * 1.6;
@@ -412,58 +412,6 @@ export function signAtlas(items) {
   });
   const texture = tex(c, { repeat: false, aniso: 8 });
   return { texture, uv };
-}
-
-// ---------- interiors (inspired by the corridor photos: red granite floor, cream walls, brown dado) ----------
-
-export function graniteFloor() {
-  const [c, g] = mk(256, 256);
-  g.fillStyle = '#873a2d';
-  g.fillRect(0, 0, 256, 256);
-  const r = rng(41);
-  for (let i = 0; i < 40; i++) {
-    g.fillStyle = `rgba(${r() > 0.5 ? '170,90,70' : '60,20,14'},${0.06 + r() * 0.1})`;
-    g.beginPath();
-    g.arc(r() * 256, r() * 256, 10 + r() * 30, 0, Math.PI * 2);
-    g.fill();
-  }
-  speckle(g, 256, 256, 2400, 0.4, 42, '235,185,165', '45,12,8');
-  g.fillStyle = '#3b1711'; // tile joints every 0.8 m
-  g.fillRect(0, 0, 256, 2);
-  g.fillRect(0, 126, 256, 3);
-  g.fillRect(0, 0, 2, 256);
-  g.fillRect(126, 0, 3, 256);
-  g.fillStyle = 'rgba(255,225,205,0.18)';
-  g.fillRect(0, 2, 256, 1);
-  g.fillRect(2, 0, 1, 256);
-  return tex(c, { aniso: 8 });
-}
-
-export function interiorWall() {
-  const [c, g] = mk(64, 256);
-  g.fillStyle = '#f0eadb';
-  g.fillRect(0, 0, 64, 256);
-  speckle(g, 64, 256, 120, 0.035, 43);
-  const dado = 181; // 1.0 m of 3.4 m from the bottom
-  g.fillStyle = '#bf8860';
-  g.fillRect(0, dado, 64, 256 - dado);
-  speckle(g, 64, 256, 90, 0.04, 44, '255,230,200', '70,40,20');
-  g.fillStyle = '#8a5a38';
-  g.fillRect(0, dado - 2, 64, 3);
-  g.fillStyle = '#5e3c26';
-  g.fillRect(0, 246, 64, 10);
-  return tex(c, { aniso: 8 });
-}
-
-export function ceilingTile() {
-  const [c, g] = mk(128, 128);
-  g.fillStyle = '#f2f0e9';
-  g.fillRect(0, 0, 128, 128);
-  speckle(g, 128, 128, 160, 0.04, 45);
-  g.fillStyle = '#d8d4c7';
-  g.fillRect(0, 0, 128, 2);
-  g.fillRect(0, 0, 2, 128);
-  return tex(c);
 }
 
 // ---------- sky ----------

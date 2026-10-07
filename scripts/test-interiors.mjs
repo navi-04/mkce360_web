@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Unit checks for the interior floor plans in campus.json: walls, doors, walkability and the "now in session" logic.
+// Unit checks for the interior floor plans in campus.json: walls, doors, walkability, the courtyard arcade and the "now in session" logic.
 //   npm run test:interiors
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
@@ -23,26 +23,31 @@ const b = withPlans[0];
 check('the floor count matches the confirmed number of floors', b.floorPlans.length === b.floors, `${b.floorPlans.length} vs ${b.floors}`);
 check('every floor is flagged as sample data', b.floorPlans.every((f) => f.sample === true));
 check('floor labels are G, 1, 2, 3', b.floorPlans.map(floorShortLabel).join(',') === 'G,1,2,3');
+check('the building is a ring with a courtyard on every floor', b.floorPlans.every((f) => f.court));
 
 const R = 0.35;
 for (const floor of b.floorPlans) {
   console.log(`Floor ${floor.level}`);
   const plan = buildPlan(floor);
   const col = new Collider(plan.colliders, plan.boundary);
-  const blocked = (x, z) => { const p = { x, z }; return col.resolve(p, R); };
+  const blocked = (x, z) => col.resolve({ x, z }, R);
 
-  check('walls and furniture produce colliders', plan.colliders.length > 20, `${plan.colliders.length} colliders, ${plan.slabs.length} wall slabs`);
-  check('every room has a door and a sign', plan.doors.length === floor.rooms.length && plan.signs.length === floor.rooms.length);
-  const wallAt = (x, z) => plan.slabs.some((s) => s.solid && x > s.x0 + 1e-6 && x < s.x1 - 1e-6 && z > s.z0 + 1e-6 && z < s.z1 - 1e-6);
-  check('door openings are free of wall', plan.doors.every((d) => !wallAt(d.x, d.z)));
-  check('the wall beside each door is solid', plan.doors.every((d) => {
+  check('walls and furniture produce colliders', plan.colliders.length > 100, `${plan.colliders.length} colliders, ${plan.walls.length} wall boxes`);
+  check('every room has a door and a sign', plan.doors.filter((d) => d.main).length === floor.rooms.length && plan.signs.length === floor.rooms.length);
+  const wallAt = (x, z) => plan.walls.some((s) => s.solid && x > s.x0 + 1e-6 && x < s.x1 - 1e-6 && z > s.z0 + 1e-6 && z < s.z1 - 1e-6);
+  check('door openings are free of wall', plan.doors.every((d) => !wallAt(d.x - d.nx * WALL_T / 2, d.z - d.nz * WALL_T / 2)));
+  check('the wall beside each door is solid', plan.doors.filter((d) => !d.open).every((d) => {
     const tx = d.nz !== 0 ? 1 : 0, tz = d.nx !== 0 ? 1 : 0; // along the wall
-    return wallAt(d.x + tx * 0.9, d.z + tz * 0.9) || wallAt(d.x - tx * 0.9, d.z - tz * 0.9);
+    const k = d.width / 2 + 0.3;
+    return wallAt(d.x - d.nx * WALL_T / 2 + tx * k, d.z - d.nz * WALL_T / 2 + tz * k) || wallAt(d.x - d.nx * WALL_T / 2 - tx * k, d.z - d.nz * WALL_T / 2 - tz * k);
   }));
   check('wall thickness is the standard 0.2 m', Math.abs(WALL_T - 0.2) < 1e-9);
+  check('the courtyard edge is an open arcade: four parapets and columns, no wall', plan.parapets.length === 4 && plan.columns.length > 20 && !wallAt(plan.court.x0 + 0.5, 0));
+  check('the courtyard has trees and paths, none on a path', plan.garden.trees.length > 30 && plan.garden.paths.length >= 2 && plan.garden.trees.every((t) => !plan.garden.paths.some((p) => t.x > p.x0 && t.x < p.x1 && t.z > p.z0 && t.z < p.z1)));
+  check('every room has furniture or is a plain room, furniture stays inside its room', floor.rooms.every((r) => (plan.furniture[r.id]?.boxes ?? []).every((f) => f.x > r.bounds.x0 && f.x < r.bounds.x1 && f.z > r.bounds.z0 && f.z < r.bounds.z1)));
 
-  // flood fill on a 0.2 m grid from the spawn point
-  const o = plan.outline, step = 0.2;
+  // flood fill on a grid from the spawn point
+  const o = plan.outline, step = 0.3;
   const nx = Math.ceil((o.x1 - o.x0) / step), nz = Math.ceil((o.z1 - o.z0) / step);
   const idx = (ix, iz) => iz * nx + ix;
   const seen = new Uint8Array(nx * nz);
@@ -64,13 +69,15 @@ for (const floor of b.floorPlans) {
     }
   }
   const reach = (x, z) => { const [ix, iz] = toCell(x, z); return ix >= 0 && iz >= 0 && ix < nx && iz < nz && seen[idx(ix, iz)] === 1; };
-  check('every room can be reached from the spawn', plan.doors.every((d) => reach(d.x - d.nx * 1.2, d.z - d.nz * 1.2) && reach(d.x + d.nx * 1.0, d.z + d.nz * 1.0)),
-    plan.doors.filter((d) => !(reach(d.x - d.nx * 1.2, d.z - d.nz * 1.2) && reach(d.x + d.nx * 1.0, d.z + d.nz * 1.0))).map((d) => d.roomId).join(','));
-  check('stairs and lift landings can be reached', plan.stairs.every((s) => reach(s.landing.x, s.landing.z)) && plan.lifts.every((l) => reach(l.landing.x, l.landing.z)));
+  const bad = plan.doors.filter((d) => d.main && !(reach(d.x - d.nx * 1.2, d.z - d.nz * 1.2) && reach(d.x + d.nx * 1.0, d.z + d.nz * 1.0)));
+  check('every room can be reached from the spawn', bad.length === 0, bad.map((d) => d.roomId).join(','));
+  check('all four corner stairs and the lift can be reached (the whole ring is connected)', plan.stairs.length === 4 && plan.stairs.every((s) => reach(s.landing.x, s.landing.z)) && plan.lifts.every((l) => reach(l.landing.x, l.landing.z)));
+  check('nobody can step into the courtyard or leave the building', !reach((plan.court.x0 + plan.court.x1) / 2, (plan.court.z0 + plan.court.z1) / 2) && blocked(o.x1 + 1, 0));
   if (floor.level === 0) check('the entrance door can be reached', reach(plan.entrance.x - 1.5, plan.entrance.z));
   let free = 0;
   for (let i = 0; i < seen.length; i++) free += seen[i];
-  check('a good share of the floor is walkable', free * step * step > 120, `${(free * step * step).toFixed(0)} m2`);
+  check('a good share of the floor is walkable', free * step * step > 1500, `${(free * step * step).toFixed(0)} m2`);
+  check('the stair flights end below the ceiling and rise towards a wall', plan.stairs.every((s) => s.boxes.length > 20 && Math.max(...s.boxes.map((q) => q.y1)) < plan.height));
 }
 
 console.log('Timetable');
