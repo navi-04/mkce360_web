@@ -2,6 +2,7 @@
 import { Joystick } from './joystick.js';
 import { Gyro } from '../modes/gyro.js';
 import { clearProfile } from '../core/profile.js';
+import { isEmbedded } from '../core/env.js';
 import { profileSummary } from './updates.js';
 import { showWelcome } from './welcome.js';
 
@@ -74,7 +75,8 @@ export function createHud(app) {
   const bSearch = mkBtn('search', 'Search', () => app.navUi?.openSearch(), 'search-btn');
   const bFull = mkBtn('full', 'Full', () => app.toggleFullscreen());
   const bSet = mkBtn('sliders', 'Settings', () => sheet.open());
-  if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) bFull.style.display = 'none';
+  // inside an Android WebView the host Activity goes immersive (docs/android-webview.md); the Fullscreen API would do nothing there
+  if ((!document.fullscreenEnabled && !document.webkitFullscreenEnabled) || isEmbedded()) bFull.style.display = 'none';
   col.append(bSearch, bRun, bGyro, bReset, bFull, bSet);
 
   // ----- toast, walk-here chip, fade -----

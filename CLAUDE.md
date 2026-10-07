@@ -32,7 +32,7 @@ App name shown everywhere in the UI: **MKCE 360**.
 ```
 assets/                 Input images (satellite map, signboard photos). Not served by the app.
                         Reference photos of the real campus live here too but are git-ignored (they show people).
-docs/                   blueprint-extraction.md, interiors.md, satellite-candidates.png, android-webview.md (step 9)
+docs/                   blueprint-extraction.md, interiors.md, android-webview.md, satellite-candidates.png
 public/                 Static files copied as-is: textures/campus-map.jpg (mosaic), debug/signboard.jpg, CNAME, favicon
 scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs, satellite-mosaic.py (dev tool, needs Python + OpenCV)
 privacy-policy/         Static page served at /privacy-policy
@@ -42,6 +42,7 @@ src/
   data/footprint.js    Footprint geometry shared by picking, routing checks and the validator
   config.js            Tunables: player speeds, quality presets, type colours (no campus facts)
   core/app.js          App shell: renderer, auto quality fallback, mode switching
+  core/env.js          isEmbedded(): Android WebView detection (hides the Fullscreen button)
   core/profile.js      localStorage conveniences (welcome details, last seen update), all in try/catch
   world/               textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
   modes/               overview (orbit), walk (first person), collision, gyro
@@ -51,6 +52,8 @@ src/
   tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
   interiors/           plan (floor plan to walls, doors, furniture; pure), interiors (meshes, enter/exit, floors, stairs, lift)
 index.html, vite.config.js   base './' (relative) for GitHub Pages / Netlify / WebView; two HTML entries
+netlify.toml           Netlify build, caching and security headers (CSP). The e2e suite passes under these headers.
+public/404.html        GitHub Pages not-found page
 ```
 
 ## Commands

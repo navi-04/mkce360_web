@@ -4,7 +4,7 @@ A frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering
 
 Walk through the campus in first person from your phone, or orbit over it from above. No backend, no login, no API calls: everything is static files.
 
-> **Status:** under construction (steps 1 to 8 of 9 done, step 9 next). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
+> **Status:** under construction (all 9 steps done; the campus data is still being verified, see below). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
 
 ## Stack
 
@@ -54,7 +54,7 @@ Both can be combined: `?debug=1&calibrate=1`.
 npm run build
 npm run test:nav  # search and routing on the real campus.json, no browser (28 checks)
 npm run test:interiors  # floor plans: walls, doors, walkability, timetable (46 checks)
-npm run e2e       # 106 checks with real touch events: speed, joystick + look together, tap-to-walk,
+npm run e2e       # 108 checks with real touch events: speed, joystick + look together, tap-to-walk,
                   # collisions, gyro (simulated), search, directions, guided walk, calibration, debug map.
                   # Needs Microsoft Edge or Chrome.
 npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU slowdown)
@@ -90,4 +90,18 @@ One-time setup:
 2. **DNS** (at the provider that manages `nraj.me`): add a `CNAME` record for host `mkce360` pointing to `<github-username>.github.io` (the account or organisation that owns this repository).
 3. **GitHub:** *Settings → Pages → Custom domain* = `mkce360.nraj.me`, wait for the DNS check, then tick **Enforce HTTPS**.
 
-The privacy policy is then available at `https://mkce360.nraj.me/privacy-policy`. Before publishing, replace the two highlighted placeholders (contact email, operator name) at the bottom of `privacy-policy/index.html`.
+The privacy policy is then available at `https://mkce360.nraj.me/privacy-policy`. `public/404.html` is the page GitHub Pages
+shows for unknown addresses.
+
+### Netlify (alternative host)
+
+`netlify.toml` is included: build command `npm run build`, publish folder `dist`, Node 22, long-lived caching for the hashed files and
+security headers (a strict Content-Security-Policy, Permissions-Policy that allows device motion for the page itself, no referrer).
+Connect the repository in Netlify and deploy; no other settings are needed. The whole test suite also passes when the build is
+served with these headers. GitHub Pages cannot set response headers, so the policy only applies on Netlify.
+
+### Android
+
+See [docs/android-webview.md](docs/android-webview.md): the WebView settings the app needs (JavaScript, DOM storage, hardware
+acceleration, fullscreen, orientation, sensors), a Kotlin sample for loading the live site or the bundled files, and a test checklist.
+The page hides its own Fullscreen button when it detects a WebView (`; wv)` in the user agent, or `?embedded=1`). Before publishing, replace the two highlighted placeholders (contact email, operator name) at the bottom of `privacy-policy/index.html`.

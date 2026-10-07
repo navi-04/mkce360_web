@@ -1,0 +1,37 @@
+# Netlify: build the static site and publish dist/. No functions, no redirects needed (the app is one page plus /privacy-policy).
+# GitHub Pages is the primary host (custom domain mkce360.nraj.me, see .github/workflows/deploy.yml); this file makes the
+# same build deployable on Netlify too. The build uses a relative base path, so it works under any path.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# hashed build files never change under the same name
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# the satellite texture and the debug signboard photo are not hashed: let them be cached for a day
+[[headers]]
+  for = "/textures/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/debug/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# security headers. The app loads nothing from other origins and never contacts a server, so the policy is tight.
+# Gyro and accelerometer are allowed for this page itself (the optional "Gyro" look-around button).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "accelerometer=(self), gyroscope=(self), magnetometer=(self), camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'"

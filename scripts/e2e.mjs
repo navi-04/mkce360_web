@@ -598,6 +598,18 @@ async function main() {
       await c4.close();
     }
 
+    // ---- Android WebView: the host app goes immersive, so the page hides its own Fullscreen button
+    {
+      const UA = 'Mozilla/5.0 (Linux; Android 13; Pixel 7 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36';
+      const { ctx: c5, page: p5 } = await newPage({ userAgent: UA });
+      const full = (pg) => pg.evaluate(() => [...document.querySelectorAll('.hud-col .hbtn')].find((b) => /Full/.test(b.textContent))?.style.display ?? 'missing');
+      check('inside an Android WebView the Fullscreen button is hidden', (await full(p5)) === 'none');
+      await c5.close();
+      const { ctx: c6, page: p6 } = await newPage();
+      check('in a normal browser the Fullscreen button is available', (await full(p6)) !== 'none');
+      await c6.close();
+    }
+
     // ---- reduced motion
     const c3 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
     await c3.addInitScript(() => { try { localStorage.setItem('mkce360.profile.v1', JSON.stringify({ skipped: true })); } catch { /* blocked */ } });
