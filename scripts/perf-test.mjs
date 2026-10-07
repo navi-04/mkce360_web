@@ -50,6 +50,8 @@ const SCENARIOS = {
   // step 6: the glowing route line is drawn, and in walk-guided the app also drives the camera along it
   'overview-route': { mode: 'overview', action: 'route' },
   'walk-guided': { mode: 'walk', action: 'guide' },
+  // step 7: inside the sample interior of block 1, walking down the corridor
+  'interior-move': { mode: 'walk', action: 'interior' },
 };
 
 /** GPU-related launch args tried first (headless). */
@@ -528,6 +530,13 @@ async function runScenario({ browser, mobile, url, name, cpu, opts, shotPath, pr
         }, scen.action === 'guide');
         stopAction = () => page.evaluate(() => window.__mkce.nav.end()).catch(() => {});
       } catch (e) { result.notes.push(`route setup failed: ${String(e.message || e).split(String.fromCharCode(10))[0]}`); }
+    } else if (scen.action === 'interior') {
+      try {
+        await page.evaluate(() => window.__mkce.interiors.enter('apj-block'));
+        await sleep(800);
+        await page.evaluate(() => window.__mkce.input({ forward: 1, strafe: 0, turn: 0 }));
+        stopAction = () => page.evaluate(() => window.__mkce.input(null)).catch(() => {});
+      } catch (e) { result.notes.push('interior setup failed'); }
     } else if (scen.action === 'move') {
       if (api.present && api.input) {
         await page.evaluate(() => window.__mkce.input({ forward: 1, strafe: 0, turn: 0 }));

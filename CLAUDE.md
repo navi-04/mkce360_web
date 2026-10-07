@@ -32,7 +32,7 @@ App name shown everywhere in the UI: **MKCE 360**.
 ```
 assets/                 Input images (satellite map, signboard photos). Not served by the app.
                         Reference photos of the real campus live here too but are git-ignored (they show people).
-docs/                   blueprint-extraction.md, satellite-candidates.png, android-webview.md (step 9)
+docs/                   blueprint-extraction.md, interiors.md, satellite-candidates.png, android-webview.md (step 9)
 public/                 Static files copied as-is: textures/campus-map.jpg (mosaic), debug/signboard.jpg, CNAME, favicon
 scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs, satellite-mosaic.py (dev tool, needs Python + OpenCV)
 privacy-policy/         Static page served at /privacy-policy
@@ -47,7 +47,7 @@ src/
   ui/                  hud, joystick, sheets (one bottom sheet), nav-ui (search, cards, directions, nav card, arrival)
   nav/                 search (index + scoring), route (plan, turns, hints), routeLayer (3D line + beacon), navigator (state machine, guided walk)
   tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
-  (interiors/ added in step 7)
+  interiors/           plan (floor plan to walls, doors, furniture; pure), interiors (meshes, enter/exit, floors, stairs, lift)
 index.html, vite.config.js   base './' (relative) for GitHub Pages / Netlify / WebView; two HTML entries
 ```
 
@@ -60,12 +60,15 @@ npm run build      validate campus.json, then production build into dist/
 npm run validate   campus.json validation only
 npm run preview    serve the production build locally
 npm run test:nav   search and routing unit checks on the real campus.json (no browser)
+npm run test:interiors   floor plan checks (walls, doors, walkability, timetable) on the real campus.json
 npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; run build first)
 npm run perf       frame-rate measurement at 390x844
 ```
 
 Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export).
 Test hook: `window.__mkce` (`setMode`, `stats`, `input`, `nav`, `app`), used by the scripts.
+
+Interiors (step 7): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them and it is SAMPLE data (flagged `sample: true`, shown as such on the room card). Entering hides the outdoor scene (`world.setInterior`), swaps the walk collider and fades; no new shader programs (the interior materials are precompiled at start-up).
 
 Navigation (step 6): `Navigator` states are none, preview, guided, paused, manual, arrived. The guided walk drives `WalkMode` through its `driver` hook; joystick, keys or a tap hand control back. Routes only run on `campus.paths` edges and the validator warns when an edge crosses a building. Guidance never invents campus facts: turn hints use building names from campus.json.
 

@@ -196,7 +196,7 @@ export function createNavUi(app) {
     rows.append(
       row('Walk', walkInfo(b.id)),
       row('Floors', b.verified?.floors ? String(b.floors) : 'Not confirmed yet', !b.verified?.floors),
-      row('Inside', b.floorPlans?.length ? 'Floor plans available' : 'Not available yet', !b.floorPlans?.length),
+      row('Inside', b.floorPlans?.length ? (b.floorPlans.some((f) => f.sample) ? 'Sample floor plans' : 'Floor plans available') : 'Not available yet', !b.floorPlans?.length),
     );
     root.appendChild(rows);
     if (b.description) root.appendChild(el('p', 'cdesc', b.description));
@@ -208,6 +208,7 @@ export function createNavUi(app) {
       button('btn', 'map', 'Show on map', () => showOnMap(b)),
       button('btn', 'door', 'Go to door', () => goToDoor(b)),
     );
+    if (app.interiors?.has(b.id)) act.append(button('btn', 'enter', 'Go inside', () => { sheets.close(); app.interiors.enter(b.id); }));
     root.appendChild(act);
     sheets.show({ id: 'card', title: 'Building', node: root, modal: true, label: b.name });
   }

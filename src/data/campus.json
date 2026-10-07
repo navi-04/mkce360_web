@@ -1217,7 +1217,2496 @@
         "z": 31
       },
       "description": "Academic area, legend item 1. Placeholder: description to be provided by the college.",
-      "floorPlans": [],
+      "floorPlans": [
+        {
+          "level": 0,
+          "label": "Ground floor",
+          "short": "G",
+          "sample": true,
+          "height": 3.4,
+          "outline": {
+            "x0": -22,
+            "z0": -8,
+            "x1": 22,
+            "z1": 8
+          },
+          "rooms": [
+            {
+              "id": "room-g-01",
+              "number": "G-01",
+              "name": "Sample classroom A",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": -8,
+                "x1": -5,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-g-02",
+              "number": "G-02",
+              "name": "Sample classroom B",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": -8,
+                "x1": 4,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-g-03",
+              "number": "G-03",
+              "name": "Sample seminar hall C",
+              "type": "seminar",
+              "capacity": 40,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Podium (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                }
+              ],
+              "bounds": {
+                "x0": 4,
+                "z0": -8,
+                "x1": 13,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": 8.5
+              }
+            },
+            {
+              "id": "room-g-04",
+              "number": "G-04",
+              "name": "Sample laboratory 4",
+              "type": "lab",
+              "capacity": 30,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Workstations (sample)",
+                "Lab equipment (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": 1.5,
+                "x1": -5,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-g-05",
+              "number": "G-05",
+              "name": "Sample office E",
+              "type": "office",
+              "capacity": null,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample staff (placeholder)",
+              "equipment": [
+                "Desks (sample)"
+              ],
+              "timetable": [],
+              "bounds": {
+                "x0": -5,
+                "z0": 1.5,
+                "x1": 4,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-g-06",
+              "number": "G-06",
+              "name": "Sample washroom F",
+              "type": "washroom",
+              "capacity": null,
+              "department": null,
+              "faculty": null,
+              "equipment": [],
+              "timetable": [],
+              "bounds": {
+                "x0": 4,
+                "z0": 1.5,
+                "x1": 13,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": 8.5
+              }
+            }
+          ],
+          "stairs": [
+            {
+              "id": "stairs-0",
+              "label": "Stairs",
+              "bounds": {
+                "x0": -22,
+                "z0": -8,
+                "x1": -17,
+                "z1": -2.5
+              },
+              "landing": {
+                "x": -15.4,
+                "z": -5.2
+              }
+            }
+          ],
+          "lifts": [
+            {
+              "id": "lift-0",
+              "label": "Lift",
+              "bounds": {
+                "x0": -22,
+                "z0": 3,
+                "x1": -20.2,
+                "z1": 6.5
+              },
+              "landing": {
+                "x": -18.2,
+                "z": 4.75
+              }
+            }
+          ],
+          "entrance": {
+            "x": 22,
+            "z": 0,
+            "facing": "east",
+            "label": "Main entrance (exit)"
+          }
+        },
+        {
+          "level": 1,
+          "label": "Floor 1",
+          "short": "1",
+          "sample": true,
+          "height": 3.4,
+          "outline": {
+            "x0": -22,
+            "z0": -8,
+            "x1": 22,
+            "z1": 8
+          },
+          "rooms": [
+            {
+              "id": "room-1-01",
+              "number": "1-01",
+              "name": "Sample classroom A",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": -8,
+                "x1": -5,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-1-02",
+              "number": "1-02",
+              "name": "Sample classroom B",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": -8,
+                "x1": 4,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-1-03",
+              "number": "1-03",
+              "name": "Sample classroom C",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                }
+              ],
+              "bounds": {
+                "x0": 4,
+                "z0": -8,
+                "x1": 13,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": 8.5
+              }
+            },
+            {
+              "id": "room-1-04",
+              "number": "1-04",
+              "name": "Sample laboratory 4",
+              "type": "lab",
+              "capacity": 30,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Workstations (sample)",
+                "Lab equipment (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": 1.5,
+                "x1": -5,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-1-05",
+              "number": "1-05",
+              "name": "Sample classroom E",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session H"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": 1.5,
+                "x1": 4,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-1-06",
+              "number": "1-06",
+              "name": "Sample store F",
+              "type": "store",
+              "capacity": null,
+              "department": null,
+              "faculty": null,
+              "equipment": [],
+              "timetable": [],
+              "bounds": {
+                "x0": 4,
+                "z0": 1.5,
+                "x1": 13,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": 8.5
+              }
+            }
+          ],
+          "stairs": [
+            {
+              "id": "stairs-1",
+              "label": "Stairs",
+              "bounds": {
+                "x0": -22,
+                "z0": -8,
+                "x1": -17,
+                "z1": -2.5
+              },
+              "landing": {
+                "x": -15.4,
+                "z": -5.2
+              }
+            }
+          ],
+          "lifts": [
+            {
+              "id": "lift-1",
+              "label": "Lift",
+              "bounds": {
+                "x0": -22,
+                "z0": 3,
+                "x1": -20.2,
+                "z1": 6.5
+              },
+              "landing": {
+                "x": -18.2,
+                "z": 4.75
+              }
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "label": "Floor 2",
+          "short": "2",
+          "sample": true,
+          "height": 3.4,
+          "outline": {
+            "x0": -22,
+            "z0": -8,
+            "x1": 22,
+            "z1": 8
+          },
+          "rooms": [
+            {
+              "id": "room-2-01",
+              "number": "2-01",
+              "name": "Sample classroom A",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": -8,
+                "x1": -5,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-2-02",
+              "number": "2-02",
+              "name": "Sample classroom B",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": -8,
+                "x1": 4,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-2-03",
+              "number": "2-03",
+              "name": "Sample seminar hall C",
+              "type": "seminar",
+              "capacity": 40,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Podium (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                }
+              ],
+              "bounds": {
+                "x0": 4,
+                "z0": -8,
+                "x1": 13,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": 8.5
+              }
+            },
+            {
+              "id": "room-2-04",
+              "number": "2-04",
+              "name": "Sample laboratory 4",
+              "type": "lab",
+              "capacity": 30,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Workstations (sample)",
+                "Lab equipment (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": 1.5,
+                "x1": -5,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-2-05",
+              "number": "2-05",
+              "name": "Sample classroom E",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session H"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": 1.5,
+                "x1": 4,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-2-06",
+              "number": "2-06",
+              "name": "Sample office F",
+              "type": "office",
+              "capacity": null,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample staff (placeholder)",
+              "equipment": [
+                "Desks (sample)"
+              ],
+              "timetable": [],
+              "bounds": {
+                "x0": 4,
+                "z0": 1.5,
+                "x1": 13,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": 8.5
+              }
+            }
+          ],
+          "stairs": [
+            {
+              "id": "stairs-2",
+              "label": "Stairs",
+              "bounds": {
+                "x0": -22,
+                "z0": -8,
+                "x1": -17,
+                "z1": -2.5
+              },
+              "landing": {
+                "x": -15.4,
+                "z": -5.2
+              }
+            }
+          ],
+          "lifts": [
+            {
+              "id": "lift-2",
+              "label": "Lift",
+              "bounds": {
+                "x0": -22,
+                "z0": 3,
+                "x1": -20.2,
+                "z1": 6.5
+              },
+              "landing": {
+                "x": -18.2,
+                "z": 4.75
+              }
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "label": "Floor 3",
+          "short": "3",
+          "sample": true,
+          "height": 3.4,
+          "outline": {
+            "x0": -22,
+            "z0": -8,
+            "x1": 22,
+            "z1": 8
+          },
+          "rooms": [
+            {
+              "id": "room-3-01",
+              "number": "3-01",
+              "name": "Sample classroom A",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session B"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": -8,
+                "x1": -5,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-3-02",
+              "number": "3-02",
+              "name": "Sample classroom B",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session C"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": -8,
+                "x1": 4,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-3-03",
+              "number": "3-03",
+              "name": "Sample classroom C",
+              "type": "classroom",
+              "capacity": 60,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Whiteboard (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session D"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                }
+              ],
+              "bounds": {
+                "x0": 4,
+                "z0": -8,
+                "x1": 13,
+                "z1": -1.5
+              },
+              "door": {
+                "side": "s",
+                "at": 8.5
+              }
+            },
+            {
+              "id": "room-3-04",
+              "number": "3-04",
+              "name": "Sample laboratory 4",
+              "type": "lab",
+              "capacity": 30,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Workstations (sample)",
+                "Lab equipment (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Mon",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Tue",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Wed",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Thu",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session E"
+                },
+                {
+                  "day": "Fri",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                }
+              ],
+              "bounds": {
+                "x0": -14,
+                "z0": 1.5,
+                "x1": -5,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -9.5
+              }
+            },
+            {
+              "id": "room-3-05",
+              "number": "3-05",
+              "name": "Sample seminar hall E",
+              "type": "seminar",
+              "capacity": 40,
+              "department": "Sample department (placeholder)",
+              "faculty": "Sample faculty (placeholder)",
+              "equipment": [
+                "Projector (sample)",
+                "Podium (sample)"
+              ],
+              "timetable": [
+                {
+                  "day": "Mon",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Mon",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Mon",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Tue",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Tue",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Tue",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Wed",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Wed",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Wed",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Thu",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Thu",
+                  "start": "09:00",
+                  "end": "10:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Thu",
+                  "start": "11:15",
+                  "end": "12:15",
+                  "title": "Sample session H"
+                },
+                {
+                  "day": "Fri",
+                  "start": "14:15",
+                  "end": "15:15",
+                  "title": "Sample session F"
+                },
+                {
+                  "day": "Fri",
+                  "start": "10:00",
+                  "end": "11:00",
+                  "title": "Sample session G"
+                },
+                {
+                  "day": "Fri",
+                  "start": "13:15",
+                  "end": "14:15",
+                  "title": "Sample session H"
+                }
+              ],
+              "bounds": {
+                "x0": -5,
+                "z0": 1.5,
+                "x1": 4,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": -0.5
+              }
+            },
+            {
+              "id": "room-3-06",
+              "number": "3-06",
+              "name": "Sample washroom F",
+              "type": "washroom",
+              "capacity": null,
+              "department": null,
+              "faculty": null,
+              "equipment": [],
+              "timetable": [],
+              "bounds": {
+                "x0": 4,
+                "z0": 1.5,
+                "x1": 13,
+                "z1": 8
+              },
+              "door": {
+                "side": "n",
+                "at": 8.5
+              }
+            }
+          ],
+          "stairs": [
+            {
+              "id": "stairs-3",
+              "label": "Stairs",
+              "bounds": {
+                "x0": -22,
+                "z0": -8,
+                "x1": -17,
+                "z1": -2.5
+              },
+              "landing": {
+                "x": -15.4,
+                "z": -5.2
+              }
+            }
+          ],
+          "lifts": [
+            {
+              "id": "lift-3",
+              "label": "Lift",
+              "bounds": {
+                "x0": -22,
+                "z0": 3,
+                "x1": -20.2,
+                "z1": 6.5
+              },
+              "landing": {
+                "x": -18.2,
+                "z": 4.75
+              }
+            }
+          ]
+        }
+      ],
       "verified": {
         "position": false,
         "size": true,
@@ -1229,7 +3718,8 @@
       "source": "satellite + user dimensions (113 x 92 m)",
       "floorsNote": "4 levels (Ground to Third), read from the directory sign at the entrance and confirmed by the user.",
       "doorFacing": "east",
-      "doorNode": "door-apj-block"
+      "doorNode": "door-apj-block",
+      "interiorNote": "SAMPLE interior. The layout, room names, capacities, faculty, equipment and timetables are placeholders that demonstrate the feature. Real data will come from the college. Only the four-floor count is confirmed."
     },
     {
       "id": "radhakrishnan-block",

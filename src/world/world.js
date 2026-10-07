@@ -134,6 +134,9 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
   };
 
   let mode = 'overview';
+  let interior = false;
+  let indoor = null;
+  let outdoorLights = null;
   let quality = QUALITY.high;
   let shadows = false;
 
@@ -147,6 +150,33 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
     parts: { grass, satellite: sat, roads: roads.group, buildings: built.group, scenery: scenery.group },
     get mode() { return mode; },
 
+    /** Inside a building: the outdoor scene is hidden, light and fog are changed (no shader changes). */
+    setInterior(on, look = null) {
+      interior = on;
+      root.visible = !on;
+      sky.visible = !on;
+      if (on && look) {
+        indoor = look;
+        scene.background = new THREE.Color(look.bg);
+        scene.fog.color.set(look.bg);
+        outdoorLights = { hemi: hemi.intensity, sun: sun.intensity, sky: hemi.color.getHex(), ground: hemi.groundColor.getHex() };
+        hemi.intensity = look.hemi;
+        sun.intensity = look.sun;
+        hemi.color.set(0xfff4e2); // warm indoor light; the green ground bounce of the lawn must not tint the ceiling
+        hemi.groundColor.set(0xc9c1b2);
+      } else {
+        scene.background = new THREE.Color(COLORS.skyHorizon);
+        scene.fog.color.set(COLORS.fog);
+        if (outdoorLights) {
+          hemi.intensity = outdoorLights.hemi;
+          sun.intensity = outdoorLights.sun;
+          hemi.color.set(outdoorLights.sky);
+          hemi.groundColor.set(outdoorLights.ground);
+        }
+      }
+      this.applyFog();
+    },
+    get interior() { return interior; },
     setMode(m) {
       mode = m;
       const walk = m === 'walk';
@@ -176,7 +206,10 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
       this.applyFog();
     },
     applyFog() {
-      if (mode === 'walk') {
+      if (interior && indoor) {
+        scene.fog.near = indoor.fogNear;
+        scene.fog.far = indoor.fogFar;
+      } else if (mode === 'walk') {
         scene.fog.near = 90;
         scene.fog.far = quality.fogFar;
       } else {

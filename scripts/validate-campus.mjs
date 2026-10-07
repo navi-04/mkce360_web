@@ -165,13 +165,35 @@ function overlap(c1, c2) {
   return true;
 }
 
+const rectOk = (r) => r && isNum(r.x0) && isNum(r.z0) && isNum(r.x1) && isNum(r.z1) && r.x1 > r.x0 && r.z1 > r.z0;
+const inRect = (p, r, m = 0) => p.x >= r.x0 - m && p.x <= r.x1 + m && p.z >= r.z0 - m && p.z <= r.z1 + m;
+const rectsOverlap = (a, b) => a.x0 < b.x1 - 1e-6 && b.x0 < a.x1 - 1e-6 && a.z0 < b.z1 - 1e-6 && b.z0 < a.z1 - 1e-6;
+
 function validateFloor(f, where) {
   if (!Number.isInteger(f.level)) err(`${where}: floor.level must be an integer`);
   if (!Array.isArray(f.rooms)) err(`${where}: floor.rooms must be an array`);
   if (!Array.isArray(f.stairs)) err(`${where}: floor.stairs must be an array`);
+  if (f.sample != null && typeof f.sample !== 'boolean') err(`${where}: floor.sample must be true or false`);
+  const outlineOk = rectOk(f.outline);
+  if (!outlineOk) err(`${where} floor ${f.level}: outline {x0,z0,x1,z1} is required`);
+  const parts = [];
   const roomIds = new Set();
   for (const r of f.rooms ?? []) {
     const w = `${where} room "${r.id}"`;
+    if (!rectOk(r.bounds)) err(`${w}: bounds {x0,z0,x1,z1} required`);
+    else {
+      if (outlineOk && !(inRect({ x: r.bounds.x0, z: r.bounds.z0 }, f.outline, 0.01) && inRect({ x: r.bounds.x1, z: r.bounds.z1 }, f.outline, 0.01))) err(`${w}: bounds leave the floor outline`);
+      for (const q of parts) if (rectsOverlap(r.bounds, q.bounds)) err(`${w}: overlaps room "${q.id}"`);
+      parts.push(r);
+      const d = r.door;
+      if (!d || !['n', 's', 'e', 'w'].includes(d.side) || !isNum(d.at)) err(`${w}: door {side: n|s|e|w, at} required`);
+      else {
+        const [lo, hi] = d.side === 'n' || d.side === 's' ? [r.bounds.x0, r.bounds.x1] : [r.bounds.z0, r.bounds.z1];
+        if (d.at - 0.6 < lo || d.at + 0.6 > hi) err(`${w}: door does not fit on its wall`);
+      }
+    }
+    if (r.department != null && !isStr(r.department)) err(`${w}: department must be text or null`);
+    if (r.faculty != null && !isStr(r.faculty)) err(`${w}: faculty must be text or null`);
     if (!isStr(r.id) || roomIds.has(r.id)) err(`${w}: id missing or duplicate`);
     roomIds.add(r.id);
     if (!isStr(r.number) && !isNum(r.number)) err(`${w}: number required`);
@@ -188,6 +210,20 @@ function validateFloor(f, where) {
       if (!isStr(t.title)) err(`${w}: timetable title required`);
     }
   }
+  for (const [kind, list] of [['stairs', f.stairs ?? []], ['lifts', f.lifts ?? []]]) {
+    for (const x of list) {
+      const w = `${where} ${kind} "${x.id}"`;
+      if (!isStr(x.id)) err(`${where}: a ${kind} entry has no id`);
+      if (!rectOk(x.bounds)) err(`${w}: bounds required`);
+      if (!isXZ(x.landing)) err(`${w}: landing {x,z} required`);
+      else {
+        if (outlineOk && !inRect(x.landing, f.outline)) err(`${w}: landing is outside the floor`);
+        for (const r of f.rooms ?? []) if (rectOk(r.bounds) && inRect(x.landing, r.bounds)) err(`${w}: landing is inside room "${r.id}"`);
+        if (rectOk(x.bounds) && inRect(x.landing, x.bounds)) err(`${w}: landing is inside its own block`);
+      }
+    }
+  }
+  if (f.entrance && !(isXZ(f.entrance) && outlineOk)) err(`${where}: entrance {x,z} required and the outline too`);
 }
 
 for (const b of buildings) {
@@ -210,6 +246,14 @@ for (const b of buildings) {
   }
   if (!Array.isArray(b.floorPlans)) err(`${w}: floorPlans must be an array`);
   for (const f of b.floorPlans ?? []) validateFloor(f, w);
+  if (b.floorPlans?.length) {
+    const levels = b.floorPlans.map((f) => f.level).sort((a, c) => a - c);
+    if (new Set(levels).size !== levels.length) err(`${w}: duplicate floor levels`);
+    if (!levels.includes(0)) err(`${w}: floorPlans need a level 0 (ground floor)`);
+    if (b.verified?.floors && b.floorPlans.length !== b.floors) warn(`${w}: ${b.floorPlans.length} floor plans but floors is ${b.floors}`);
+    if (!b.floorPlans.some((f) => f.entrance)) warn(`${w}: no floor has an entrance, so there is no way in`);
+    if (b.floorPlans.some((f) => f.sample)) warn(`${w}: floor plans are SAMPLE data`);
+  }
   if (b.form === 'ring' && !(isNum(b.ring?.thickness) && b.ring.thickness > 0)) err(`${w}: ring form needs ring.thickness`);
   if (b.sport != null && !isStr(b.sport)) err(`${w}: sport must be a non-empty string when present`);
   for (const [i, p] of (b.parts ?? []).entries()) {

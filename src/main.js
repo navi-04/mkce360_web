@@ -70,6 +70,7 @@ async function boot() {
   window.__mkce = {
     app,
     nav: app.nav,
+    interiors: app.interiors,
     ready: Promise.resolve(true),
     setMode: (m) => app.setMode(m, { instant: true }),
     stats: () => app.stats(),

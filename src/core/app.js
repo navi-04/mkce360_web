@@ -7,6 +7,8 @@ import { WalkMode } from '../modes/walk.js';
 import { Collider } from '../modes/collision.js';
 import { createHud } from '../ui/hud.js';
 import { createNavUi } from '../ui/nav-ui.js';
+import { createInteriorUi } from '../ui/interior-ui.js';
+import { Interiors } from '../interiors/interiors.js';
 import { Navigator } from '../nav/navigator.js';
 import { RouteLayer } from '../nav/routeLayer.js';
 
@@ -75,6 +77,8 @@ export class App {
     this.nav = new Navigator(this);
     this.nav.layer = this.routeLayer;
     this.navUi = createNavUi(this);
+    this.interiors = new Interiors(this); // adds its (hidden) materials to the scene before the shader precompile below
+    this.interiorUi = createInteriorUi(this);
 
     this.overview.onTap = (x, z, e, building) => {
       if (this.calibrator?.handleTap(x, z)) return;
@@ -154,6 +158,7 @@ export class App {
         this.mode = 'walk';
         this.walk.enter(s);
       } else {
+        if (this.interiors.active) this.interiors.exit({ immediate: true }); // the fade of this mode switch covers it
         this.lastWalk = { x: this.walk.pos.x, z: this.walk.pos.z, yaw: this.walk.yaw };
         this.walk.exit();
         this.world.setMode('overview');
@@ -279,6 +284,7 @@ export class App {
     if (this.mode === 'walk') this.walk.update(dt);
     else this.overview.update(dt);
     this.nav.update(dt);
+    this.interiors.update(dt);
     this._updateViewShift(dt);
     for (const fn of this.extra) fn(dt);
     this.world.update(this.camera);

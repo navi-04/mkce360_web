@@ -51,6 +51,7 @@ export class WalkMode {
     this.gyroBase = { yaw: 0, pitch: 0 };
 
     this.onTap = null; // (x, z, event) => void  (calibration hook)
+    this.onRawTap = null; // (event) => boolean: handle a tap before the ground is picked (interiors)
 
     // tap-to-walk marker
     this.marker = new THREE.Mesh(
@@ -336,6 +337,7 @@ export class WalkMode {
   }
 
   _tap(e) {
+    if (this.onRawTap?.(e)) return; // e.g. interiors: a tap on a door or sign
     const g = this.pickGround(e.clientX, e.clientY);
     if (!g) return;
     if (this.onTap) this.onTap(g.x, g.z, e);

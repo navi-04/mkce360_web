@@ -4,7 +4,7 @@ A frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering
 
 Walk through the campus in first person from your phone, or orbit over it from above. No backend, no login, no API calls: everything is static files.
 
-> **Status:** under construction (steps 1 to 6 of 9 done, step 7 next). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
+> **Status:** under construction (steps 1 to 7 of 9 done, step 8 next). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
 
 ## Stack
 
@@ -34,6 +34,8 @@ Requires Node 20.19+ (or 22.12+).
 
 **Search and directions:** the gold **Search** button (bottom right) opens a bottom sheet with a search field and category chips. Tapping a result (or a building in Overview) opens its card with **Directions**. Directions plan the shortest walk over the campus paths from your position or from a gate (distance, walking time, turn-by-turn steps), draw a glowing line on the ground and a beacon at the door. **Start guided walk** moves the camera along the route; **Pause**, **Resume** or **Take control** at any time (moving the joystick, using the keys or tapping the ground also takes control). **Walk it myself** shows the line and live hints ("Go straight for 60 m, then turn left") while you walk. On arrival a card appears at the door.
 
+**Interiors (sample):** block 1 can be entered (arrival card **Enter**, or **Go inside** on its building card). Inside, a floor selector (G, 1, 2, 3) changes floors, stairs and the lift do too, and tapping a door or a room sign opens a room card with type, capacity, department, faculty, equipment and a live **Now in session** status from the timetable. **Exit** puts you back outside at the door. All of it is **sample data** for now; see [docs/interiors.md](docs/interiors.md).
+
 Walking speed is about 1.4 m/s (run about 3.2 m/s) at an eye height of 1.6 m. The player collides with buildings and cannot leave the campus boundary. Settings (graphics quality, shadows, head bob, invert look) are in the **Settings** sheet. Graphics quality is **Auto** by default and drops a level if the frame rate stays under 30 fps. Shadows are off by default.
 
 ## Developer tools (query flags)
@@ -48,7 +50,8 @@ Both can be combined: `?debug=1&calibrate=1`.
 ```bash
 npm run build
 npm run test:nav  # search and routing on the real campus.json, no browser (28 checks)
-npm run e2e       # 54 checks with real touch events: speed, joystick + look together, tap-to-walk,
+npm run test:interiors  # floor plans: walls, doors, walkability, timetable (46 checks)
+npm run e2e       # 79 checks with real touch events: speed, joystick + look together, tap-to-walk,
                   # collisions, gyro (simulated), search, directions, guided walk, calibration, debug map.
                   # Needs Microsoft Edge or Chrome.
 npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU slowdown)
@@ -68,6 +71,7 @@ npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU 
 | `src/world/` | Scene: textures, buildings, roads, scenery, sky and lighting |
 | `src/modes/` | Overview orbit, first-person walk, collision, gyro |
 | `src/nav/` | Search, route planning, route line, guided walk |
+| `src/interiors/` | Floor plans to walls and rooms, enter/exit, floors |
 | `src/ui/`, `src/core/`, `src/tools/` | HUD and sheets, app shell and quality manager, debug and calibration |
 | `privacy-policy/` | Static privacy policy page (served at `/privacy-policy`) |
 

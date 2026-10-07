@@ -371,31 +371,99 @@ export function signAtlas(items) {
   const rows = Math.min(perCol, items.length) || 1;
   const [c, g] = mk(SIGN_CELL.w * cols, SIGN_CELL.h * rows);
   const uv = [];
-  items.forEach((it, i) => {
-    const col = Math.floor(i / perCol), row = i % perCol;
-    const x = col * SIGN_CELL.w, y = row * SIGN_CELL.h;
-    const black = it.style === 'black';
-    g.fillStyle = black ? '#141414' : '#0e3a8c';
-    g.fillRect(x, y, SIGN_CELL.w, SIGN_CELL.h);
-    g.strokeStyle = black ? '#c9a24a' : '#f2c230';
-    g.lineWidth = 5;
-    g.strokeRect(x + 5, y + 5, SIGN_CELL.w - 10, SIGN_CELL.h - 10);
-    g.fillStyle = black ? '#e9c46a' : '#ffffff';
-    g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    let size = 44;
-    const maxW = SIGN_CELL.w - 40;
+  const STYLES = {
+    blue: { bg: '#0e3a8c', line: '#f2c230', fg: '#ffffff', sub: '#cfd8ee' },
+    black: { bg: '#141414', line: '#c9a24a', fg: '#e9c46a', sub: '#cdb683' },
+    green: { bg: '#0f4a38', line: '#d9c27a', fg: '#f4f7f5', sub: '#c4dccf' },
+  };
+  const fit = (text, size, maxW, min) => {
     do {
       g.font = `700 ${size}px system-ui, "Segoe UI", Roboto, sans-serif`;
       size -= 2;
-    } while (g.measureText(it.text).width > maxW && size > 14);
-    g.fillText(it.text, x + SIGN_CELL.w / 2, y + SIGN_CELL.h / 2 + 2);
+    } while (g.measureText(text).width > maxW && size > min);
+  };
+  items.forEach((it, i) => {
+    const col = Math.floor(i / perCol), row = i % perCol;
+    const x = col * SIGN_CELL.w, y = row * SIGN_CELL.h;
+    const st = STYLES[it.style] ?? STYLES.blue;
+    g.fillStyle = st.bg;
+    g.fillRect(x, y, SIGN_CELL.w, SIGN_CELL.h);
+    g.strokeStyle = st.line;
+    g.lineWidth = 5;
+    g.strokeRect(x + 5, y + 5, SIGN_CELL.w - 10, SIGN_CELL.h - 10);
+    g.fillStyle = st.fg;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    const maxW = SIGN_CELL.w - 40;
+    if (it.sub) {
+      // two lines: a big number (room signs) and a small description
+      fit(it.text, 46, maxW, 20);
+      g.fillText(it.text, x + SIGN_CELL.w / 2, y + SIGN_CELL.h * 0.38);
+      fit(it.sub, 24, maxW, 12);
+      g.fillStyle = st.sub;
+      g.fillText(it.sub, x + SIGN_CELL.w / 2, y + SIGN_CELL.h * 0.76);
+    } else {
+      fit(it.text, 44, maxW, 14);
+      g.fillText(it.text, x + SIGN_CELL.w / 2, y + SIGN_CELL.h / 2 + 2);
+    }
     const u0 = x / c.width, u1 = (x + SIGN_CELL.w) / c.width;
     const vTop = 1 - y / c.height, vBot = 1 - (y + SIGN_CELL.h) / c.height;
     uv.push([u0, vBot, u1, vTop]);
   });
   const texture = tex(c, { repeat: false, aniso: 8 });
   return { texture, uv };
+}
+
+// ---------- interiors (inspired by the corridor photos: red granite floor, cream walls, brown dado) ----------
+
+export function graniteFloor() {
+  const [c, g] = mk(256, 256);
+  g.fillStyle = '#873a2d';
+  g.fillRect(0, 0, 256, 256);
+  const r = rng(41);
+  for (let i = 0; i < 40; i++) {
+    g.fillStyle = `rgba(${r() > 0.5 ? '170,90,70' : '60,20,14'},${0.06 + r() * 0.1})`;
+    g.beginPath();
+    g.arc(r() * 256, r() * 256, 10 + r() * 30, 0, Math.PI * 2);
+    g.fill();
+  }
+  speckle(g, 256, 256, 2400, 0.4, 42, '235,185,165', '45,12,8');
+  g.fillStyle = '#3b1711'; // tile joints every 0.8 m
+  g.fillRect(0, 0, 256, 2);
+  g.fillRect(0, 126, 256, 3);
+  g.fillRect(0, 0, 2, 256);
+  g.fillRect(126, 0, 3, 256);
+  g.fillStyle = 'rgba(255,225,205,0.18)';
+  g.fillRect(0, 2, 256, 1);
+  g.fillRect(2, 0, 1, 256);
+  return tex(c, { aniso: 8 });
+}
+
+export function interiorWall() {
+  const [c, g] = mk(64, 256);
+  g.fillStyle = '#f0eadb';
+  g.fillRect(0, 0, 64, 256);
+  speckle(g, 64, 256, 120, 0.035, 43);
+  const dado = 181; // 1.0 m of 3.4 m from the bottom
+  g.fillStyle = '#bf8860';
+  g.fillRect(0, dado, 64, 256 - dado);
+  speckle(g, 64, 256, 90, 0.04, 44, '255,230,200', '70,40,20');
+  g.fillStyle = '#8a5a38';
+  g.fillRect(0, dado - 2, 64, 3);
+  g.fillStyle = '#5e3c26';
+  g.fillRect(0, 246, 64, 10);
+  return tex(c, { aniso: 8 });
+}
+
+export function ceilingTile() {
+  const [c, g] = mk(128, 128);
+  g.fillStyle = '#f2f0e9';
+  g.fillRect(0, 0, 128, 128);
+  speckle(g, 128, 128, 160, 0.04, 45);
+  g.fillStyle = '#d8d4c7';
+  g.fillRect(0, 0, 128, 2);
+  g.fillRect(0, 0, 2, 128);
+  return tex(c);
 }
 
 // ---------- sky ----------

@@ -15,7 +15,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -290,7 +290,7 @@ async function main() {
       return { dist: Math.hypot(t.x - w.pos.x, t.z - w.pos.z), faced: (dlt * 180) / Math.PI };
     });
     check('stops about 2 m before the door and faces it', d.dist > 1.6 && d.dist < 3.2 && d.faced < 12, `${d.dist.toFixed(1)} m from the door, ${d.faced.toFixed(0)} deg off`);
-    check('arrival card has a (disabled) Enter button until interiors exist', await page.evaluate(() => { const b = document.querySelector('.arrival .btn.primary'); return !!b && b.disabled && /arrived/i.test(document.querySelector('.arrival h3').textContent); }));
+    check('arrival card says so and offers Enter (sample interior exists for block 1)', await page.evaluate(() => { const b = document.querySelector('.arrival .btn.primary'); return !!b && !b.disabled && /arrived/i.test(document.querySelector('.arrival h3').textContent); }));
     await page.tap('.arrival .btn:has-text("Done")');
     await sleep(500);
     n = await nav();
@@ -306,6 +306,129 @@ async function main() {
     await page.touchscreen.tap(scr2[0], scr2[1]);
     await sleep(500);
     check('tapping a building in Overview opens its card', await page.evaluate(() => /KALAM/.test(document.querySelector('.xsheet.open .card h3')?.textContent ?? '')));
+    await ctx.close();
+  }
+
+
+  // ================= phone: interiors (sample data, block 1) =================
+  console.log('Interiors (sample data)');
+  {
+    const { ctx, page } = await newPage();
+    const cdp = await ctx.newCDPSession(page);
+    const tp = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y, id]) => ({ x, y, id, radiusX: 1, radiusY: 1, force: 1 })) });
+    const programs = () => page.evaluate(() => window.__mkce.app.renderer.info.programs.length);
+    const st = () => page.evaluate(() => { const i = window.__mkce.interiors, w = window.__mkce.app.walk; return { active: i.active, level: i.level, x: w.pos.x, z: w.pos.z, yaw: (w.yaw * 180) / Math.PI, mode: window.__mkce.app.mode, prompt: i.prompt?.kind ?? null, outdoors: window.__mkce.app.world.root.visible }; });
+    const p0 = await programs();
+    const { sessionNow } = await import(pathToFileURL(path.join(ROOT, 'src/interiors/plan.js')).href);
+    const data = JSON.parse(readFileSync(path.join(ROOT, 'src/data/campus.json'), 'utf8'));
+    const rooms0 = data.buildings.find((b) => b.id === 'apj-block').floorPlans[0].rooms;
+    const FAKE = new Date(2026, 9, 5, 10, 30); // Monday 10:30
+    const inSession = rooms0.find((r) => sessionNow(r, FAKE).current);
+    const notIn = rooms0.find((r) => r.timetable.length && !sessionNow(r, FAKE).current) ?? rooms0.find((r) => !sessionNow(r, FAKE).current);
+    await page.evaluate((t) => { window.__mkce.interiors.clock = () => new Date(t); }, FAKE.getTime());
+
+    // enter from the building card
+    await page.tap('.search-btn');
+    await sleep(400);
+    await page.fill('.sbar input', 'kalam');
+    await sleep(200);
+    await page.tap('.srow');
+    await sleep(400);
+    check('building card offers "Go inside" for the sample building', await page.evaluate(() => [...document.querySelectorAll('.cacts .btn')].some((b) => /Go inside/.test(b.textContent))));
+    await page.tap('.cacts .btn:has-text("Go inside")');
+    await sleep(2800);
+    let s = await st();
+    check('"Go inside" walks to the door, fades and enters on the ground floor', s.active && s.level === 0 && s.mode === 'walk', `floor ${s.level}`);
+    check('outdoor scene is hidden inside', s.outdoors === false);
+    check('floor selector shows G 1 2 3', await page.evaluate(() => [...document.querySelectorAll('.floors .fbtn')].map((b) => b.textContent).join(',') === '3,2,1,G'));
+    check('Exit button is visible and Search is hidden inside', await page.evaluate(() => getComputedStyle(document.querySelector('.iexit')).display !== 'none' && getComputedStyle(document.querySelector('.search-btn')).display === 'none'));
+    check('starts in the entrance hall facing the corridor', s.x > 15 && Math.abs(s.z) < 1 && Math.abs(((s.yaw % 360) + 360) % 360 - 90) < 3, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
+
+    // walking and collisions with real input
+    await page.evaluate(() => window.__mkce.input({ forward: 1 }));
+    await sleep(3000);
+    await page.evaluate(() => window.__mkce.input(null));
+    const w1 = await st();
+    check('walks down the corridor (west)', w1.x < s.x - 3 && Math.abs(w1.z) < 1.2, `x ${w1.x.toFixed(1)}`);
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 2; w.pos.z = 0; w.yaw = 0; w.cancelTarget(); });
+    await page.evaluate(() => window.__mkce.input({ forward: 1 }));
+    await sleep(2500);
+    await page.evaluate(() => window.__mkce.input(null));
+    const w2 = await st();
+    check('walls stop the player (corridor wall at z -1.4)', w2.z > -1.25 && w2.z < -0.85, `z ${w2.z.toFixed(2)}`);
+
+    // door and sign taps open the room card
+    await page.evaluate(([x, z]) => { const w = window.__mkce.app.walk; w.pos.x = x; w.pos.z = z; w.yaw = 0; w.pitch = (4 * Math.PI) / 180; w.cancelTarget(); }, [-9.5, 0]);
+    await sleep(400);
+    const signScr = await page.evaluate(() => { const a = window.__mkce.app, i = window.__mkce.interiors; const s = i.current.plan.signs.find((q) => q.roomId === 'room-g-01'); const v = new a.camera.position.constructor(s.x, s.y, s.z).project(a.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight, v.z]; });
+    await page.touchscreen.tap(signScr[0], signScr[1]);
+    await sleep(500);
+    const card = await page.evaluate(() => ({ open: !!document.querySelector('.xsheet.open .roomcard'), text: document.querySelector('.roomcard')?.textContent ?? '' }));
+    check('tapping a room sign opens the room card', card.open && /G-01/.test(card.text), card.text.slice(0, 40));
+    check('room card lists type, capacity, department, faculty and equipment', /Classroom/.test(card.text) && /Capacity60people/.test(card.text.replace(/\s/g, '')) && /Department/.test(card.text) && /Faculty/.test(card.text) && /Projector/.test(card.text));
+    check('room card says it is sample data', /Sample data/.test(card.text));
+    await page.tap('.roomcard .btn:has-text("Close")');
+    await sleep(300);
+    await page.evaluate((id) => window.__mkce.interiors.openRoom(id), inSession.id);
+    await sleep(400);
+    check('"Now in session" shows for a room with a running slot (Mon 10:30)', await page.evaluate(() => /Now in session/.test(document.querySelector('.roomcard .status')?.textContent ?? '') && document.querySelector('.roomcard .status').classList.contains('in')), inSession.number);
+    await page.evaluate(() => document.querySelector('.xs-close').click());
+    await sleep(300);
+    await page.evaluate((id) => window.__mkce.interiors.openRoom(id), notIn.id);
+    await sleep(400);
+    check('"Not in session" shows when nothing is running', await page.evaluate(() => /Not in session|No timetable/.test(document.querySelector('.roomcard .status')?.textContent ?? '')), notIn.number);
+    await page.evaluate(() => document.querySelector('.xs-close').click());
+    await sleep(300);
+
+    // floors: selector
+    await page.tap('.fbtn:has-text("3")');
+    await sleep(1200);
+    s = await st();
+    check('floor selector changes the floor', s.level === 3 && (await page.evaluate(() => document.querySelector('.fbtn.on')?.textContent)) === '3');
+    check('upper floor has its own rooms (3-01 ...)', await page.evaluate(() => window.__mkce.interiors.current.floor.rooms[0].number === '3-01'));
+    // stairs prompt
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -15.4; w.pos.z = -5.2; w.yaw = (-90 * Math.PI) / 180; w.cancelTarget(); });
+    await sleep(500);
+    check('standing at the stairs shows the stairs prompt', await page.evaluate(() => /Stairs down/.test(document.querySelector('.iprompt.on')?.textContent ?? '')));
+    await page.tap('.iprompt .btn:has-text("Stairs down")');
+    await sleep(1200);
+    s = await st();
+    check('stairs take you one floor down', s.level === 2, `floor ${s.level}`);
+    // lift prompt
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -18.2; w.pos.z = 4.75; w.cancelTarget(); });
+    await sleep(500);
+    check('standing at the lift shows the lift buttons', await page.evaluate(() => document.querySelectorAll('.iprompt.on .liftrow .btn').length === 3));
+    await page.tap('.iprompt .liftrow .btn:has-text("G")');
+    await sleep(1200);
+    s = await st();
+    check('the lift goes to any floor', s.level === 0, `floor ${s.level}`);
+
+    // exit puts you back outside at the door
+    await page.tap('.iexit');
+    await sleep(1500);
+    s = await st();
+    const doorDist = await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); const w = window.__mkce.app.walk; return Math.hypot(w.pos.x - f.x, w.pos.z - f.z); });
+    check('Exit returns outside at the building door', !s.active && s.outdoors === true && doorDist > 1.5 && doorDist < 4, `${doorDist.toFixed(1)} m from the door`);
+    check('the Search button is back outside', await page.evaluate(() => getComputedStyle(document.querySelector('.search-btn')).display !== 'none'));
+
+    // arrival card -> Enter
+    await page.evaluate(() => { const n = window.__mkce.nav; n.planTo({ buildingId: 'apj-block' }, 'gate:main-gate'); n.speedMult = 5; });
+    await page.evaluate(async () => { await window.__mkce.nav.start(); window.__mkce.app.walk.run = true; });
+    for (let i = 0; i < 40 && (await page.evaluate(() => window.__mkce.nav.mode)) !== 'arrived'; i++) await sleep(500);
+    await sleep(600);
+    check('arrival card now has an enabled Enter button', await page.evaluate(() => { const b = document.querySelector('.arrival .btn.primary'); return !!b && !b.disabled && /Enter/.test(b.textContent); }));
+    await page.tap('.arrival .btn.primary');
+    await sleep(2200);
+    s = await st();
+    check('Enter on the arrival card goes inside and ends the route', s.active && (await page.evaluate(() => window.__mkce.nav.mode)) === 'none');
+    await page.evaluate(() => { window.__mkce.app.walk.run = false; });
+
+    // leaving to Overview from inside exits cleanly
+    await page.click('.segmented button[data-mode="overview"]');
+    await sleep(1000);
+    s = await st();
+    check('switching to Overview from inside leaves the building', !s.active && s.mode === 'overview' && s.outdoors);
+    check('no new shader programs were compiled by the interiors (precompiled)', (await programs()) === p0, `${p0} -> ${await programs()}`);
     await ctx.close();
   }
 
