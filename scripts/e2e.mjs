@@ -66,6 +66,8 @@ async function main() {
   const errors = [];
   const newPage = async (opts = {}, query = '') => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, acceptDownloads: true, ...opts });
+    // every context starts as a returning visitor, so the welcome screen does not cover the app (it has its own test)
+    await ctx.addInitScript(() => { try { if (!localStorage.getItem('mkce360.profile.v1')) localStorage.setItem('mkce360.profile.v1', JSON.stringify({ skipped: true })); } catch { /* storage blocked */ } });
     const page = await ctx.newPage();
     page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`[${m.type()}] ${m.text()}`); });
     page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message));
@@ -430,6 +432,188 @@ async function main() {
     check('switching to Overview from inside leaves the building', !s.active && s.mode === 'overview' && s.outdoors);
     check('no new shader programs were compiled by the interiors (precompiled)', (await programs()) === p0, `${p0} -> ${await programs()}`);
     await ctx.close();
+  }
+
+
+  // ================= phone: welcome screen, mini-map, updates, reduced motion, touch targets =================
+  console.log('Mobile UX');
+  {
+    // ---- welcome screen: a first-time visitor (no saved details)
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const page = await ctx.newPage();
+    page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`[${m.type()}] ${m.text()}`); });
+    page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message));
+    await page.goto(base);
+    await page.waitForFunction(() => window.__mkce, null, { timeout: 40000 });
+    await sleep(900);
+    check('first visit shows the welcome screen', await page.evaluate(() => !!document.querySelector('.welcome .w-card')));
+    check('welcome asks for email, college and location', await page.evaluate(() => !!document.querySelector('.welcome input[type=email]') && !!document.querySelector('.welcome .w-opt[data-id="this"]') && !!document.querySelector('.welcome input[name=location]')));
+    check('this college is preselected and marked Available', await page.evaluate(() => document.querySelector('.w-opt[data-id="this"]').classList.contains('on') && /Available/.test(document.querySelector('.w-opt[data-id="this"]').textContent)));
+    await page.tap('.w-opt[data-id="other"]');
+    await sleep(200);
+    check('another college shows "Not available yet" and cannot start', await page.evaluate(() => /Not available yet/.test(document.querySelector('.w-na').textContent) && document.querySelector('.w-go').disabled));
+    await page.tap('.w-opt[data-id="this"]');
+    await page.fill('.welcome input[type=email]', 'not-an-email');
+    await page.tap('.w-go');
+    await sleep(300);
+    check('a bad email is explained and not saved', await page.evaluate(() => /does not look right/.test(document.querySelector('.w-err').textContent) && !!document.querySelector('.welcome') && localStorage.getItem('mkce360.profile.v1') === null));
+    await page.fill('.welcome input[type=email]', 'student@example.com');
+    await page.fill('.welcome input[name=location]', 'Karur');
+    await page.tap('.w-go');
+    await sleep(700);
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('mkce360.profile.v1') ?? 'null'));
+    check('details are saved in local storage only', !!saved && saved.email === 'student@example.com' && saved.location === 'Karur' && saved.college === 'mkce');
+    check('the welcome screen goes away', await page.evaluate(() => !document.querySelector('.welcome')));
+    await page.reload();
+    await page.waitForFunction(() => window.__mkce, null, { timeout: 40000 });
+    await sleep(700);
+    check('it does not come back on the next visit', await page.evaluate(() => !document.querySelector('.welcome')));
+    await page.tap('.hbtn:has-text("Settings")');
+    await sleep(500);
+    check('Settings shows the saved details', await page.evaluate(() => /student@example.com/.test(document.querySelector('[data-k=profile]').textContent)));
+    await page.tap('[data-act="clear-profile"]');
+    await sleep(300);
+    check('Clear removes them from the device', await page.evaluate(() => localStorage.getItem('mkce360.profile.v1') === null && /Nothing saved/.test(document.querySelector('[data-k=profile]').textContent)));
+    await page.tap('.sheet-close');
+    await sleep(300);
+    await ctx.close();
+
+    // ---- storage blocked: everything still works
+    {
+      const c = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await c.addInitScript(() => {
+        const boom = () => { throw new Error('storage blocked'); };
+        Storage.prototype.getItem = boom;
+        Storage.prototype.setItem = boom;
+        Storage.prototype.removeItem = boom;
+      });
+      const p = await c.newPage();
+      const errs = [];
+      p.on('pageerror', (e) => errs.push(e.message));
+      await p.goto(base);
+      await p.waitForFunction(() => window.__mkce, null, { timeout: 40000 });
+      await sleep(800);
+      await p.tap('.w-go');
+      await sleep(600);
+      check('with storage blocked the app still starts and the welcome can be dismissed', errs.length === 0 && (await p.evaluate(() => !document.querySelector('.welcome') && window.__mkce.app.mode === 'overview')), errs.join(' | '));
+      await p.evaluate(() => window.__mkce.setMode('walk'));
+      await sleep(600);
+      check('walk mode works with storage blocked', await p.evaluate(() => window.__mkce.app.mode === 'walk'));
+      await c.close();
+    }
+
+    // ---- mini-map, expanded map, updates, touch targets (returning visitor)
+    const { ctx: c2, page: p2 } = await newPage();
+    const brandDot = () => p2.evaluate(() => document.querySelector('.brand').classList.contains('has-new'));
+    check('mini-map is hidden in Overview', await p2.evaluate(() => getComputedStyle(document.querySelector('.minimap')).display === 'none'));
+    await p2.evaluate(() => { window.__mkce.setMode('walk'); const w = window.__mkce.app.walk; w.pos.x = -60; w.pos.z = 12; w.yaw = Math.PI / 2; });
+    await sleep(700);
+    const mm = await p2.evaluate(() => {
+      const c = document.querySelector('.minimap canvas'), g = c.getContext('2d');
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      const seen = new Set();
+      for (let i = 0; i < d.length; i += 4 * 97) seen.add(`${d[i] >> 4},${d[i + 1] >> 4},${d[i + 2] >> 4}`);
+      const r = c.getBoundingClientRect();
+      return { shown: getComputedStyle(document.querySelector('.minimap')).display !== 'none', colours: seen.size, w: r.width, h: r.height };
+    });
+    check('mini-map shows in Walk mode with real map content', mm.shown && mm.colours > 12 && mm.w >= 100, `${mm.colours} colours, ${mm.w}px`);
+    const before = await p2.evaluate(() => document.querySelector('.minimap canvas').toDataURL());
+    await p2.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -150; w.pos.z = 150; w.yaw = 0; });
+    await sleep(500);
+    const after = await p2.evaluate(() => document.querySelector('.minimap canvas').toDataURL());
+    check('mini-map follows the walker', after !== before && after.length > 1000);
+    await p2.tap('.minimap');
+    await sleep(700);
+    check('tapping the mini-map expands it', await p2.evaluate(() => document.querySelector('.mapfull').classList.contains('on')));
+    const pt = await p2.evaluate(() => {
+      const m = window.__mkce.app.minimap, c = document.querySelector('.mapfull canvas'), r = c.getBoundingClientRect(), b = window.__mkce.app.data.buildings.find((q) => q.id === 'apj-block');
+      return [r.left + r.width / 2 + (b.position.x - m.view.cx) * m.view.s, r.top + r.height / 2 + (b.position.z - m.view.cz) * m.view.s];
+    });
+    await p2.mouse.click(pt[0], pt[1]);
+    await sleep(600);
+    check('tapping a building on the expanded map opens its card', await p2.evaluate(() => !document.querySelector('.mapfull').classList.contains('on') && /KALAM/.test(document.querySelector('.xsheet.open .card h3')?.textContent ?? '')));
+    await p2.evaluate(() => document.querySelector('.xs-close').click());
+    await sleep(300);
+
+    // updates
+    check('no unread dot while the only update is a placeholder', !(await brandDot()));
+    await p2.evaluate(() => { window.__mkce.app.data.updates.push({ id: 'upd-test', date: '2026-10-07', title: 'Test update', body: 'Body text.' }); window.__mkce.app.updatesUi.refreshDot(); });
+    check('a new real update shows an unread dot on the brand', await brandDot());
+    await p2.tap('.brand');
+    await sleep(500);
+    const upd = await p2.evaluate(() => ({ open: !!document.querySelector('.xsheet.open .about'), text: document.querySelector('.about')?.textContent ?? '' }));
+    check('tapping the brand opens updates read from campus.json', upd.open && /Test update/.test(upd.text) && /Placeholder/.test(upd.text) && /Karur/.test(upd.text));
+    check('opening it clears the unread dot', !(await brandDot()));
+    await p2.evaluate(() => document.querySelector('.xs-close').click());
+    await sleep(300);
+
+    // touch targets: every visible control is at least 48 px in both directions
+    const audit = () => p2.evaluate(() => {
+      const out = [];
+      for (const e of document.querySelectorAll('button, a[href], [role=tab], select, label.row, .sbar input, .w-field input')) {
+        if (e.closest('.panel, .map2d')) continue;
+        const cs = getComputedStyle(e);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || cs.pointerEvents === 'none' || +cs.opacity < 0.05) continue;
+        let q = e.parentElement, hidden = false;
+        while (q && q !== document.body) { const c = getComputedStyle(q); if (c.display === 'none' || c.visibility === 'hidden' || +c.opacity < 0.05 || c.pointerEvents === 'none') { hidden = true; break; } q = q.parentElement; }
+        const r = e.getBoundingClientRect();
+        if (hidden || r.width === 0 || r.height === 0 || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) continue;
+        if (Math.min(r.width, r.height) < 47.5) out.push(`${e.className || e.tagName} ${Math.round(r.width)}x${Math.round(r.height)}`);
+      }
+      return out;
+    });
+    const small = [];
+    const step = async (name, fn) => { await fn(); await sleep(450); for (const s of await audit()) small.push(`${name}: ${s}`); };
+    await step('walk', async () => {});
+    await step('settings', async () => { await p2.tap('.hbtn:has-text("Settings")'); });
+    await p2.tap('.sheet-close');
+    await sleep(300);
+    await step('search', async () => { await p2.tap('.search-btn'); });
+    await step('card', async () => { await p2.fill('.sbar input', 'kalam'); await p2.tap('.srow'); });
+    await step('directions', async () => { await p2.tap('.cacts .btn.primary'); });
+    await step('guided card', async () => { await p2.tap('.planner .cacts .btn.primary'); await sleep(2200); });
+    await p2.evaluate(() => window.__mkce.nav.end());
+    await step('expanded map', async () => { await p2.tap('.minimap'); });
+    await p2.tap('.mapfull .xs-close');
+    await sleep(300);
+    await step('interior', async () => { await p2.evaluate(() => window.__mkce.interiors.enter('apj-block')); await sleep(1600); });
+    await step('room card', async () => { await p2.evaluate(() => window.__mkce.interiors.openRoom('room-g-01')); });
+    check('every control is at least 48 px (walk, settings, search, card, directions, guide, map, interior, room)', small.length === 0, small.slice(0, 4).join(' | '));
+    await c2.close();
+
+    // ---- page gestures are blocked on the canvas and the app name is MKCE 360 everywhere
+    {
+      const { ctx: c4, page: p4 } = await newPage();
+      const g = await p4.evaluate(() => ({
+        touch: getComputedStyle(document.getElementById('scene')).touchAction,
+        overscroll: getComputedStyle(document.body).overscrollBehaviorY,
+        scroll: getComputedStyle(document.body).overflow,
+        title: document.title,
+        loader: document.querySelector('.loader-logo')?.textContent ?? 'loader removed',
+        brand: document.querySelector('.brand').textContent.trim(),
+        viewport: document.querySelector('meta[name=viewport]').content,
+      }));
+      check('canvas blocks page gestures (no scroll, pull-to-refresh or double-tap zoom)', g.touch === 'none' && g.overscroll === 'none' && g.scroll === 'hidden' && /user-scalable=no/.test(g.viewport), `${g.touch} ${g.overscroll} ${g.scroll}`);
+      check('the app is called MKCE 360 in the title and the HUD', g.title === 'MKCE 360' && /MKCE\s*360/.test(g.brand), `${g.title} / ${g.brand}`);
+      await c4.close();
+    }
+
+    // ---- reduced motion
+    const c3 = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+    await c3.addInitScript(() => { try { localStorage.setItem('mkce360.profile.v1', JSON.stringify({ skipped: true })); } catch { /* blocked */ } });
+    const p3 = await c3.newPage();
+    await p3.goto(base);
+    await p3.waitForFunction(() => window.__mkce, null, { timeout: 40000 });
+    await sleep(700);
+    check('prefers-reduced-motion is honoured (no head bob by default, no damping)', await p3.evaluate(() => { const a = window.__mkce.app; return a.reducedMotion === true && a.walk.headBob === false && a.overview.controls.enableDamping === false; }));
+    await p3.evaluate(() => window.__mkce.app.overview.focus(-250, 120, 150));
+    await sleep(250);
+    const jumped = await p3.evaluate(() => Math.hypot(window.__mkce.app.camera.position.x + 250, window.__mkce.app.camera.position.z - 120) < 400 && window.__mkce.app.overview._tween === null);
+    check('camera flights are instant jumps', jumped);
+    await p3.evaluate(() => { const n = window.__mkce.nav; n.planTo({ buildingId: 'apj-block' }, 'gate:main-gate'); });
+    await sleep(900);
+    check('the route line does not animate', await p3.evaluate(() => window.__mkce.app.routeLayer.time === 0));
+    await c3.close();
   }
 
 

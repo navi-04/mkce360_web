@@ -360,6 +360,7 @@ export function createNavUi(app) {
     card.classList.toggle('on', showable);
     if (!showable) {
       nc.key = '';
+      hud.root.style.setProperty('--nav-h', '0px');
       return;
     }
     const preview = m === 'preview' && app.mode !== 'walk';
@@ -422,6 +423,7 @@ export function createNavUi(app) {
     setText(nc.metaSpans[0], r.to.shortLabel);
     setText(nc.metaSpans[1], `${formatDistance(nav.remaining)} left`);
     setText(nc.metaSpans[2], formatDuration(nav.eta));
+    hud.root.style.setProperty('--nav-h', `${Math.round(card.offsetHeight + 8)}px`); // the mini-map sits below the card
   }
 
   // ---------------------------------------------------------------- arrival

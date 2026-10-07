@@ -1,7 +1,9 @@
 import './style.css';
 import './nav.css';
+import './ux.css';
 import rawData from './data/campus.json';
 import { App } from './core/app.js';
+import { showWelcome } from './ui/welcome.js';
 
 const params = new URLSearchParams(location.search);
 const loader = document.getElementById('loader');
@@ -81,6 +83,8 @@ async function boot() {
 
   loader.classList.add('done');
   setTimeout(() => loader.remove(), 500);
+  // first visit: the welcome screen (skipped for tests and tools with ?welcome=0)
+  if (params.get('welcome') !== '0') showWelcome(app);
 }
 
 boot();

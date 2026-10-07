@@ -9,6 +9,7 @@ export class OverviewMode {
   constructor({ camera, canvas, world, reducedMotion }) {
     this.camera = camera;
     this.canvas = canvas;
+    this.reducedMotion = !!reducedMotion; // camera flights become instant jumps
     this.world = world;
     this.active = false;
 
@@ -175,7 +176,7 @@ export class OverviewMode {
     if (!this.active) return;
     if (this._tween) {
       const tw = this._tween;
-      tw.t = Math.min(1, tw.t + dt / tw.dur);
+      tw.t = this.reducedMotion ? 1 : Math.min(1, tw.t + dt / tw.dur);
       const k = tw.t * tw.t * (3 - 2 * tw.t);
       this.camera.position.lerpVectors(tw.fromPos, tw.toPos, k);
       this.controls.target.lerpVectors(tw.fromTarget, tw.toTarget, k);

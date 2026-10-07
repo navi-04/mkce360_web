@@ -438,6 +438,7 @@ async function runScenario({ browser, mobile, url, name, cpu, opts, shotPath, pr
     scenario: name, cpuThrottle: cpu, api: null, mode: scen.mode, notes: [], error: null,
   };
   const context = await browser.newContext(mobile);
+  await context.addInitScript(() => { try { localStorage.setItem('mkce360.profile.v1', JSON.stringify({ skipped: true })); } catch { /* storage blocked */ } }); // no welcome screen
   const page = await context.newPage();
   const addIssue = (kind, text, location) => issues.push({ run: tag, kind, text, location: location || null });
   // The browser auto-requests /favicon.ico; a 404 there is harmless noise, so count it separately.

@@ -1,6 +1,9 @@
 // On-screen controls. Plain DOM: no framework. All touch targets are at least 48 px.
 import { Joystick } from './joystick.js';
 import { Gyro } from '../modes/gyro.js';
+import { clearProfile } from '../core/profile.js';
+import { profileSummary } from './updates.js';
+import { showWelcome } from './welcome.js';
 
 const ICON = {
   overview: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
@@ -30,7 +33,9 @@ export function createHud(app) {
 
   // ----- top bar -----
   const top = el('div', 'hud-top');
-  const brand = el('div', 'brand', '<b>MKCE</b> 360');
+  const brand = el('button', 'brand', '<b>MKCE</b> 360<i class="dot" aria-hidden="true"></i>');
+  brand.type = 'button';
+  brand.setAttribute('aria-label', 'MKCE 360: about the college, updates and your details');
   const seg = el('div', 'segmented mode-seg');
   seg.setAttribute('role', 'tablist');
   seg.setAttribute('aria-label', 'View mode');
@@ -103,6 +108,10 @@ export function createHud(app) {
       <label class="row"><div><b>Shadows</b><small>Off by default; costs speed on phones</small></div><input type="checkbox" data-k="shadows" class="switch"></label>
       <label class="row"><div><b>Head bob</b><small>Gentle walking motion</small></div><input type="checkbox" data-k="headBob" class="switch"></label>
       <label class="row"><div><b>Invert look</b><small>Drag up to look down</small></div><input type="checkbox" data-k="invertLook" class="switch"></label>
+      <div class="row"><div><b>Your details</b><small data-k="profile">Nothing saved on this device</small></div>
+        <div class="btnrow"><button type="button" data-act="edit-profile">Edit</button><button type="button" data-act="clear-profile">Clear</button></div></div>
+      <div class="row"><div><b>College updates and about</b><small>News from the college and what this app is</small></div>
+        <div class="btnrow"><button type="button" data-act="open-updates">Open</button></div></div>
       <div class="help">
         <b>Controls</b>
         <p><span>Phone:</span> left thumb moves, drag on the right half to look, tap the ground to walk there. Gyro looks around by turning your phone.</p>
@@ -143,6 +152,23 @@ export function createHud(app) {
     });
   }
 
+  sheetEl.addEventListener('click', async (e) => {
+    const act = e.target.closest('[data-act]')?.dataset.act;
+    if (!act) return;
+    if (act === 'open-updates') {
+      sheet.close();
+      app.updatesUi?.open();
+    } else if (act === 'clear-profile') {
+      clearProfile();
+      app.updatesUi?.refreshDot();
+      api.toast('Saved details cleared from this device.');
+      sync();
+    } else if (act === 'edit-profile') {
+      sheet.close();
+      await showWelcome(app, { force: true });
+    }
+  });
+
   root.append(top, col, toastEl, chip, joystick.hint, scrim, sheetEl, fade);
 
   // ----- state -> UI -----
@@ -161,6 +187,8 @@ export function createHud(app) {
     for (const b of qSeg.children) b.classList.toggle('on', b.dataset.q === app.settings.quality);
     for (const inp of sheetEl.querySelectorAll('input[data-k]')) inp.checked = !!app.settings[inp.dataset.k];
     joystick.setHint(walk && !app.walk.joy.id && !app.walkTouched);
+    const ps = sheetEl.querySelector('[data-k="profile"]');
+    if (ps) ps.textContent = profileSummary();
   }
 
   let toastTimer = 0;

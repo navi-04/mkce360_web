@@ -147,6 +147,7 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
     labels: built.labels,
     doorFrames: built.doorFrames,
     data,
+    satelliteImage: satTex?.image ?? null,
     parts: { grass, satellite: sat, roads: roads.group, buildings: built.group, scenery: scenery.group },
     get mode() { return mode; },
 

@@ -8,6 +8,8 @@ import { Collider } from '../modes/collision.js';
 import { createHud } from '../ui/hud.js';
 import { createNavUi } from '../ui/nav-ui.js';
 import { createInteriorUi } from '../ui/interior-ui.js';
+import { createMinimap } from '../ui/minimap.js';
+import { createUpdatesUi } from '../ui/updates.js';
 import { Interiors } from '../interiors/interiors.js';
 import { Navigator } from '../nav/navigator.js';
 import { RouteLayer } from '../nav/routeLayer.js';
@@ -79,6 +81,8 @@ export class App {
     this.navUi = createNavUi(this);
     this.interiors = new Interiors(this); // adds its (hidden) materials to the scene before the shader precompile below
     this.interiorUi = createInteriorUi(this);
+    this.minimap = createMinimap(this);
+    this.updatesUi = createUpdatesUi(this);
 
     this.overview.onTap = (x, z, e, building) => {
       if (this.calibrator?.handleTap(x, z)) return;

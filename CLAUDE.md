@@ -42,9 +42,11 @@ src/
   data/footprint.js    Footprint geometry shared by picking, routing checks and the validator
   config.js            Tunables: player speeds, quality presets, type colours (no campus facts)
   core/app.js          App shell: renderer, auto quality fallback, mode switching
+  core/profile.js      localStorage conveniences (welcome details, last seen update), all in try/catch
   world/               textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
   modes/               overview (orbit), walk (first person), collision, gyro
-  ui/                  hud, joystick, sheets (one bottom sheet), nav-ui (search, cards, directions, nav card, arrival)
+  ui/                  hud, joystick, sheets (one bottom sheet), nav-ui (search, cards, directions, nav card, arrival),
+                       interior-ui, welcome (first visit), minimap (+ expanded map), updates (about and college updates)
   nav/                 search (index + scoring), route (plan, turns, hints), routeLayer (3D line + beacon), navigator (state machine, guided walk)
   tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
   interiors/           plan (floor plan to walls, doors, furniture; pure), interiors (meshes, enter/exit, floors, stairs, lift)
@@ -65,10 +67,12 @@ npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; 
 npm run perf       frame-rate measurement at 390x844
 ```
 
-Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export).
+Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export), `?welcome=0` (skip the welcome screen).
 Test hook: `window.__mkce` (`setMode`, `stats`, `input`, `nav`, `app`), used by the scripts.
 
 Interiors (step 7): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them and it is SAMPLE data (flagged `sample: true`, shown as such on the room card). Entering hides the outdoor scene (`world.setInterior`), swaps the walk collider and fades; no new shader programs (the interior materials are precompiled at start-up).
+
+Mobile UX (step 8): every control is at least 48 px (an e2e check audits this in each screen), the welcome screen stores optional email/college/location only in localStorage (`mkce360.profile.v1`), the mini-map and expanded map draw the satellite texture on a 2D canvas (floor plan indoors), the brand pill opens About and updates (read from `campus.json` `updates`), `prefers-reduced-motion` turns off camera flights, route and beacon animation and head bob.
 
 Navigation (step 6): `Navigator` states are none, preview, guided, paused, manual, arrived. The guided walk drives `WalkMode` through its `driver` hook; joystick, keys or a tap hand control back. Routes only run on `campus.paths` edges and the validator warns when an edge crosses a building. Guidance never invents campus facts: turn hints use building names from campus.json.
 

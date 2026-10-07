@@ -4,7 +4,7 @@ A frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering
 
 Walk through the campus in first person from your phone, or orbit over it from above. No backend, no login, no API calls: everything is static files.
 
-> **Status:** under construction (steps 1 to 7 of 9 done, step 8 next). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
+> **Status:** under construction (steps 1 to 8 of 9 done, step 9 next). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
 
 ## Stack
 
@@ -36,11 +36,14 @@ Requires Node 20.19+ (or 22.12+).
 
 **Interiors (sample):** block 1 can be entered (arrival card **Enter**, or **Go inside** on its building card). Inside, a floor selector (G, 1, 2, 3) changes floors, stairs and the lift do too, and tapping a door or a room sign opens a room card with type, capacity, department, faculty, equipment and a live **Now in session** status from the timetable. **Exit** puts you back outside at the door. All of it is **sample data** for now; see [docs/interiors.md](docs/interiors.md).
 
+**Welcome, mini-map and updates:** the first visit shows a welcome screen (email, college, location, all optional; only this college is available and any other shows "Not available yet"). The details stay in this browser only and can be edited or cleared in Settings. In Walk mode a mini-map shows your position and heading; tap it for the full campus map (drag to move, tap a numbered building for its card). Tap the **MKCE 360** pill for About and the college updates (read from `campus.json`). Every control is at least 48 px, landscape is supported, and `prefers-reduced-motion` turns animations off.
+
 Walking speed is about 1.4 m/s (run about 3.2 m/s) at an eye height of 1.6 m. The player collides with buildings and cannot leave the campus boundary. Settings (graphics quality, shadows, head bob, invert look) are in the **Settings** sheet. Graphics quality is **Auto** by default and drops a level if the frame rate stays under 30 fps. Shadows are off by default.
 
 ## Developer tools (query flags)
 
 - `?debug=1`: draws the extracted footprints, paths, doors and gates over the satellite ground, shows live stats (fps, draw calls, triangles) and offers a **2D alignment map** that overlays everything on the satellite image and on the signboard photo.
+- `?welcome=0`: skips the welcome screen (used by the test scripts).
 - `?calibrate=1`: tap the ground to read `x / z`, tap a building to select it, then nudge, rotate, resize, set its centre or door, undo, and **Export** a corrected `campus.json` (also copied to the clipboard). Edits are applied live and kept in this browser's local storage; to make them permanent, replace `src/data/campus.json` with the exported file.
 
 Both can be combined: `?debug=1&calibrate=1`.
@@ -51,7 +54,7 @@ Both can be combined: `?debug=1&calibrate=1`.
 npm run build
 npm run test:nav  # search and routing on the real campus.json, no browser (28 checks)
 npm run test:interiors  # floor plans: walls, doors, walkability, timetable (46 checks)
-npm run e2e       # 79 checks with real touch events: speed, joystick + look together, tap-to-walk,
+npm run e2e       # 106 checks with real touch events: speed, joystick + look together, tap-to-walk,
                   # collisions, gyro (simulated), search, directions, guided walk, calibration, debug map.
                   # Needs Microsoft Edge or Chrome.
 npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU slowdown)
