@@ -287,6 +287,21 @@ for (const p of data.points ?? []) {
   if (p.parent && !bIds.has(p.parent)) err(`${w}: parent "${p.parent}" is not a building id`);
 }
 
+// unplaced legend items: listed on the board, but not marked in docs/satellite-candidates.png, so they have no map position
+const uIdsUnplaced = new Set();
+for (const u of data.unplaced ?? []) {
+  const w = `unplaced "${u.id}"`;
+  if (!isStr(u.id) || uIdsUnplaced.has(u.id) || bIds.has(u.id) || pIds.has(u.id)) err(`${w}: id missing, duplicated or already used by a building or point`);
+  uIdsUnplaced.add(u.id);
+  if (!isStr(u.name)) err(`${w}: name required`);
+  if (!['building', 'point'].includes(u.kind)) err(`${w}: kind must be building or point`);
+  if (u.number != null && !Number.isInteger(u.number)) err(`${w}: number must be an integer or null`);
+  if (!isStr(u.reason)) err(`${w}: reason required (why it is not on the map)`);
+  if (u.position != null) err(`${w}: unplaced items must not have a "position" (keep an old guess under lastEstimate)`);
+}
+if (data.unplaced != null && !Array.isArray(data.unplaced)) err('campus.unplaced must be an array');
+if ((data.unplaced ?? []).length) warn(`${data.unplaced.length} legend items are not on the map yet (listed under "unplaced")`);
+
 // open areas (optional): kept free of trees
 for (const o of data.openAreas ?? []) {
   if (!isStr(o.id) || !isXZ(o.position) || !(isNum(o.size?.w) && isNum(o.size?.d))) err(`openArea "${o.id}" needs id, position, size`);

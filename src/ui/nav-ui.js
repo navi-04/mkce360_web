@@ -130,10 +130,10 @@ export function createNavUi(app) {
       const li = el('li');
       const b = el('button', 'srow');
       b.type = 'button';
-      const type = it.kind === 'building' ? it.category : (byId.get(it.buildingId)?.type ?? 'other');
+      const type = it.kind === 'building' ? it.category : it.kind === 'unplaced' ? it.type : (byId.get(it.buildingId)?.type ?? 'other');
       const txt = el('span', 'stxt');
       txt.append(el('b', null, it.title), el('small', null, it.subtitle));
-      b.append(badge(it.number, type), txt, el('span', 'sdist', formatDistance(r.distance ?? 0)));
+      b.append(badge(it.number, type), txt, el('span', 'sdist', r.distance == null ? '' : formatDistance(r.distance)));
       b.addEventListener('click', () => openItem(it));
       li.appendChild(b);
       frag.appendChild(li);
@@ -168,7 +168,24 @@ export function createNavUi(app) {
   // ---------------------------------------------------------------- cards
   function openItem(it) {
     if (it.kind === 'building') openBuilding(it.buildingId);
+    else if (it.kind === 'unplaced') openUnplaced(it);
     else openPlace(it);
+  }
+
+  /** a legend item whose place on the map is not confirmed: say so plainly, no directions */
+  function openUnplaced(it) {
+    const root = el('div', 'card');
+    const top = el('div', 'chead');
+    const t = el('div', 'ctitle');
+    t.append(el('h3', null, it.title), el('small', null, it.subtitle));
+    top.append(badge(it.number, it.type), t);
+    root.appendChild(top);
+    root.appendChild(el('p', 'cwarn', 'This place is on the college layout board, but its position on the map has not been confirmed yet, so there are no directions to it.'));
+    if (it.reason) root.appendChild(el('p', 'cdesc', it.reason));
+    const act = el('div', 'cacts');
+    act.append(button('btn primary', 'close', 'Close', () => sheets.close('card')));
+    root.appendChild(act);
+    sheets.show({ id: 'card', title: 'Not mapped yet', node: root, modal: true, label: it.title });
   }
 
   function row(label, value, muted = false) {

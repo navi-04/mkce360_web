@@ -18,7 +18,7 @@ export const BAY_WIDTH = 3.6; // m
 // white hostels, terracotta tile roofs on sheds). Purely visual.
 export const TYPE_STYLE = {
   department: { wall: 0xa9b5de, roof: 0xd9d3c5, trim: 0xf1ead6 },
-  lab: { wall: 0xf1ede3, roof: 0xb4593c, trim: 0xe8dfcb },
+  lab: { wall: 0xf1ede3, roof: 0xcdbca4, trim: 0xe8dfcb },
   library: { wall: 0xe9dfc8, roof: 0xd9d3c5, trim: 0xf1ead6 },
   canteen: { wall: 0xf0dcae, roof: 0xc2694a, trim: 0xf6ecd0 },
   parking: { wall: 0x9aa0a6, roof: 0x6e8199, trim: 0xb9bec4 },

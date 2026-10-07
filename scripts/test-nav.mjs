@@ -16,6 +16,20 @@ const check = (name, ok, detail = '') => {
   else { failed.push(name); console.log(`  FAIL  ${name}${detail ? '  (' + detail + ')' : ''}`); }
 };
 
+console.log('Map content (docs/satellite-candidates.png is the reference)');
+const IMAGE_SET = ['apj-block', 'radhakrishnan-block', 'laboratories-shed-1', 'laboratories-shed-2', 'veda-hostel', 'muthulakshmi-reddy-hostel', 'play-ground', 'basket-ball-court', 'volley-ball-court', 'tennis-court', 'olympia-block', 'unlabelled-6', 'four-wheeler-parking', 'two-wheeler-parking', 'fuel-station'].sort();
+check('only structures marked in the satellite candidate image are on the map', JSON.stringify(data.buildings.map((b) => b.id).sort()) === JSON.stringify(IMAGE_SET), data.buildings.map((b) => b.id).filter((i) => !IMAGE_SET.includes(i)).join(','));
+check('image labels: 5 = west C-shaped block, 3 and 4 = the twin wings, Unlabelled-6 has no legend number', (() => {
+  const g = (id) => data.buildings.find((b) => b.id === id);
+  return g('veda-hostel').number === 5 && g('veda-hostel').position.x < -300 && g('laboratories-shed-1').number === 3 && g('laboratories-shed-2').number === 4 && g('laboratories-shed-1').position.x < g('laboratories-shed-2').position.x && g('unlabelled-6').number == null;
+})());
+check('everything else from the board is listed as unplaced, none of it has a position', data.unplaced.length >= 20 && data.unplaced.every((u) => u.position === undefined));
+check('all legend numbers 1 to 33 are accounted for (mapped or unplaced)', (() => {
+  const nums = new Set([...data.buildings, ...data.unplaced.filter((u) => u.kind === 'building')].map((b) => b.number).filter((n) => n != null));
+  const missing = []; for (let n = 1; n <= 33; n++) if (!nums.has(n) && ![21, 22].includes(n)) missing.push(n);
+  return missing.length === 0;
+})());
+
 console.log('Search');
 const index = buildSearchIndex(data);
 const first = (q, o) => searchIndex(index, q, o)[0]?.item;
@@ -23,14 +37,24 @@ check('"kalam" finds block 1', first('kalam')?.buildingId === 'apj-block');
 check('"apj" finds block 1 (dots in the printed name)', first('apj')?.buildingId === 'apj-block');
 check('"1" finds legend item 1 first', first('1')?.buildingId === 'apj-block');
 check('"7" finds the Muthulakshmi Reddy hostel', first('7')?.buildingId === 'muthulakshmi-reddy-hostel');
-check('"hostel" lists all hostels', searchIndex(index, 'hostel').filter((r) => r.item.category === 'hostel').length === data.buildings.filter((b) => b.type === 'hostel').length);
+check('"hostel" lists the mapped hostels first, then the unmapped one', (() => {
+  const r = searchIndex(index, 'hostel').map((x) => x.item);
+  return r.length === 3 && r.slice(0, 2).every((i) => i.kind === 'building') && r[2].kind === 'unplaced';
+})());
 check('category filter: sports only', searchIndex(index, '', { category: 'sports' }).every((r) => r.item.category === 'sports'));
 check('typo-free partial words work ("radha")', first('radha')?.buildingId === 'radhakrishnan-block');
-check('multi-word query ("boys mess")', first('boys mess')?.buildingId === 'boys-mess');
+check('a legend item that is not mapped yet is still findable ("boys mess") and says so', (() => { const r = first('boys mess'); return r?.kind === 'unplaced' && /Not mapped yet/.test(r.subtitle); })());
+check('unmapped items have no distance and sort after mapped places', (() => {
+  const r = searchIndex(index, '', { from: { x: -3, z: 0 }, limit: 500 });
+  const firstU = r.findIndex((x) => x.item.kind === 'unplaced');
+  return r.filter((x) => x.item.kind === 'unplaced').every((x) => x.distance === null) && r.slice(firstU).every((x) => x.item.kind === 'unplaced');
+})());
+check('no route can be planned to an unmapped item', planRoute(data, { gate: 'main-gate' }, { pointId: 'well-48' }) === null && planRoute(data, { gate: 'main-gate' }, { buildingId: 'canteen' }) === null);
 check('no match gives an empty list', searchIndex(index, 'zzzzqq').length === 0);
 check('empty query lists everything, nearest first when a position is given', (() => {
   const r = searchIndex(index, '', { from: { x: -3, z: 0 }, limit: 500 });
-  return r.length === index.items.length && r[0].distance <= r[r.length - 1].distance;
+  const placed = r.filter((x) => x.distance !== null);
+  return r.length === index.items.length && placed[0].distance <= placed[placed.length - 1].distance;
 })());
 check('categories only for types that exist', index.categories.every((c) => index.items.some((i) => i.category === c.id)));
 check('solar PV markers are not search results', !index.items.some((i) => i.pointId?.startsWith('solar')));
@@ -60,8 +84,8 @@ const far = planRoute(data, { x: -190, z: 120, label: 'Test spot' }, { buildingI
 check('route from a spot off the paths connects through the nearest path', !!far && far.length > 40, far ? `${far.length.toFixed(0)} m` : 'none');
 const same = planRoute(data, { x: data.buildings[0].doorPosition.x, z: data.buildings[0].doorPosition.z }, { buildingId: 'apj-block' });
 check('already at the door gives a (near) zero-length route', !!same && same.length < 6, same ? `${same.length.toFixed(1)} m` : 'none');
-const toPoint = planRoute(data, { gate: 'main-gate' }, { pointId: 'well-48' });
-check('route to a free point (well) ends at the point', !!toPoint && Math.hypot(toPoint.poly.p.at(-1).x + 215, toPoint.poly.p.at(-1).z - 38) < 0.5);
+const toPoint = planRoute(data, { gate: 'main-gate' }, { x: -90, z: 110, label: 'Test spot' });
+check('route to a free spot ends at the spot', !!toPoint && Math.hypot(toPoint.poly.p.at(-1).x + 90, toPoint.poly.p.at(-1).z - 110) < 0.5);
 const toRoom = planRoute(data, { gate: 'main-gate' }, { pointId: 'gym-21' });
 check('route to a marker inside a building goes to that building door', !!toRoom && toRoom.to.buildingId === 'olympia-block');
 

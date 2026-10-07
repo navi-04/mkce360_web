@@ -323,3 +323,36 @@ the user's 92 x 113 m. That is within 3 to 4 percent of the 0.792 m per pixel sc
 (3, 4), storage yard, power house, snack corner, girls mess, canteen (20), the kiosks and ATMs, the cricket net, and the
 far-west items (STP, transformer, boundary), which lie outside all imagery. The satellite shows a dry field without the
 oval running track that the board draws for the play ground (8).
+
+
+---
+
+## 12. Revision 5: the map now matches `docs/satellite-candidates.png`
+
+The user confirmed that `docs/satellite-candidates.png` is correct and that earlier revisions had added buildings that are
+not in it. Rule from now on: **only a structure marked in that image is placed on the map.** Everything else from the board is kept
+in `campus.json` under `unplaced` (no position, shown in search as "Not mapped yet", no directions) until the user confirms where it is.
+
+**Identities, taken from the image labels**
+
+| Image label | Now | Before |
+| --- | --- | --- |
+| 5? Veda hostel (the C-shaped block at the west edge) | `veda-hostel` (5) | drawn as Octa hostel (6) |
+| 3? and 4? (the twin solar-roof wings south of block 1) | `laboratories-shed-1` (west wing) and `laboratories-shed-2` (east wing) | drawn as one Veda hostel, with the lab sheds placed in the palm grove |
+| Unlabelled-6 (grey flat-roof building) | `unlabelled-6`, no legend number | drawn as Boys mess |
+| 30/31? parking shed | one shed, drawn as two adjoining halves for items 30 and 31 | two sheds with a gap |
+| 12/13? courts | the painted court pair is item 12 only | item 13 had a separate box near the gate |
+| top courtyard block (unlabelled) | kept as item 7 (Dr. Muthulakshmi Reddy hostel), identity still to be confirmed | same |
+
+**Kept:** 1, 2, 3, 4, 5, 7, 8 (play ground), 12, 14, 15, 19, 30, 31, 32, Unlabelled-6. Plus the gym and guest-house markers (they sit
+on block 19) and the solar panel markers (on block 1 and the twin wings).
+
+**Moved to `unplaced`** (27 entries): 6 Octa hostel, 9 ball badminton, 10 kabaddi, 11 kho-kho, 13 cricket practice net, 16 security office,
+17 and 18 ATMs, 20 canteen, 23 boys mess, 24 staff quarters, 25 storage yard, 26 power house, 27 snack corner, 28 girls mess,
+29 main transformer, 33 sewage treatment plant, the three bio gas points, the four emergency assembly points and the three wells.
+Their last estimated positions (from the board and a homography fit) are kept under `lastEstimate` for reference only.
+
+**Paths.** The 7 m road down x = -300 and the road to the far west were invented and are gone. The west hostel is now reached by the
+road that is visible in the satellite (from its north end, round the bend and east to the white houses), drawn as a 4 m road. The
+link from that road to the main network (a 46 m walkway to the junction at about -251, 123) and the walkways through the palm grove
+along z = 122 are **assumed connectors**, not visible in the imagery. Dead-end stubs that only served parked items were removed.

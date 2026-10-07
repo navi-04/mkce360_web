@@ -13,6 +13,7 @@ export const CATEGORY_LABEL = {
   other: 'Other',
   place: 'Places',
   room: 'Rooms',
+  unplaced: 'Not mapped yet',
 };
 
 export const TYPE_NOUN = {
@@ -34,7 +35,7 @@ const POINT_NOUN = {
   biogas: 'Utility',
 };
 
-const CATEGORY_ORDER = ['department', 'lab', 'library', 'hostel', 'canteen', 'sports', 'parking', 'admin', 'place', 'room', 'other'];
+const CATEGORY_ORDER = ['department', 'lab', 'library', 'hostel', 'canteen', 'sports', 'parking', 'admin', 'place', 'room', 'other', 'unplaced'];
 
 /** lower case, no accents, letters and digits only, words separated by single spaces */
 export function normalise(s) {
@@ -137,6 +138,28 @@ export function buildSearchIndex(data) {
     );
   }
 
+  // legend items without a confirmed place on the map: findable, but they cannot be routed to
+  for (const u of data.unplaced ?? []) {
+    items.push(
+      prepare(
+        {
+          id: `u:${u.id}`,
+          kind: 'unplaced',
+          category: 'unplaced',
+          title: u.name,
+          subtitle: `Not mapped yet${u.number != null ? ` · legend item ${u.number}` : ''}`,
+          number: u.number ?? null,
+          x: null,
+          z: null,
+          unplacedId: u.id,
+          reason: u.reason,
+          type: u.type ?? 'other',
+        },
+        `${CATEGORY_LABEL[u.type] ?? ''} ${TYPE_NOUN[u.type] ?? ''} ${u.number ?? ''} not mapped`,
+      ),
+    );
+  }
+
   const present = new Set(items.map((i) => i.category));
   const categories = CATEGORY_ORDER.filter((c) => present.has(c)).map((c) => ({ id: c, label: CATEGORY_LABEL[c] }));
   return { items, categories };
@@ -171,16 +194,18 @@ export function searchIndex(index, query, { category = 'all', from = null, limit
   const qNorm = normalise(query);
   const qTokens = qNorm ? qNorm.split(' ') : [];
   const qSquashed = qNorm.replace(/ /g, '');
-  const dist = (it) => (from ? Math.hypot(it.x - from.x, it.z - from.z) : 0);
+  const dist = (it) => (from && it.x != null ? Math.hypot(it.x - from.x, it.z - from.z) : null);
   const out = [];
   for (const it of index.items) {
     if (category !== 'all' && it.category !== category) continue;
     const s = qTokens.length ? score(it, qTokens, qSquashed, qNorm) : 1;
-    if (s > 0) out.push({ item: it, score: s, distance: from ? dist(it) : null });
+    if (s > 0) out.push({ item: it, score: s, distance: dist(it) });
   }
   out.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    if (!qTokens.length && from) return a.distance - b.distance; // empty query: nearest first
+    const ua = a.item.kind === 'unplaced', ub = b.item.kind === 'unplaced';
+    if (ua !== ub) return ua ? 1 : -1; // places on the map come before the unmapped ones
+    if (!qTokens.length && from && !ua) return a.distance - b.distance; // empty query: nearest first
     const an = a.item.number ?? 1e9, bn = b.item.number ?? 1e9;
     if (an !== bn) return an - bn;
     return a.item.title.localeCompare(b.item.title);

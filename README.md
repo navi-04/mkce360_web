@@ -4,6 +4,8 @@ A frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering
 
 Walk through the campus in first person from your phone, or orbit over it from above. No backend, no login, no API calls: everything is static files.
 
+> **Map content:** only the structures marked in `docs/satellite-candidates.png` are placed on the map (15 buildings). The other places on the college layout board are listed under `unplaced` in `src/data/campus.json` and appear in search as "Not mapped yet" until their location is confirmed.
+
 > **Status:** under construction (all 9 steps done; the campus data is still being verified, see below). Campus data was extracted from the college layout signboard and a satellite image and is **not yet verified on site**. Anything marked `verified: false` in `src/data/campus.json` is a first estimate. Use calibration mode (below) to correct positions.
 
 ## Stack
@@ -54,7 +56,7 @@ Both can be combined: `?debug=1&calibrate=1`.
 npm run build
 npm run test:nav  # search and routing on the real campus.json, no browser (28 checks)
 npm run test:interiors  # floor plans: walls, doors, walkability, timetable (46 checks)
-npm run e2e       # 108 checks with real touch events: speed, joystick + look together, tap-to-walk,
+npm run e2e       # 109 checks with real touch events: speed, joystick + look together, tap-to-walk,
                   # collisions, gyro (simulated), search, directions, guided walk, calibration, debug map.
                   # Needs Microsoft Edge or Chrome.
 npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU slowdown)

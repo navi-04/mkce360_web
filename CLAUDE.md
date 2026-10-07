@@ -10,6 +10,7 @@ App name shown everywhere in the UI: **MKCE 360**.
 - Static frontend only: no backend, no database, no login, no API calls.
 - Stack: Vite + vanilla JavaScript + Three.js. No heavy UI framework (no React/Vue/etc.).
 - All campus content lives in `src/data/campus.json`. Code never contains campus facts.
+- Only structures marked in `docs/satellite-candidates.png` (confirmed correct by the user) are placed on the map. Other legend items live under `unplaced` in campus.json (no position) until the user says where they are; `scripts/test-nav.mjs` guards this list.
 - Never invent real campus details (building names, room names, faculty, timetables, floor counts). Use clearly labelled placeholders and flag unverified values (for example `"floors": 1` with `"floorsVerified": false`).
 - If something is unclear, ask the user before assuming. Do not guess scale, door sides, or building identities.
 - Work step by step. After each step: run the build, fix errors, summarise, commit. Respect the STOP points; do not continue past one until the user replies.
