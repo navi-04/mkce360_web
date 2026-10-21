@@ -228,10 +228,19 @@ function validateFloor(f, where) {
       const w = `${where} ${kind} "${x.id}"`;
       if (!isStr(x.id)) err(`${where}: a ${kind} entry has no id`);
       if (!rectOk(x.bounds)) err(`${w}: bounds required`);
-      if (x.rise != null && !['n', 's', 'e', 'w'].includes(x.rise)) err(`${w}: rise must be n|s|e|w`);
       if (x.facing != null && !['n', 's', 'e', 'w'].includes(x.facing)) err(`${w}: facing must be n|s|e|w`);
-      if (x.arrive != null && !['n', 's', 'e', 'w'].includes(x.arrive)) err(`${w}: arrive must be n|s|e|w`);
-      if (!isXZ(x.landing)) err(`${w}: landing {x,z} required`);
+      if (kind === 'stairs') {
+        // a stair well: two flights side by side and a landing, opening on the side `foot` (see docs/interiors.md)
+        if (!['n', 's', 'e', 'w'].includes(x.foot)) err(`${w}: foot must be n|s|e|w`);
+        else if (rectOk(x.bounds)) {
+          const across = x.foot === 'w' || x.foot === 'e' ? x.bounds.z1 - x.bounds.z0 : x.bounds.x1 - x.bounds.x0;
+          const along = x.foot === 'w' || x.foot === 'e' ? x.bounds.x1 - x.bounds.x0 : x.bounds.z1 - x.bounds.z0;
+          if (across < 2.6 || along < across / 2 + 2.4) err(`${w}: the well is too small (${across.toFixed(1)} x ${along.toFixed(1)} m; two flights need at least 2.6 m across and 2.4 m of run)`);
+          if (outlineOk && !(inRect({ x: x.bounds.x0, z: x.bounds.z0 }, f.outline) && inRect({ x: x.bounds.x1, z: x.bounds.z1 }, f.outline))) err(`${w}: the well leaves the outline`);
+          for (const r of f.rooms ?? []) if (rectOk(r.bounds) && rectsOverlap(x.bounds, r.bounds)) err(`${w}: overlaps room "${r.id}"`);
+          if (rectOk(court) && rectsOverlap(x.bounds, court)) err(`${w}: stands in the courtyard`);
+        }
+      } else if (!isXZ(x.landing)) err(`${w}: landing {x,z} required`);
       else {
         if (outlineOk && !inRect(x.landing, f.outline)) err(`${w}: landing is outside the floor`);
         for (const r of f.rooms ?? []) if (rectOk(r.bounds) && inRect(x.landing, r.bounds)) err(`${w}: landing is inside room "${r.id}"`);
@@ -241,6 +250,7 @@ function validateFloor(f, where) {
     }
   }
   if (f.entrance && !(isXZ(f.entrance) && outlineOk)) err(`${where}: entrance {x,z} required and the outline too`);
+  if (f.entrance?.height != null && !(isNum(f.entrance.height) && f.entrance.height >= 2 && f.entrance.height <= 3.4)) err(`${where} floor ${f.level}: entrance.height must be 2 to 3.4 metres`);
   if (f.entrance && outlineOk && isXZ(f.entrance)) {
     const e = f.entrance, o = f.outline, facing = e.facing ?? 'east';
     const wall = { east: ['x', o.x1], west: ['x', o.x0], north: ['z', o.z0], south: ['z', o.z1] }[facing];
@@ -278,6 +288,20 @@ for (const b of buildings) {
     const levels = b.floorPlans.map((f) => f.level).sort((a, c) => a - c);
     if (new Set(levels).size !== levels.length) err(`${w}: duplicate floor levels`);
     if (!levels.includes(0)) err(`${w}: floorPlans need a level 0 (ground floor)`);
+    if (levels.some((l, i) => l !== i)) err(`${w}: floor levels must be 0, 1, 2 ... without gaps`);
+    const ref = JSON.stringify((b.floorPlans.find((f) => f.level === 0)?.stairs ?? []).map((q) => [q.id, q.foot, q.bounds]));
+    for (const f of b.floorPlans) if (JSON.stringify((f.stairs ?? []).map((q) => [q.id, q.foot, q.bounds])) !== ref) err(`${w}: floor ${f.level} has different stair wells than the ground floor (the wells stack)`);
+    const hs = new Set(b.floorPlans.map((f) => f.height ?? 3.6));
+    if (hs.size > 1) err(`${w}: every floor needs the same height`);
+    if (b.porch && b.floorPlans[0].entrance && ((b.porch.doorW ?? 4.8) !== (b.floorPlans[0].entrance.width ?? 2.4) || (b.porch.doorH ?? 2.6) !== (b.floorPlans[0].entrance.height ?? 2.6))) {
+      warn(`${w}: the doorway of the porch and the entrance of the plan differ in size`);
+    }
+    if (b.form === 'ring' && isNum(b.ring?.thickness) && b.floorPlans[0].court) {
+      const o0 = b.floorPlans[0].outline, c0 = b.floorPlans[0].court;
+      const tx = c0.x0 - o0.x0, tz = c0.z0 - o0.z0;
+      if (Math.abs(tx - b.ring.thickness) > 0.3 || Math.abs(tz - b.ring.thickness) > 0.3) warn(`${w}: the wings outside are ${b.ring.thickness} m thick but the plan's are ${tx.toFixed(1)} x ${tz.toFixed(1)} m`);
+    }
+    if (b.floorPlans.length && isNum(b.heightM) && Math.abs(b.heightM - b.floorPlans.length * (b.floorPlans[0].height ?? 3.6)) > 0.3) warn(`${w}: heightM is ${b.heightM} m but ${b.floorPlans.length} floors of ${b.floorPlans[0].height ?? 3.6} m make ${(b.floorPlans.length * (b.floorPlans[0].height ?? 3.6)).toFixed(1)} m`);
     if (b.verified?.floors && b.floorPlans.length !== b.floors) warn(`${w}: ${b.floorPlans.length} floor plans but floors is ${b.floors}`);
     if (!b.floorPlans.some((f) => f.entrance)) warn(`${w}: no floor has an entrance, so there is no way in`);
     if (b.floorPlans.some((f) => f.sample)) warn(`${w}: floor plans are SAMPLE data`);

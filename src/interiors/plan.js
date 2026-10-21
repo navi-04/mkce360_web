@@ -10,6 +10,7 @@
 export const WALL_T = 0.2;
 export const DOOR = { w: 1.2, h: 2.1 };
 export const ENTRANCE_W = 2.4;
+export const ENTRANCE_H = 2.6;
 export const PARAPET_H = 1.0;
 export const PLINTH = 0.45; // the verandah floor stands this far above the garden
 const TYPE_ROOMS = new Set(['classroom', 'lab', 'office', 'seminar', 'library', 'washroom', 'store', 'lobby', 'other']);
@@ -74,7 +75,7 @@ function subtractIntervals(a, b, cover) {
 /**
  * Build the description of one floor.
  */
-export function buildPlan(floor) {
+export function buildPlan(floor, ctx = {}) {
   const H = floorHeight(floor);
   const o = floor.outline;
   const c = floor.court ?? null;
@@ -111,6 +112,7 @@ export function buildPlan(floor) {
   // ---------- the entrance: an opening cut into whichever wall it lies on ----------
   const ent = floor.entrance ?? null;
   const entW = ent?.width ?? ENTRANCE_W; // the opening in the outer wall, `entrance.width` metres wide (default 2.4)
+  const entH = ent?.height ?? ENTRANCE_H; // and `entrance.height` high (default 2.6)
   let entrance = null;
   const entranceCut = (orient, coord, lo, hi) => {
     if (!ent) return [];
@@ -119,12 +121,12 @@ export function buildPlan(floor) {
     if ((orient === 'v') !== vertical) return [];
     const line = vertical ? ent.x : ent.z, along = vertical ? ent.z : ent.x;
     if (!near(line, coord, 0.05) || along < lo || along > hi) return [];
-    return [[along - entW / 2, along + entW / 2, 2.4]];
+    return [[along - entW / 2, along + entW / 2, entH]];
   };
   if (ent) {
     const facing = ent.facing ?? 'east';
     const dir = { east: [1, 0], west: [-1, 0], north: [0, -1], south: [0, 1] }[facing] ?? [1, 0];
-    entrance = { x: ent.x, z: ent.z, width: entW, facing, nx: dir[0], nz: dir[1] };
+    entrance = { x: ent.x, z: ent.z, width: entW, height: entH, facing, nx: dir[0], nz: dir[1] };
   }
 
   // ---------- rooms: walls, doors, signs, windows ----------
@@ -187,6 +189,19 @@ export function buildPlan(floor) {
     }
   }
 
+  // ---------- stairs: a walled well in a corner, two flights side by side joined by a landing (first: the floors get holes for it) ----------
+  const levels = ctx.levels ?? 1, lvl = floor.level;
+  const hasUp = lvl < levels - 1, hasDown = lvl > 0;
+  const cores = (floor.stairs ?? []).map((s) => stairCore(s, o, H, { hasUp, hasDown, nextHasUp: lvl + 1 < levels - 1 }));
+  for (const k of cores) {
+    for (const w of k.walls) {
+      walls.push({ x0: w.x0, z0: w.z0, x1: w.x1, z1: w.z1, y0: 0, y1: w.h ?? H, solid: true, inner: null });
+      addCollider(w.x0, w.z0, w.x1, w.z1, `stairs:${k.id}`);
+    }
+  }
+  const holesBelow = hasDown ? cores.flatMap((k) => k.holeBelow) : []; // the slab of this floor is open where flights arrive from below
+  const holesAbove = hasUp ? cores.flatMap((k) => k.holeAbove) : []; // the ceiling is open where the flights go on up
+
   // ---------- floors and ceilings ----------
   const floors = []; // { x0,z0,x1,z1, kind, y }
   const ceilings = [];
@@ -200,8 +215,8 @@ export function buildPlan(floor) {
     : [{ ...o }];
   const corridorKind = floor.corridorFloor ?? 'granite';
   for (const p of ringParts) {
-    floors.push({ ...p, kind: corridorKind, y: 0 });
-    ceilings.push({ ...p });
+    for (const q of cutRects([p], holesBelow)) floors.push({ ...q, kind: corridorKind, y: 0 });
+    for (const q of cutRects([p], holesAbove)) ceilings.push({ ...q });
   }
   for (const r of floor.rooms) floors.push({ ...r.bounds, kind: r.floor ?? FLOOR_KIND[r.type] ?? 'granite', y: 0.03 });
 
@@ -218,7 +233,8 @@ export function buildPlan(floor) {
     const PT = 0.25, CW = 0.42;
     for (const [side, orient, coord, lo, hi, nx, nz] of sides) {
       const len = hi - lo;
-      const bays = 2 * Math.max(1, Math.round(len / 7.4)); // an even number: the facade texture is two bays wide
+      let bays = Math.max(1, Math.round(len / 3.7));
+      if (bays % 2 === 0) bays += 1; // an odd number: a bay, not a column, is in the middle of each side, where the paths and the entrance are
       const step = len / bays;
       // parapet and columns stand on the verandah side of the court edge
       const band = orient === 'h'
@@ -226,7 +242,9 @@ export function buildPlan(floor) {
         : { x0: Math.min(coord, coord + nx * PT), x1: Math.max(coord, coord + nx * PT), z0: lo, z1: hi };
       for (let i = 0; i <= bays; i++) {
         const q = lo + i * step;
-        columns.push(orient === 'h' ? { x: r2(q), z: r2(coord + nz * PT / 2), w: CW, d: CW } : { x: r2(coord + nx * PT / 2), z: r2(q), w: CW, d: CW });
+        const col = orient === 'h' ? { x: r2(q), z: r2(coord + nz * PT / 2), w: CW, d: CW } : { x: r2(coord + nx * PT / 2), z: r2(q), w: CW, d: CW };
+        columns.push(col);
+        addCollider(col.x - CW / 2, col.z - CW / 2, col.x + CW / 2, col.z + CW / 2, 'column'); // the white columns of the arcade are solid
       }
       fascia.push({ ...band, y0: H - 0.5, y1: H });
       // a ceiling beam across the verandah at every column (the corridor photos show them)
@@ -330,21 +348,16 @@ export function buildPlan(floor) {
     const cx = e.orient === 'h' ? (lo + hi) / 2 : e.coord + e.nx * off, cz = e.orient === 'h' ? e.coord + e.nz * off : (lo + hi) / 2;
     props.boxes.push({ x: r2(cx), z: r2(cz), w: e.orient === 'h' ? r2(hi - lo) : 0.05, d: e.orient === 'h' ? 0.05 : r2(hi - lo), h: 0.05, y: r2(y), color: 0xf4f3ee });
   }
-  for (const s of (floor.stairs ?? []).filter((_, i, a) => i === 0 || i === a.length - 1)) {
-    // a steel water cooler beside the foot of the stairs, on the courtyard side
-    const toward = Math.sign((c ?? o).x0 + ((c ?? o).x1 - (c ?? o).x0) / 2 - s.landing.x) || 1;
-    const cx = s.landing.x + toward * 1.4, cz = s.landing.z;
-    props.boxes.push({ x: r2(cx), z: r2(cz), w: 0.55, d: 0.5, h: 1.45, y: 0, color: COLORS.cooler });
-    addCollider(cx - 0.3, cz - 0.28, cx + 0.3, cz + 0.28, 'furniture');
+  for (const k of cores.filter((_, i, a) => i === 0 || i === a.length - 1)) {
+    // a steel water cooler beside the stairwell (in the corridor photos), against its open side
+    const q = k.cooler;
+    props.boxes.push({ x: r2((q.x0 + q.x1) / 2), z: r2((q.z0 + q.z1) / 2), w: r2(q.x1 - q.x0), d: r2(q.z1 - q.z0), h: 1.45, y: 0, color: COLORS.cooler });
+    addCollider(q.x0 - 0.02, q.z0 - 0.02, q.x1 + 0.02, q.z1 + 0.02, 'furniture');
   }
 
-  // ---------- stairs and lifts ----------
-  const stairs = [], lifts = [];
-  for (const s of floor.stairs ?? []) {
-    const boxes = stairBoxes(s, H);
-    addCollider(Math.min(...boxes.map((q) => q.x0)), Math.min(...boxes.map((q) => q.z0)), Math.max(...boxes.map((q) => q.x1)), Math.max(...boxes.map((q) => q.z1)), `stairs:${s.id}`);
-    stairs.push({ ...s, boxes });
-  }
+  // ---------- the stair wells (see above) and lifts ----------
+  const stairs = cores, lifts = [];
+  const ramps = cores.flatMap((k) => k.ramps), platforms = cores.flatMap((k) => k.platforms);
   for (const l of floor.lifts ?? []) {
     const b = l.bounds;
     addCollider(b.x0, b.z0, b.x1, b.z1, `lift:${l.id}`);
@@ -370,6 +383,11 @@ export function buildPlan(floor) {
     }
   }
 
+  for (let i = lights.length - 1; i >= 0; i--) {
+    const l = lights[i];
+    if (holesAbove.some((h) => l.x > h.x0 - 0.3 && l.x < h.x1 + 0.3 && l.z > h.z0 - 0.3 && l.z < h.z1 + 0.3)) lights.splice(i, 1);
+  }
+
   // ---------- garden inside the courtyard ----------
   const garden = c ? gardenOf(c, gc, H) : null;
   if (walkway && garden) {
@@ -381,13 +399,33 @@ export function buildPlan(floor) {
   }
   const groundAt = (x, z) => (walkway && garden ? yardGround(garden, x, z) : 0);
 
+  /**
+   * The heights (relative to this floor, y = 0) of every surface a viewer could stand on at (x, z): the floor, the yard of the
+   * ground floor, a flight of the stairs, a landing. The caller picks the one that fits the height it is at (see ground.js).
+   */
+  const inRect = (r, x, z) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1;
+  const heightsAt = (x, z) => {
+    const out = [];
+    if (!inRect(o, x, z)) return out;
+    if (c && inRect(c, x, z)) {
+      if (walkway && garden) out.push(yardGround(garden, x, z));
+    } else if (floors.some((f) => inRect(f, x, z))) out.push(0);
+    for (const r of ramps) {
+      if (!inRect(r.rect, x, z)) continue;
+      const t = Math.max(0, Math.min(1, ((x - r.ox) * r.ux + (z - r.oz) * r.uz) / r.len));
+      out.push(r.y0 + (r.y1 - r.y0) * t);
+    }
+    for (const p of platforms) if (inRect(p, x, z)) out.push(p.y);
+    return out;
+  };
+
   const spawn = entrance
     ? { x: r2(entrance.x - entrance.nx * 2.6), z: r2(entrance.z - entrance.nz * 2.6), yaw: Math.atan2(entrance.nx, entrance.nz) }
     : stairs[0] ? { x: stairs[0].landing.x, z: stairs[0].landing.z, yaw: 0 } : { x: (o.x0 + o.x1) / 2, z: (o.z0 + o.z1) / 2, yaw: 0 };
 
   return {
     height: H, slabs: walls, walls, floors, ceilings, parapets, columns, fascia, doors, signs, windows, decor, furniture, colliders, stairs, lifts, picks,
-    lights, garden, entrance, ringParts, props, walkway, groundAt, yard: garden?.yard ?? null,
+    lights, garden, entrance, ringParts, props, walkway, groundAt, heightsAt, ramps, platforms, holes: { below: holesBelow, above: holesAbove }, yard: garden?.yard ?? null,
     boundary: [{ x: o.x0, z: o.z0 }, { x: o.x1, z: o.z0 }, { x: o.x1, z: o.z1 }, { x: o.x0, z: o.z1 }],
     spawn, outline: o, court: c,
   };
@@ -395,34 +433,94 @@ export function buildPlan(floor) {
 
 // ---------- stairs ----------
 
-/** a straight flight inside `bounds` rising towards `rise` (n|s|e|w); treads and nosings as boxes, side walls, and the wall above the top */
-export function stairBoxes(s, H) {
-  const b = s.bounds;
-  const rise = s.rise ?? 'w';
-  const alongX = rise === 'e' || rise === 'w';
-  const len = alongX ? b.x1 - b.x0 : b.z1 - b.z0;
-  const width = alongX ? b.z1 - b.z0 : b.x1 - b.x0;
-  const n = Math.max(6, Math.round(len / 0.27));
-  const run = len / n;
-  const stepH = Math.min(0.18, (H - 0.7) / n);
-  const dir = rise === 'e' || rise === 's' ? 1 : -1; // direction of travel along the axis
-  const start = alongX ? (dir > 0 ? b.x0 : b.x1) : (dir > 0 ? b.z0 : b.z1);
-  const boxes = [];
-  const rect = (a0, a1, w0, w1, y0, y1, color) => {
-    const lo = Math.min(a0, a1), hi = Math.max(a0, a1);
-    boxes.push(alongX ? { x0: lo, x1: hi, z0: w0, z1: w1, y0, y1, color } : { x0: w0, x1: w1, z0: lo, z1: hi, y0, y1, color });
-  };
-  const w0 = alongX ? b.z0 : b.x0, w1 = alongX ? b.z1 : b.x1;
-  for (let i = 0; i < n; i++) {
-    const a0 = start + dir * i * run, a1 = a0 + dir * run;
-    const h = stepH * (i + 1);
-    rect(a0, a1, w0 + 0.25, w1 - 0.25, 0, h, i % 2 ? 0xa8a59e : 0xb2afa7);
-    rect(a0, a0 + dir * 0.05, w0 + 0.25, w1 - 0.25, h - 0.03, h, 0x5f8eb0); // the blue nosing line on every tread
+const STAIR_PART = 0.2; // the wall between the two flights
+const STAIR_RISERS = 11; // risers per flight: a flight climbs half a storey
+
+/** the parts of `rects` that are not inside any of `holes` (all axis aligned) */
+export function cutRects(rects, holes) {
+  let out = rects;
+  for (const h of holes) {
+    const next = [];
+    for (const r of out) {
+      if (h.x1 <= r.x0 + 1e-6 || h.x0 >= r.x1 - 1e-6 || h.z1 <= r.z0 + 1e-6 || h.z0 >= r.z1 - 1e-6) { next.push(r); continue; }
+      if (h.z0 > r.z0 + 1e-6) next.push({ ...r, z1: h.z0 });
+      if (h.z1 < r.z1 - 1e-6) next.push({ ...r, z0: h.z1 });
+      const z0 = Math.max(r.z0, h.z0), z1 = Math.min(r.z1, h.z1);
+      if (h.x0 > r.x0 + 1e-6) next.push({ ...r, z0, z1, x1: h.x0 });
+      if (h.x1 < r.x1 - 1e-6) next.push({ ...r, z0, z1, x0: h.x1 });
+    }
+    out = next;
   }
-  for (const [p0, p1] of [[w0, w0 + 0.25], [w1 - 0.25, w1]]) rect(start, start + dir * len, p0, p1, 0, 1.15, 0x8c6b55); // brown side walls
-  const end = start + dir * len;
-  rect(end, end + dir * 0.3, w0, w1, 0, H - 0.4, 0xf0eadb); // the wall the flight runs into
-  return boxes;
+  return out;
+}
+
+/**
+ * A stair well in a corner: a walled box with two flights side by side joined by a landing, climbing half a storey each.
+ * `s.bounds` is the inside of the well, `s.foot` (w|e|n|s) the side where both flights open (the foot of the lower flight and the
+ * top of the upper one are on the same side). The lower flight is in the lane on the open side, the upper flight in the lane against
+ * the outer wall; the same well is repeated on every floor, so the upper flight of one floor ends where the lower flight of the next
+ * begins. u runs from the foot into the well, v from the wall side across it.
+ *
+ * Returns the steps (boxes), the walls (with colliders added by the caller), the ramps and platforms the viewer's height follows,
+ * and the holes the floor above and below need.
+ */
+function stairCore(s, o, H, ctx) {
+  const b = s.bounds, foot = s.foot ?? 'w';
+  const alongX = foot === 'w' || foot === 'e';
+  const W = alongX ? b.z1 - b.z0 : b.x1 - b.x0;
+  const len = alongX ? b.x1 - b.x0 : b.z1 - b.z0;
+  let ox, oz, ux, uz, vx, vz;
+  if (alongX) {
+    const wallNorth = b.z0 - o.z0 <= o.z1 - b.z1;
+    ox = foot === 'w' ? b.x0 : b.x1; oz = wallNorth ? b.z0 : b.z1; ux = foot === 'w' ? 1 : -1; uz = 0; vx = 0; vz = wallNorth ? 1 : -1;
+  } else {
+    const wallWest = b.x0 - o.x0 <= o.x1 - b.x1;
+    ox = wallWest ? b.x0 : b.x1; oz = foot === 'n' ? b.z0 : b.z1; ux = 0; uz = foot === 'n' ? 1 : -1; vx = wallWest ? 1 : -1; vz = 0;
+  }
+  const LANE = (W - STAIR_PART) / 2, LD = W / 2, R = len - LD; // lane width, depth of the landing, run of a flight
+  const P = (u, v) => ({ x: ox + ux * u + vx * v, z: oz + uz * u + vz * v });
+  const rc = (u0, u1, v0, v1) => {
+    const a = P(u0, v0), c = P(u1, v1);
+    return { x0: r2(Math.min(a.x, c.x)), z0: r2(Math.min(a.z, c.z)), x1: r2(Math.max(a.x, c.x)), z1: r2(Math.max(a.z, c.z)) };
+  };
+  const vS0 = LANE + STAIR_PART, vS1 = W; // the open-side lane (lower flight); the wall-side lane is [0, LANE] (upper flight)
+  const n = STAIR_RISERS, riser = H / 2 / n, tread = R / (n - 1);
+
+  const boxes = [];
+  const put = (rect, y0, y1, color) => boxes.push({ ...rect, y0, y1, color });
+  if (ctx.hasUp) {
+    for (let i = 0; i < n - 1; i++) {
+      const top = (i + 1) * riser;
+      put(rc(i * tread, (i + 1) * tread, vS0, vS1), 0, top, i % 2 ? 0xa8a59e : 0xb2afa7);
+      put(rc(i * tread, i * tread + 0.05, vS0, vS1), top - 0.03, top, 0x5f8eb0); // the blue nosing on every tread
+    }
+    for (let j = 0; j < n - 1; j++) {
+      const top = H / 2 + (j + 1) * riser;
+      put(rc(R - (j + 1) * tread, R - j * tread, 0, LANE), top - 0.22, top, j % 2 ? 0xa8a59e : 0xb2afa7);
+      put(rc(R - j * tread - 0.05, R - j * tread, 0, LANE), top - 0.03, top, 0x5f8eb0);
+    }
+    put(rc(R, R + LD, 0, W), 0, H / 2, 0xa8a59e); // the landing
+  }
+
+  const walls = [rc(0, len, W, W + STAIR_PART), rc(0, R, LANE, LANE + STAIR_PART)]; // the open side of the well, and between the flights
+  if (!ctx.hasDown) walls.push({ ...rc(0, 0.2, 0, LANE), h: H - 0.5 }); // ground floor: nothing arrives from below, the wall-side lane is closed
+  if (!ctx.hasUp) walls.push(rc(0, 0.2, vS0, vS1)); // top floor: nothing goes on up, the open-side lane is closed
+
+  const ramps = ctx.hasUp ? [
+    { rect: rc(0, R, vS0, vS1), ox, oz, ux, uz, len: R, y0: 0, y1: H / 2 },
+    { rect: rc(0, R, 0, LANE), ox, oz, ux, uz, len: R, y0: H, y1: H / 2 },
+  ] : [];
+  const platforms = ctx.hasUp ? [{ ...rc(R, R + LD, 0, W), y: H / 2 }] : [];
+  const holeN = rc(0, R, 0, LANE), holeL = rc(R, R + LD, 0, W), holeS = rc(0, R, vS0, vS1);
+  const landing = P(-1.5, (vS0 + vS1) / 2);
+  const cp = P(1.2, W + STAIR_PART + 0.3);
+  const cooler = { x0: r2(cp.x - 0.28), x1: r2(cp.x + 0.28), z0: r2(cp.z - 0.28), z1: r2(cp.z + 0.28) };
+  return {
+    id: s.id, label: s.label, bounds: b, foot, boxes, walls, ramps, platforms, landing: { x: r2(landing.x), z: r2(landing.z) }, cooler,
+    holeBelow: [holeN, holeL, ...(ctx.hasUp ? [holeS] : [])],
+    holeAbove: [holeN, holeL, ...(ctx.nextHasUp ? [holeS] : [])],
+    rect: rc(0, len, 0, W), u: { x: ux, z: uz }, mouths: { upper: rc(-0.6, 0, 0, LANE), lower: rc(-0.6, 0, vS0, vS1) },
+  };
 }
 
 // ---------- garden ----------

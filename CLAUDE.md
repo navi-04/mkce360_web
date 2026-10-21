@@ -46,12 +46,12 @@ src/
   core/env.js          isEmbedded(): Android WebView detection (hides the Fullscreen button)
   core/profile.js      localStorage conveniences (welcome details, last seen update), all in try/catch
   world/               textures and interior-textures (canvas-generated), geo helpers, buildings, roads, scenery, world assembler
-  modes/               overview (orbit), walk (first person), collision, gyro
+  modes/               overview (orbit), walk (first person), drive (car) with car (its physics, pure), collision, gyro
   ui/                  hud, joystick, sheets (one bottom sheet), nav-ui (search, cards, directions, nav card, arrival),
-                       interior-ui, welcome (first visit), minimap (+ expanded map), updates (about and college updates)
+                       interior-ui (the room card), drive-ui (pedals and steering buttons), welcome (first visit), minimap (+ expanded map), updates (about and college updates)
   nav/                 search (index + scoring), route (plan, turns, hints), routeLayer (3D line + beacon), navigator (state machine, guided walk)
   tools/               debug (?debug=1), calibrate (?calibrate=1), overrides (calibration storage)
-  interiors/           plan (floor plan to walls, doors, windows, furniture, stairs, garden; pure), interiors (meshes, enter/exit, floors, stairs, lift, courtyard garden)
+  interiors/           plan (floor plan to walls, doors, windows, furniture, stair wells, garden; pure), ground (height, floor and obstacles of a building for a viewer; pure), interiors (meshes of every floor and the garden, what is drawn)
 index.html, vite.config.js   base './' (relative) for GitHub Pages / Netlify / WebView; two HTML entries
 netlify.toml           Netlify build, caching and security headers (CSP). The e2e suite passes under these headers.
 public/404.html        GitHub Pages not-found page
@@ -66,7 +66,8 @@ npm run build      validate campus.json, then production build into dist/
 npm run validate   campus.json validation only
 npm run preview    serve the production build locally
 npm run test:nav   search and routing unit checks on the real campus.json (no browser)
-npm run test:interiors   floor plan checks (walls, doors, walkability of the whole ring, courtyard, timetable) on the real campus.json (about 40 s)
+npm run test:interiors   floor plan checks (walls, doors, stair wells, a viewer who walks in and up every stair, courtyard, timetable) on the real campus.json (about 60 s)
+npm run test:car   car physics and an autopilot that drives in through the entrance of block 1 and round its verandahs (no browser)
 npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; run build first)
 npm run perf       frame-rate measurement at 390x844
 ```
@@ -74,7 +75,9 @@ npm run perf       frame-rate measurement at 390x844
 Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export), `?welcome=0` (skip the welcome screen).
 Test hook: `window.__mkce` (`setMode`, `stats`, `input`, `nav`, `app`), used by the scripts.
 
-Interiors (step 7): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them. Its look follows the photos supplied for the block (courtyard ring, open verandahs, granite corridors, marble hall, green classrooms) but which room is where is unknown, so layout, room names and timetables are SAMPLE data (flagged `sample: true`, shown as such on the room card); regenerate with `node scripts/generate-sample-interior.mjs`. The courtyard is built from the user's photos (photo-cut lawn, pavers and bark in `public/textures/interior`, made by `scripts/make-interior-photo-textures.py`; ground floor walkway with steel columns and a ribbed roof; the yard can be walked, `walk.groundFn` lowers the eye over the steps). A building with an interior offers an Enter prompt within 8 m of its door. The door of block 1 is in the middle of its north face (the side facing the play ground; told by the user, the porch is visible in the satellite crop): `doorFacing`, `porch {w,d,h,doorW}` and `doorNote` in campus.json, and `floor.entrance` faces the same way. Entering hides the outdoor scene (`world.setInterior`, which keeps the sky for open courtyards), swaps the walk collider and fades; no new shader programs (the interior materials are precompiled at start-up and their textures uploaded then).
+Interiors (step 7, then made part of the world): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them. Its look follows the photos supplied for the block (courtyard ring, open verandahs, granite corridors, marble hall, green classrooms) but which room is where is unknown, so layout, room names and timetables are SAMPLE data (flagged `sample: true`, shown as such on the room card); regenerate with `node scripts/generate-sample-interior.mjs`. The courtyard is built from the user's photos (photo-cut lawn, pavers and bark in `public/textures/interior`, made by `scripts/make-interior-photo-textures.py`; ground floor walkway with steel columns and a ribbed roof; the yard can be walked). **There is no Enter, Exit, floor or stairs button (the user asked for none): the building is part of the world.** Its floors stand in the scene at the place of the building on a 0.45 m plinth; the outside is a skin built in `world/buildings.js` (doorway cut open, no collider); `interiors/ground.js` (pure) gives a viewer the height of the ground (floors, steps, stairs), the floor they are on and the walls of that floor; `walk.groundFn` and the car use it; the light and fog blend with how far inside the viewer is (`world.setIndoor`). The stairs are real flights in a walled well in each corner (wells stack, floors have holes). The door of block 1 is in the middle of its north face (the side facing the play ground; told by the user, the porch is visible in the satellite crop): `doorFacing`, `porch {w,d,h,doorW,doorH}` and `doorNote` in campus.json, and `floor.entrance` faces the same way and is as wide and high. The wings outside (`ring.thickness` 12.2) and `heightM` (4 x 3.6) follow the plan (the satellite shows 12 m wings). No new shader programs (the interior materials are precompiled at start-up and their textures uploaded then).
+
+Driving (docs/driving.md): `Drive` is a third mode (`DriveMode`, `Car` physics in `modes/car.js`, controls in `ui/drive-ui.js`). The car goes anywhere the walker goes, into block 1 too, bumps into walls, trees, lamp posts, benches and columns, follows the ground height, parks where the driver gets out. Keys on a computer (W A S D / arrows, Space, C), pedals and steering buttons on a phone (two thumbs at once). The car mirrors its place into `walk.pos/yaw/groundY`, so anything that reads the walker (mini-map, route, buildings) works for a driver (`app.inWorld` is true for walk and drive).
 
 Mobile UX (step 8): every control is at least 48 px (an e2e check audits this in each screen), the welcome screen stores optional email/college/location only in localStorage (`mkce360.profile.v1`), the mini-map and expanded map draw the satellite texture on a 2D canvas (floor plan indoors), the brand pill opens About and updates (read from `campus.json` `updates`), `prefers-reduced-motion` turns off camera flights, route and beacon animation and head bob.
 
@@ -85,6 +88,7 @@ Navigation (step 6): `Navigator` states are none, preview, guided, paused, manua
 - Merge static geometry (few draw calls); use instanced meshes for repeated scenery.
 - All shaders are precompiled for both modes at start-up (`compileAsync`), so nothing hitches the first time it appears. New material types must be reachable from `world.scene` at start-up.
 - Pixel ratio is capped at 2 and drops with the quality level; the app lowers quality automatically below 30 fps.
+- The floors of a building are built one part per frame after start-up and their static meshes merged (one draw call per kind for all floors); a building is drawn only when the viewer is inside it or within 38 m of its door, never in Overview; deep inside, the far palms and trees are not drawn. Keep the whole scene near 50 draw calls and 70 thousand triangles inside the courtyard.
 
 ## Steps (see the project brief)
 

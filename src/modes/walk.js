@@ -30,7 +30,7 @@ export class WalkMode {
     this.pitch = 0;
     this.speed = 0; // actual speed this frame (m/s)
     this.groundY = 0; // height of the ground under the viewer (the courtyard lawn is lower than the walkway)
-    this.groundFn = null; // (x, z) => ground height; set by the interiors
+    this.groundFn = null; // (x, z, yHint) => height of the ground under the viewer (floors, stairs, steps); set by the app
 
     this.run = false;
     this.headBob = !reducedMotion;
@@ -72,9 +72,10 @@ export class WalkMode {
 
   // ---------- lifecycle ----------
 
-  enter({ x, z, yaw = 0 }) {
+  enter({ x, z, yaw = 0, y = 0 }) {
     this.pos.x = x;
     this.pos.z = z;
+    this.groundY = y; // the height they arrive at (a floor of a building), the ground function takes it from there
     this.collider.resolve(this.pos, PLAYER.radius);
     this.vel.x = this.vel.z = 0;
     this.yaw = yaw;
@@ -136,6 +137,19 @@ export class WalkMode {
       this.gyroOn = true;
     }
     return ok;
+  }
+
+  /** stand at a spot, facing yaw, on the ground at height y (0 in the open, the floor in a building); no walking in between */
+  placeAt(x, z, yaw, { y = 0, pitch = -6 * DEG } = {}) {
+    this.pos.x = x;
+    this.pos.z = z;
+    this.groundY = y;
+    this.collider.resolve(this.pos, PLAYER.radius);
+    this.vel.x = this.vel.z = 0;
+    this.yaw = yaw;
+    this.pitch = pitch;
+    this.cancelTarget();
+    this._apply(0);
   }
 
   walkTo(x, z) {
@@ -251,7 +265,7 @@ export class WalkMode {
       bob = Math.sin(this.bobPhase) * PLAYER.bobAmplitude * f;
       sway = Math.cos(this.bobPhase * 0.5) * 0.012 * f;
     }
-    const gy = this.groundFn ? this.groundFn(this.pos.x, this.pos.z) : 0;
+    const gy = this.groundFn ? this.groundFn(this.pos.x, this.pos.z, this.groundY) : 0;
     this.groundY = dt > 0 ? this.groundY + (gy - this.groundY) * Math.min(1, 12 * dt) : gy; // eased, so steps are not jolts
     this.camera.position.set(this.pos.x, this.groundY + PLAYER.eyeHeight + bob, this.pos.z);
     this.camera.rotation.set(this.pitch, this.yaw, sway, 'YXZ');

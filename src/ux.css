@@ -152,8 +152,7 @@ button.brand {
 .hbtn:focus-visible,
 .segmented button:focus-visible,
 .schip:focus-visible,
-.srow:focus-visible,
-.fbtn:focus-visible {
+.srow:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
@@ -288,9 +287,6 @@ button.brand {
 .minimap .mm-n {
   display: none;
 }
-#hud[data-interior] .minimap {
-  top: calc(122px + var(--safe-top));
-}
 #hud.sheet-open .minimap,
 #hud.map-open .minimap {
   display: none;
@@ -411,13 +407,4 @@ button.brand {
   color: var(--gold);
 }
 
-@media (orientation: landscape) and (max-height: 520px) {
-  /* the left column is crowded in landscape: keep the interior floor selector clear of the Exit button */
-  #hud[data-interior] .floors {
-    top: calc(124px + var(--safe-top));
-    transform: none;
-  }
-  #hud[data-interior] .minimap {
-    display: none;
-  }
-}
+

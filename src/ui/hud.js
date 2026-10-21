@@ -10,6 +10,8 @@ const ICON = {
   overview: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
   walk: '<circle cx="13" cy="4.5" r="2"/><path d="M10 21l2.2-6.5-2.4-3 1.8-4.2 3.6 1.2 2 3.2 2.4.6M12.2 14.5l3.8 2.2 1 4.3"/>',
   run: '<path d="M13 2L4 14h6l-1 8 9-12h-6z"/>',
+  drive: '<path d="M4 15.5V12l2-4.5A2 2 0 0 1 7.9 6h8.2a2 2 0 0 1 1.9 1.5L20 12v3.5M3 15.5h18v2.2a.8.8 0 0 1-.8.8H19v1.5h-2.5V18.5h-9V20H5v-1.5H3.8a.8.8 0 0 1-.8-.8z"/><circle cx="7.5" cy="14.2" r="1.1"/><circle cx="16.5" cy="14.2" r="1.1"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
   gyro: '<rect x="8" y="5" width="8" height="14" rx="2"/><path d="M3.5 9.5A9 9 0 0 1 8 4M20.5 14.5A9 9 0 0 1 16 20"/>',
   full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
   sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
@@ -42,7 +44,8 @@ export function createHud(app) {
   seg.setAttribute('aria-label', 'View mode');
   const bOver = el('button', null, `${svg('overview')}<span>Overview</span>`);
   const bWalk = el('button', null, `${svg('walk')}<span>Walk</span>`);
-  for (const [b, m] of [[bOver, 'overview'], [bWalk, 'walk']]) {
+  const bDrive = el('button', null, `${svg('drive')}<span>Drive</span>`);
+  for (const [b, m] of [[bOver, 'overview'], [bWalk, 'walk'], [bDrive, 'drive']]) {
     b.setAttribute('role', 'tab');
     b.dataset.mode = m;
     b.addEventListener('click', () => app.setMode(m));
@@ -72,12 +75,13 @@ export function createHud(app) {
     sync();
   }, 'walk-only');
   const bReset = mkBtn('reset', 'Reset', () => app.overview.reset(), 'over-only');
+  const bView = mkBtn('eye', 'View', () => app.drive?.toggleView(), 'drive-only');
   const bSearch = mkBtn('search', 'Search', () => app.navUi?.openSearch(), 'search-btn');
   const bFull = mkBtn('full', 'Full', () => app.toggleFullscreen());
   const bSet = mkBtn('sliders', 'Settings', () => sheet.open());
   // inside an Android WebView the host Activity goes immersive (docs/android-webview.md); the Fullscreen API would do nothing there
   if ((!document.fullscreenEnabled && !document.webkitFullscreenEnabled) || isEmbedded()) bFull.style.display = 'none';
-  col.append(bSearch, bRun, bGyro, bReset, bFull, bSet);
+  col.append(bSearch, bRun, bGyro, bReset, bView, bFull, bSet);
 
   // ----- toast, walk-here chip, fade -----
   const toastEl = el('div', 'toast');
@@ -118,6 +122,7 @@ export function createHud(app) {
         <b>Controls</b>
         <p><span>Phone:</span> left thumb moves, drag on the right half to look, tap the ground to walk there. Gyro looks around by turning your phone.</p>
         <p><span>Desktop:</span> W A S D to move, arrow keys to move or turn, Shift to run, drag the mouse to look, click the ground to walk there.</p>
+        <p><span>Drive:</span> the car goes anywhere, into the buildings too. Phone: the arrows steer, the red pedal brakes (and backs up), the gold pedal is the gas. Desktop: W A S D or the arrow keys, Space is the handbrake, C changes the view.</p>
       </div>
       <div class="links"><a href="privacy-policy/">Privacy policy</a></div>
     </div>
@@ -177,10 +182,10 @@ export function createHud(app) {
   function sync() {
     const walk = app.mode === 'walk';
     root.dataset.mode = app.mode;
-    bOver.setAttribute('aria-selected', String(!walk));
-    bWalk.setAttribute('aria-selected', String(walk));
-    bOver.classList.toggle('on', !walk);
-    bWalk.classList.toggle('on', walk);
+    for (const [b, m] of [[bOver, 'overview'], [bWalk, 'walk'], [bDrive, 'drive']]) {
+      b.setAttribute('aria-selected', String(app.mode === m));
+      b.classList.toggle('on', app.mode === m);
+    }
     bRun.classList.toggle('on', !!app.walk?.run);
     bRun.setAttribute('aria-pressed', String(!!app.walk?.run));
     bGyro.classList.toggle('on', !!app.walk?.gyroOn);

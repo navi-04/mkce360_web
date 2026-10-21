@@ -162,8 +162,8 @@ export function createMinimap(app) {
       }
     }
     // me (only meaningful outdoors; the last position is shown from Overview too)
-    const me = app.mode === 'walk' ? app.walk.pos : app.lastWalk;
-    if (me) marker(ctx, sx(me.x), sz(me.z), app.mode === 'walk' ? heading() : (app.lastWalk?.yaw ?? 0) * -1, labels ? 1.15 : 1);
+    const me = app.inWorld ? app.walk.pos : app.lastWalk;
+    if (me) marker(ctx, sx(me.x), sz(me.z), app.inWorld ? heading() : (app.lastWalk?.yaw ?? 0) * -1, labels ? 1.15 : 1);
     // north
     ctx.save();
     ctx.fillStyle = 'rgba(11,29,51,0.8)';
@@ -251,7 +251,7 @@ export function createMinimap(app) {
   }
 
   function recenter() {
-    const me = app.mode === 'walk' ? app.walk.pos : app.lastWalk;
+    const me = app.inWorld ? app.walk.pos : app.lastWalk;
     if (me && !app.interiors.active) {
       view.cx = me.x;
       view.cz = me.z;
@@ -322,7 +322,7 @@ export function createMinimap(app) {
   // ---------------------------------------------------------------- per frame
   function update() {
     const interior = app.interiors.active;
-    const showMini = app.mode === 'walk';
+    const showMini = app.inWorld;
     mini.classList.toggle('on', showMini);
     if (!showMini && !view.open) return;
     const p = app.walk.pos;

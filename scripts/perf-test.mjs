@@ -52,6 +52,10 @@ const SCENARIOS = {
   'walk-guided': { mode: 'walk', action: 'guide' },
   // step 7: inside the sample interior of block 1, walking along the verandah beside the courtyard
   'interior-move': { mode: 'walk', action: 'interior' },
+  // the car: from the gate along the road with the gas held down (a third of full)
+  'drive-move': { mode: 'drive', action: 'drive' },
+  // the car in the hall of block 1, then driven slowly through the entrance, hall, verandah and into the courtyard
+  'drive-inside': { mode: 'drive', action: 'drive-inside' },
 };
 
 /** GPU-related launch args tried first (headless). */
@@ -533,13 +537,29 @@ async function runScenario({ browser, mobile, url, name, cpu, opts, shotPath, pr
       } catch (e) { result.notes.push(`route setup failed: ${String(e.message || e).split(String.fromCharCode(10))[0]}`); }
     } else if (scen.action === 'interior') {
       try {
-        await page.evaluate(() => window.__mkce.interiors.enter('apj-block'));
+        // stand at the north end of the east verandah of block 1 (inside the building, which is part of the world) and walk south
+        // along it (a 90 m run beside the courtyard)
+        await page.evaluate(() => {
+          const ph = window.__mkce.interiors.units.get('apj-block').phys;
+          const p = ph.toWorld(35.4, -43);
+          const fx = -ph.sin, fz = ph.cos; // south in the building's frame, in the world
+          window.__mkce.app.walk.placeAt(p.x, p.z, Math.atan2(-fx, -fz), { y: 0.45, pitch: 0 });
+        });
         await sleep(800);
-        // stand at the north end of the east verandah and walk south along it (a 90 m run beside the courtyard)
-        await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 35.4; w.pos.z = -43; w.yaw = Math.PI; w.pitch = 0; w.vel.x = w.vel.z = 0; w.cancelTarget(); });
         await page.evaluate(() => window.__mkce.input({ forward: 1, strafe: 0, turn: 0 }));
         stopAction = () => page.evaluate(() => window.__mkce.input(null)).catch(() => {});
       } catch (e) { result.notes.push('interior setup failed'); }
+    } else if (scen.action === 'drive') {
+      await page.evaluate(() => window.__mkce.input({ throttle: 0.35 }));
+      stopAction = () => page.evaluate(() => window.__mkce.input(null)).catch(() => {});
+    } else if (scen.action === 'drive-inside') {
+      // the car in front of the porch, aimed at the entrance; a gentle gas for the whole run (it stops against the walls of the court)
+      await page.evaluate(() => {
+        const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block');
+        window.__mkce.drive.car.place(f.x + f.nx * 12, f.z + f.nz * 12, Math.atan2(f.nx, f.nz), 0);
+        window.__mkce.input({ throttle: 0.2 });
+      });
+      stopAction = () => page.evaluate(() => window.__mkce.input(null)).catch(() => {});
     } else if (scen.action === 'move') {
       if (api.present && api.input) {
         await page.evaluate(() => window.__mkce.input({ forward: 1, strafe: 0, turn: 0 }));

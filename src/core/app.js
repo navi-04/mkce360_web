@@ -4,10 +4,11 @@ import { QUALITY, QUALITY_LEVELS, AUTO_QUALITY, PLAYER } from '../config.js';
 import { createWorld } from '../world/world.js';
 import { OverviewMode } from '../modes/overview.js';
 import { WalkMode } from '../modes/walk.js';
-import { Collider } from '../modes/collision.js';
+import { DriveMode } from '../modes/drive.js';
 import { createHud } from '../ui/hud.js';
 import { createNavUi } from '../ui/nav-ui.js';
 import { createInteriorUi } from '../ui/interior-ui.js';
+import { createDriveUi } from '../ui/drive-ui.js';
 import { createMinimap } from '../ui/minimap.js';
 import { createUpdatesUi } from '../ui/updates.js';
 import { Interiors } from '../interiors/interiors.js';
@@ -81,6 +82,12 @@ export class App {
     this.navUi = createNavUi(this);
     this.interiors = new Interiors(this); // adds its (hidden) materials to the scene before the shader precompile below
     this.interiors.warmTextures(this.renderer); // upload its textures now so the first visit inside does not hitch
+    this.ground = this.interiors.ground; // what the viewer stands on: the campus, the porch steps, the floors and stairs of buildings
+    this.walk.groundFn = (x, z, y) => this.ground.heightAt(x, z, y);
+    this.drive = new DriveMode({ camera: this.camera, canvas, world: this.world, ground: this.ground, walk: this.walk, reducedMotion: this.reducedMotion });
+    this.drive.ceilingAt = (x, z, y) => this.interiors.ceilingAt(x, z, y);
+    this.drive.setObstacles(this.world.sceneryObstacles());
+    this.driveUi = createDriveUi(this);
     this.interiorUi = createInteriorUi(this);
     this.minimap = createMinimap(this);
     this.updatesUi = createUpdatesUi(this);
@@ -132,7 +139,7 @@ export class App {
   /** After calibration edits: rebuild buildings/roads and refresh everything that caches them. */
   refreshBuildings() {
     this.world.rebuild();
-    this.walk.collider = new Collider(this.world.colliders, this.world.boundary);
+    this.interiors.refresh(); // the obstacles and doors of the campus changed; the floor in use is picked again every frame
     this.overview.labels.setLabels(this.world.labels);
   }
 
@@ -144,31 +151,46 @@ export class App {
     return { x: g.spawn.x, z: g.spawn.z, yaw: -g.spawn.headingDeg * DEG };
   }
 
+  /** In the world at ground level, walking or driving (not the view from the air). */
+  get inWorld() {
+    return this.mode !== 'overview';
+  }
+
   async setMode(mode, { spawn = null, instant = false } = {}) {
     if (mode === this.mode || this._switching) return;
     this._switching = true;
     this.hud.sheet.close();
     this.navUi.closeSheets();
     const swap = () => {
-      if (mode === 'walk') {
+      // leave the mode we are in; remember where the viewer stood (a driver steps out beside the car, which stays parked)
+      let pose = null;
+      if (this.mode === 'walk') {
+        pose = { x: this.walk.pos.x, z: this.walk.pos.z, yaw: this.walk.yaw, y: this.walk.groundY };
+        this.walk.exit();
+      } else if (this.mode === 'drive') {
+        pose = this.drive.exit();
+      } else {
         this.overview.exit();
         this.hud.showChip(false);
+      }
+      if (pose) this.lastWalk = pose;
+      // and enter the new one
+      if (mode === 'overview') {
+        this.world.setMode('overview');
+        this.mode = 'overview';
+        this.overview.enter();
+      } else {
         let s = spawn;
         if (s && s.yaw === undefined) {
           // face the campus centre from a tapped point
           const c = this.overview.home.target;
           s = { x: s.x, z: s.z, yaw: Math.atan2(-(c.x - s.x), -(c.z - s.z)) };
-        } else if (!s) s = this.lastWalk ?? this.gateSpawn();
-        this.world.setMode('walk');
-        this.mode = 'walk';
-        this.walk.enter(s);
-      } else {
-        if (this.interiors.active) this.interiors.exit({ immediate: true }); // the fade of this mode switch covers it
-        this.lastWalk = { x: this.walk.pos.x, z: this.walk.pos.z, yaw: this.walk.yaw };
-        this.walk.exit();
-        this.world.setMode('overview');
-        this.mode = 'overview';
-        this.overview.enter();
+        } else if (!s) s = pose ?? this.lastWalk ?? this.gateSpawn();
+        if (mode === 'drive' && this.nav.mode !== 'none') this.nav.end(); // a guided walk is for walking
+        this.world.setMode(mode);
+        this.mode = mode;
+        if (mode === 'walk') this.walk.enter(s);
+        else this.drive.enter(s);
       }
       this.onResize();
       this.hud.sync();
@@ -200,17 +222,7 @@ export class App {
 
   /** Move the Walk-mode viewer to a spot (with the usual fade) without leaving Walk mode. */
   async teleportWalk({ x, z, yaw }) {
-    await this.hud.transition(() => {
-      const w = this.walk;
-      w.pos.x = x;
-      w.pos.z = z;
-      w.collider.resolve(w.pos, PLAYER.radius);
-      w.vel.x = w.vel.z = 0;
-      w.yaw = yaw;
-      w.pitch = -6 * DEG;
-      w.cancelTarget();
-      w._apply(0);
-    }, this.reducedMotion);
+    await this.hud.transition(() => this.walk.placeAt(x, z, yaw), this.reducedMotion);
   }
 
   toggleFullscreen() {
@@ -250,6 +262,7 @@ export class App {
     this.renderer.setPixelRatio(this.pixelRatio);
     this.world.setQuality(q);
     this.interiors?.setQuality(q);
+    this.drive?.setObstacles(this.world.sceneryObstacles());
     this.onResize();
   }
 
@@ -275,6 +288,11 @@ export class App {
       // wide horizontal view on phones: aim for ~75 deg horizontally, capped vertically
       const fov = 2 * Math.atan(Math.tan((75 * DEG) / 2) / Math.max(aspect, 0.3)) / DEG;
       this.camera.fov = Math.min(95, Math.max(62, fov));
+    } else if (this.mode === 'drive') {
+      // the road ahead: a little less wide than walking, the driving mode adds a few degrees at speed
+      const fov = 2 * Math.atan(Math.tan((68 * DEG) / 2) / Math.max(aspect, 0.3)) / DEG;
+      this.camera.fov = Math.min(80, Math.max(56, fov));
+      this.drive?.setBaseFov(this.camera.fov);
     } else this.camera.fov = aspect < 0.8 ? 58 : 45; // wider on portrait phones so more of the campus fits
     this.camera.updateProjectionMatrix();
   }
@@ -288,6 +306,7 @@ export class App {
     }
 
     if (this.mode === 'walk') this.walk.update(dt);
+    else if (this.mode === 'drive') this.drive.update(dt);
     else this.overview.update(dt);
     this.nav.update(dt);
     this.interiors.update(dt);

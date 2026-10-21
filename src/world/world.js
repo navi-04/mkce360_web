@@ -134,9 +134,10 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
   };
 
   let mode = 'overview';
-  let interior = false;
+  let indoorT = 0; // 0 in the open .. 1 deep inside a building (light and fog follow it smoothly)
   let indoor = null;
-  let outdoorLights = null;
+  const outdoorLights = { hemi: hemi.intensity, sun: sun.intensity, sky: hemi.color.getHex(), ground: hemi.groundColor.getHex() };
+  const tmpCol = new THREE.Color();
   let quality = QUALITY.high;
   let shadows = false;
 
@@ -148,41 +149,44 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
     doorFrames: built.doorFrames,
     data,
     satelliteImage: satTex?.image ?? null,
-    parts: { grass, satellite: sat, roads: roads.group, buildings: built.group, scenery: scenery.group },
+    parts: { grass, satellite: sat, roads: roads.group, buildings: built.group, scenery: scenery.group, courtWalls: built.courtWalls, courtTrees: scenery.courtTrees },
     get mode() { return mode; },
 
-    /** Inside a building: the outdoor scene is hidden, light and fog are changed (no shader changes). */
-    setInterior(on, look = null) {
-      interior = on;
-      root.visible = !on;
-      sky.visible = !on || !!look?.sky; // an open courtyard shows the sky
-      if (on && look) {
-        indoor = look;
-        scene.background = new THREE.Color(look.bg);
-        scene.fog.color.set(look.bg);
-        outdoorLights = { hemi: hemi.intensity, sun: sun.intensity, sky: hemi.color.getHex(), ground: hemi.groundColor.getHex() };
-        hemi.intensity = look.hemi;
-        sun.intensity = look.sun;
-        hemi.color.set(look.hemiSky ?? 0xfff4e2); // warm indoor light; the green ground bounce of the lawn must not tint the ceiling
-        hemi.groundColor.set(look.hemiGround ?? 0xc9c1b2);
-      } else {
-        scene.background = new THREE.Color(COLORS.skyHorizon);
-        scene.fog.color.set(COLORS.fog);
-        if (outdoorLights) {
-          hemi.intensity = outdoorLights.hemi;
-          sun.intensity = outdoorLights.sun;
-          hemi.color.set(outdoorLights.sky);
-          hemi.groundColor.set(outdoorLights.ground);
-        }
-      }
+    /**
+     * How far inside a building the viewer is, 0 (in the open) to 1 (inside): the light and the fog change gently with it, so walking
+     * in through a door goes from the sun to the softer light of a hall (no shader changes, only uniforms). `look` is the indoor look.
+     */
+    setIndoor(t, look = null) {
+      if (look) indoor = look;
+      t = Math.round(t * 100) / 100;
+      if (t === indoorT || !indoor) return;
+      indoorT = t;
+      hemi.intensity = outdoorLights.hemi + (indoor.hemi - outdoorLights.hemi) * t;
+      sun.intensity = outdoorLights.sun + (indoor.sun - outdoorLights.sun) * t;
+      hemi.color.set(outdoorLights.sky).lerp(tmpCol.set(indoor.hemiSky ?? 0xfff4e2), t); // warm indoor light, no green bounce from the lawn on the ceiling
+      hemi.groundColor.set(outdoorLights.ground).lerp(tmpCol.set(indoor.hemiGround ?? 0xc9c1b2), t);
       this.applyFog();
     },
-    get interior() { return interior; },
+    get indoor() { return indoorT; },
+    /** boxes for the car: the trunks, lamp posts and benches that are drawn */
+    sceneryObstacles() {
+      return scenery.obstacles();
+    },
+    /** deep inside a building the palms and trees cannot be seen (the walls and the roof are in the way): they are not drawn */
+    setDeep(on) {
+      for (const name of ['palms', 'trees']) {
+        const m = scenery.group.getObjectByName(name);
+        if (m) m.visible = !on;
+      }
+    },
+    /** overview shows the satellite photo, the courtyard skin of the blocks and their courtyard trees; the ground-level modes (walk, drive) the roads */
     setMode(m) {
       mode = m;
-      const walk = m === 'walk';
-      sat.visible = !walk;
-      roads.group.visible = walk;
+      const low = m !== 'overview';
+      sat.visible = !low;
+      roads.group.visible = low;
+      if (built.courtWalls) built.courtWalls.visible = !low;
+      scenery.courtTrees.visible = !low;
       this.applyFog();
     },
     /** Rebuild buildings and roads from `data` (after calibration edits). Scenery is left as is. */
@@ -198,7 +202,9 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
       this.labels = built.labels;
       this.doorFrames = built.doorFrames;
       this.parts.buildings = built.group;
+      this.parts.courtWalls = built.courtWalls;
       this.parts.roads = roads.group;
+      if (built.courtWalls) built.courtWalls.visible = mode === 'overview';
       if (shadows) this.setShadows(true);
     },
     setQuality(q) {
@@ -207,16 +213,14 @@ export async function createWorld(data, { onProgress = () => {} } = {}) {
       this.applyFog();
     },
     applyFog() {
-      if (interior && indoor) {
-        scene.fog.near = indoor.fogNear;
-        scene.fog.far = indoor.fogFar;
-      } else if (mode === 'walk') {
-        scene.fog.near = 90;
-        scene.fog.far = quality.fogFar;
-      } else {
+      if (mode === 'overview') {
         scene.fog.near = 2600;
         scene.fog.far = 7000;
+        return;
       }
+      const near = 90, far = quality.fogFar, t = indoorT;
+      scene.fog.near = indoor ? near + (indoor.fogNear - near) * t : near;
+      scene.fog.far = indoor ? far + (indoor.fogFar - far) * t : far;
     },
     setShadows(on) {
       shadows = on;

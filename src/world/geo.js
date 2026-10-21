@@ -73,6 +73,57 @@ export function wallsGeo(w, h, d, { floorH = 3.6, bayW = 3.6, tile = true } = {}
   return g;
 }
 
+/**
+ * The four faces of a w x d box with window-bay uvs like wallsGeo (u in [0,nBays], v in [0,nFloors]), or with `inward` the four
+ * faces of a hole of that size seen from inside it. `door` cuts a doorway into one outward face:
+ * { face: 'n'|'s'|'e'|'w', lat, width, height } (lat = position along that face in the box frame: x for n and s, z for e and w).
+ * Used for the skin of a building that has an inside to walk in (no faces between wings, nothing hidden behind another face).
+ */
+export function shellGeo(w, d, h, { floorH = 3.6, bayW = 3.6, inward = false, door = null } = {}) {
+  const nF = Math.max(1, Math.round(h / floorH));
+  const faces = [
+    // [from(x,z), to(x,z), normal(x,z), length, key]  (from -> to runs left->right seen from outside)
+    [[-w / 2, d / 2], [w / 2, d / 2], [0, 1], w, 's'],
+    [[w / 2, -d / 2], [-w / 2, -d / 2], [0, -1], w, 'n'],
+    [[w / 2, d / 2], [w / 2, -d / 2], [1, 0], d, 'e'],
+    [[-w / 2, -d / 2], [-w / 2, d / 2], [-1, 0], d, 'w'],
+  ];
+  const pos = [], nor = [], uv = [];
+  for (const [a0, b0, n0, len, key] of faces) {
+    const a = inward ? b0 : a0, b = inward ? a0 : b0;
+    const n = inward ? [-n0[0], -n0[1]] : n0;
+    const nB = Math.max(1, Math.round(len / bayW));
+    // pieces of the face as [t0, t1, y0, y1]: t is the share along the face from `a`
+    let pieces = [[0, 1, 0, h]];
+    if (door && !inward && door.face === key) {
+      const t = key === 'n' ? (w / 2 - door.lat) / w : key === 's' ? (door.lat + w / 2) / w : key === 'e' ? (d / 2 - door.lat) / d : (door.lat + d / 2) / d;
+      const t0 = Math.max(0, t - door.width / 2 / len), t1 = Math.min(1, t + door.width / 2 / len);
+      pieces = [[0, t0, 0, h], [t1, 1, 0, h], [t0, t1, door.height, h]];
+    }
+    for (const [t0, t1, y0, y1] of pieces) {
+      if (t1 - t0 < 1e-6 || y1 - y0 < 1e-6) continue;
+      const at = (t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+      const p0 = at(t0), p1 = at(t1);
+      const v = [
+        [p0[0], y0, p0[1], t0 * nB, (y0 / h) * nF],
+        [p1[0], y0, p1[1], t1 * nB, (y0 / h) * nF],
+        [p1[0], y1, p1[1], t1 * nB, (y1 / h) * nF],
+        [p0[0], y1, p0[1], t0 * nB, (y1 / h) * nF],
+      ];
+      for (const i of [0, 1, 2, 0, 2, 3]) {
+        pos.push(v[i][0], v[i][1], v[i][2]);
+        nor.push(n[0], 0, n[1]);
+        uv.push(v[i][3], v[i][4]);
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  return g;
+}
+
 /** Gable roof (ridge along the longer side). Sits on y = 0; translate afterwards. */
 export function gableGeo(w, d, rise, overhang = 0.5, scale = 2.5) {
   const W = w + overhang * 2, D = d + overhang * 2;

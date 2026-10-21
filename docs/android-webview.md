@@ -139,7 +139,8 @@ itself or shows a message and the drag-to-look controls keep working.
 2. Rotate to landscape and back during Walk mode: the scene must not reload and the controls must stay reachable.
 3. Walk with the joystick and drag-to-look together; run; tap the ground to walk.
 4. Gyro: turn the phone; the view must follow without a jump when the button is pressed.
-5. Search, directions, **Start guided walk**, pause, take control, arrival, **Enter** block 1.
+5. Search, directions, **Start guided walk**, pause, take control, arrival, then walk in through the porch of block 1 (no button: just walk), up its stairs and back out.
+   **Drive** tab: both thumbs at once (steering arrows and a pedal), into the building and out, rotate the phone while driving, the **Walk** tab to get out.
 6. Home button and return: the app resumes (WebGL context restored), details still saved.
 7. Airplane mode: Option B works; Option A shows the browser error page, so consider a friendly offline page in the Activity.
 8. Open `chrome://inspect` with `WebView.setWebContentsDebuggingEnabled(true)` in a debug build to read the console.

@@ -196,7 +196,7 @@ export class RouteLayer {
   update(dt, camera, mode) {
     if (!this.group.visible) return;
     if (!this.reducedMotion) this.time += dt;
-    const walk = mode === 'walk';
+    const walk = mode !== 'overview'; // walking or driving
     // a ribbon of fixed width vanishes from far away: widen it with the camera height in Overview
     const w = walk ? 1.35 : Math.min(16, Math.max(2.2, camera.position.y * 0.011));
     this.ribbonMat.uniforms.uWidth.value = w;

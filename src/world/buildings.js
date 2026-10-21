@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { TYPE_STYLE, FLOOR_HEIGHT, BAY_WIDTH } from '../config.js';
 import {
-  boxGeo, wallsGeo, gableGeo, flatQuad, signQuad, cylGeo, place, paint, merge, DEG, vary, rng, hashString,
+  boxGeo, wallsGeo, shellGeo, gableGeo, flatQuad, signQuad, cylGeo, place, paint, merge, DEG, vary, rng, hashString,
 } from './geo.js';
 import { signAtlas, courtTexture, fieldTexture } from './textures.js';
 
@@ -11,7 +11,7 @@ const SHORT_H = 6.5; // below this height a building uses the single-storey faca
 
 export function createBuildings(data, T) {
   const acc = {
-    wallsBlock: [], wallsShed: [], wallsPlain: [], roofFlat: [], roofTile: [], solid: [], concrete: [], fence: [],
+    wallsBlock: [], wallsInner: [], wallsShed: [], wallsPlain: [], roofFlat: [], roofTile: [], solid: [], concrete: [], fence: [],
   };
   const courts = []; // individually textured meshes
   const signReq = [];
@@ -46,12 +46,14 @@ export function createBuildings(data, T) {
       colliders.push({ id: b.id, cx: c.x, cz: c.z, hw: r.w / 2, hd: r.d / 2, rot: rotY });
     };
 
-    const mass = (rects, height, { towers = true } = {}) => {
+    const mass = (rects, height, { towers = true, walls = true } = {}) => {
       const short = height <= SHORT_H;
       for (const r of rects) {
-        const wg = wallsGeo(r.w, height, r.d, { floorH: short ? height : FLOOR_HEIGHT, bayW: BAY_WIDTH });
-        place(wg, r.x, 0, r.z);
-        put(short ? acc.wallsShed : acc.wallsBlock, wg, wallCol);
+        if (walls) {
+          const wg = wallsGeo(r.w, height, r.d, { floorH: short ? height : FLOOR_HEIGHT, bayW: BAY_WIDTH });
+          place(wg, r.x, 0, r.z);
+          put(short ? acc.wallsShed : acc.wallsBlock, wg, wallCol);
+        }
         const rg = boxGeo(r.w + 0.7, 0.5, r.d + 0.7, { scale: 4, y: height });
         place(rg, r.x, 0, r.z);
         put(acc.roofFlat, rg, roofCol);
@@ -77,6 +79,7 @@ export function createBuildings(data, T) {
       const n = new THREE.Vector3(ln[0], 0, ln[1]).applyMatrix4(tmpM.clone().makeRotationY(rotY));
       const theta = Math.atan2(n.x, n.z);
       const px = b.doorPosition.x + n.x * 0.06, pz = b.doorPosition.z + n.z * 0.06;
+      const face = ['e', 'w', 's', 'n'][k], lat = k < 2 ? l.z : l.x; // which face of the box, and where along it (box frame)
       const porch = b.porch ?? null;
       if (porch) entrancePorch(porch, n, theta, px, pz);
       else {
@@ -104,7 +107,7 @@ export function createBuildings(data, T) {
       }
       // reach/half: how far a porch stands out from the door and half its width (lamps, benches and trees keep clear of it)
       doorFrames.push({ id: b.id, x: px, z: pz, nx: n.x, nz: n.z, theta, portico: hasPortico, type: b.type, form: b.form, h, reach: porch?.d ?? 0, half: porch ? porch.w / 2 : 0 });
-      return { n, theta, px, pz, porch };
+      return { n, theta, px, pz, porch, face, lat };
     };
 
     /**
@@ -112,7 +115,7 @@ export function createBuildings(data, T) {
      * glass entrance in the facade. w across the face, d out from it, h to the top of the roof slab. Drawn in the door's frame:
      * `lat` runs along the facade, `out` away from it.
      */
-    function entrancePorch({ w, d, h, doorW = 4.8 }, n, theta, px, pz) {
+    function entrancePorch({ w, d, h, doorW = 4.8, doorH = 2.6 }, n, theta, px, pz) {
       const side = new THREE.Vector3(1, 0, 0).applyMatrix4(tmpM.clone().makeRotationY(theta));
       const at = (lat, out) => ({ x: px + side.x * lat + n.x * out, z: pz + side.z * lat + n.z * out });
       const slab = (lat0, lat1, out0, out1, y0, y1, color) => {
@@ -136,11 +139,13 @@ export function createBuildings(data, T) {
         acc.solid.push(g);
       };
       const PARAPET = 1.5;
-      const concrete = 0xd8d2c4, light = 0xf6f2e6, post = 0xf3eee2, steel = 0x34414a, glass = 0x8fb2c6;
+      const SILL = 0.45; // the floor of the porch and of the ground floor stands this far above the campus ground
+      const concrete = 0xd8d2c4, light = 0xf6f2e6, post = 0xf3eee2, steel = 0x34414a;
       const hw = w / 2;
-      // two steps up to the porch floor
+      // three steps up to the porch floor, at the height of the ground floor inside (ground.js follows them)
       slab(-hw - 0.3, hw + 0.3, 0, d, 0, 0.15, concrete);
-      slab(-hw, hw, 0, d - 0.55, 0.15, 0.3, concrete);
+      slab(-hw - 0.15, hw + 0.15, 0, d - 0.45, 0.15, 0.3, concrete);
+      slab(-hw, hw, 0, d - 0.9, 0.3, SILL, concrete);
       // flat roof slab with a low lip along the sides and a tall front parapet that carries the name board
       slab(-hw - 0.4, hw + 0.4, 0, d + 0.5, h - 0.5, h, light);
       soffit(-hw - 0.4, hw + 0.4, 0, d + 0.5, h - 0.5, 0xf3eee2);
@@ -150,16 +155,15 @@ export function createBuildings(data, T) {
       // six square columns along the front; the middle bay stays open to frame the doors
       for (const f of [-0.95, -0.57, -0.19, 0.19, 0.57, 0.95]) {
         const lat = f * hw;
-        const c = slab(lat - 0.28, lat + 0.28, d - 0.78, d - 0.22, 0.3, h - 0.5, post);
-        slab(lat - 0.38, lat + 0.38, d - 0.88, d - 0.12, 0.3, 0.55, concrete);
+        const c = slab(lat - 0.28, lat + 0.28, d - 0.78, d - 0.22, SILL, h - 0.5, post);
+        slab(lat - 0.38, lat + 0.38, d - 0.88, d - 0.12, SILL, SILL + 0.25, concrete);
         colliders.push({ id: b.id, cx: c.x, cz: c.z, hw: 0.3, hd: 0.3, rot: rotY });
       }
-      // wide glass entrance in the facade: steel frame, glass, three mullions
-      const dw = doorW / 2;
-      slab(-dw - 0.25, dw + 0.25, 0, 0.14, 0.3, 3.1, steel);
-      slab(-dw, dw, 0.1, 0.2, 0.3, 2.95, glass);
-      for (const m of [-dw / 2, 0, dw / 2]) slab(m - 0.05, m + 0.05, 0.1, 0.24, 0.3, 2.95, steel);
-      slab(-dw, dw, 0.1, 0.24, 2.2, 2.28, steel); // transom
+      // the entrance is an open doorway (the facade is cut open for it, see the ring case): a steel frame round it, nothing in it
+      const dw = doorW / 2, top = SILL + doorH;
+      slab(-dw - 0.25, -dw, 0, 0.14, SILL, top + 0.25, steel);
+      slab(dw, dw + 0.25, 0, 0.14, SILL, top + 0.25, steel);
+      slab(-dw - 0.25, dw + 0.25, 0, 0.14, top, top + 0.25, steel);
     }
 
     const sign = (text, info, { wide = false, high = 3.7, width: w0 = null, out = 0.13 } = {}) => {
@@ -184,17 +188,24 @@ export function createBuildings(data, T) {
     switch (b.form) {
       case 'ring': {
         const t = b.ring.thickness;
-        mass(
-          [
-            { x: 0, z: -(d - t) / 2, w, d: t },
-            { x: 0, z: (d - t) / 2, w, d: t },
-            { x: -(w - t) / 2, z: 0, w: t, d: d - 2 * t },
-            { x: (w - t) / 2, z: 0, w: t, d: d - 2 * t },
-          ],
-          h,
-        );
-        obbOf({ x: 0, z: 0, w, d });
+        const wings = [
+          { x: 0, z: -(d - t) / 2, w, d: t },
+          { x: 0, z: (d - t) / 2, w, d: t },
+          { x: -(w - t) / 2, z: 0, w: t, d: d - 2 * t },
+          { x: (w - t) / 2, z: 0, w: t, d: d - 2 * t },
+        ];
         const info = door(true);
+        if (b.floorPlans?.length) {
+          // a building you walk into: its outer skin with a doorway, the skin of the courtyard (seen from Overview only, the
+          // interior has the real arcade) and the roof; nothing solid, the interior brings its own walls and colliders
+          const door2 = b.porch ? { face: info.face, lat: info.lat, width: b.porch.doorW ?? 4.8, height: (b.porch.doorH ?? 2.6) + 0.45 } : null;
+          put(acc.wallsBlock, shellGeo(w, d, h, { floorH: FLOOR_HEIGHT, bayW: BAY_WIDTH, door: door2 }), wallCol);
+          put(acc.wallsInner, shellGeo(w - 2 * t, d - 2 * t, h, { floorH: FLOOR_HEIGHT, bayW: BAY_WIDTH, inward: true }), wallCol);
+          mass(wings, h, { walls: false });
+        } else {
+          mass(wings, h);
+          obbOf({ x: 0, z: 0, w, d });
+        }
         // with a porch the name board is on the front parapet of its roof
         if (info.porch) sign(b.shortName, info, { width: 7.2, high: info.porch.h + 0.08, out: info.porch.d + 0.53 });
         else sign(b.shortName, info, { wide: true, high: 3.75 });
@@ -389,6 +400,7 @@ export function createBuildings(data, T) {
     };
     const lambert = (map) => new THREE.MeshLambertMaterial({ map, vertexColors: true });
     mk(acc.wallsBlock, lambert(T.facadeBlock), 'walls-block');
+    const courtWalls = mk(acc.wallsInner, lambert(T.facadeBlock), 'walls-court');
     mk(acc.wallsShed, lambert(T.facadeShed), 'walls-shed');
     mk(acc.wallsPlain, lambert(T.facadePlain), 'walls-plain');
     mk(acc.roofFlat, lambert(T.roofFlat), 'roof-flat');
@@ -412,14 +424,14 @@ export function createBuildings(data, T) {
     const items = signReq.map((s) => ({ text: s.text, style: s.style ?? 'blue' }));
     if (items.length) {
       const atlas = signAtlas(items);
-      const geos = signReq.map((s, i) => {
+      // a board reads correctly from both sides: a second quad turned the other way (a double-sided quad would be mirrored from behind)
+      const geos = signReq.flatMap((s, i) => [0, Math.PI].map((turn) => {
         const g = signQuad(s.width, s.height, atlas.uv[i]);
-        // double-sided look: plane faces +z; rotate to the building normal
-        g.applyMatrix4(new THREE.Matrix4().makeRotationY(s.theta));
+        g.applyMatrix4(new THREE.Matrix4().makeRotationY(s.theta + turn)); // the plane faces +z; turn it to the building normal
         g.translate(s.x, s.y, s.z);
         return g;
-      });
-      const sm = new THREE.Mesh(merge(geos), new THREE.MeshBasicMaterial({ map: atlas.texture, side: THREE.DoubleSide }));
+      }));
+      const sm = new THREE.Mesh(merge(geos), new THREE.MeshBasicMaterial({ map: atlas.texture }));
       sm.name = 'signs';
       group.add(sm);
       meshes.push(sm);
@@ -445,7 +457,7 @@ export function createBuildings(data, T) {
       im.name = 'solar';
       group.add(im);
     }
-    return { group, colliders, labels, meshes, doorFrames };
+    return { group, colliders, labels, meshes, doorFrames, courtWalls };
   }
 
   return { addBuilding, finalize };

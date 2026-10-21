@@ -12,7 +12,8 @@
     "perf": "node scripts/perf-test.mjs",
     "e2e": "node scripts/e2e.mjs",
     "test:nav": "node scripts/test-nav.mjs",
-    "test:interiors": "node scripts/test-interiors.mjs"
+    "test:interiors": "node scripts/test-interiors.mjs",
+    "test:car": "node scripts/test-car.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.63.0",

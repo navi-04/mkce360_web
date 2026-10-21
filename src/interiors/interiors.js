@@ -1,24 +1,22 @@
-// Building interiors: enter with a fade, one floor at a time (verandahs round a courtyard, corridors and rooms),
-// stairs and lift change floors, door and sign taps open a room card, exit puts the viewer back outside at the door.
-// Geometry comes from plan.js (pure data); everything static is merged into a handful of meshes per floor, the furniture
-// of a room is built the first time the viewer comes near it.
+// Building interiors as part of the world: every floor of a building with floor plans stands in the scene at the place of the
+// building, on top of each other, and the viewer simply walks (or drives) in through the open entrance, along the verandahs,
+// through the open doors and up the stairs. There is no entering, leaving or choosing a floor: what you stand on decides the floor.
+// Geometry comes from plan.js (pure data); everything static is merged into a handful of meshes per floor, the furniture of a room
+// is built the first time the viewer comes near it, and the whole building is drawn only when the viewer is inside it or at its door
+// (from outside it is the skin built in world/buildings.js). Heights and walls come from ground.js.
 import * as THREE from 'three';
-import { PLAYER } from '../config.js';
-import { Collider } from '../modes/collision.js';
 import { boxGeo, signQuad, merge, paint } from '../world/geo.js';
 import { signAtlas, grassTexture } from '../world/textures.js';
 import * as IT from '../world/interior-textures.js';
-import { buildPlan, floorShortLabel, floorLabel, DOOR, WALL_T, PARAPET_H, PLINTH } from './plan.js';
+import { floorShortLabel, floorLabel, DOOR, WALL_T, PLINTH } from './plan.js';
+import { BuildingPhysics, WorldGround } from './ground.js';
 
-const DEG = Math.PI / 180;
 // open-air look: the courtyard shows the sky, so the fog is a light haze rather than a dark void
 const INDOOR = { bg: 0xdbe6ee, hemi: 1.4, sun: 0.65, fogNear: 45, fogFar: 200, sky: true, hemiSky: 0xfff7ea, hemiGround: 0xf3eee4 };
-const PROMPT_R = 2.4;
-const EXIT_R = 3.0;
-const ENTER_R = 8; // how close to a door the "Enter" prompt appears
+const NEAR_R = 38; // the building is drawn when the viewer is this close to its door (the hall is seen through the entrance)
 const ROOM_SHOW_R = 15; // furniture of a room is built and shown within this distance
 const TILE = { granite: 1.8, marble: 1.2, green: 2.4, concrete: 2.4 };
-const ARRIVE_YAW = { n: 0, e: -Math.PI / 2, s: Math.PI, w: Math.PI / 2 }; // which way the viewer faces after stairs or lift
+const smooth01 = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
 
 // ---------- geometry helpers ----------
 
@@ -299,21 +297,17 @@ function slopeQuad(buf, pts, up, uvOf) {
 export class Interiors {
   constructor(app) {
     this.app = app;
-    this.active = false;
+    this.active = false; // the viewer is inside a building that has floor plans
     this.buildingId = null;
-    this.level = 0;
-    this.floors = new Map(); // `${buildingId}:${level}` -> built floor
-    this.gardens = new Map(); // buildingId -> garden group
+    this.level = 0; // the floor they are on
     this.clock = () => new Date(); // overridable in tests
     this.quality = { trees: 1 };
-    this.prompt = null;
     this._listeners = new Set();
-    this._saved = null;
+    this.units = new Map(); // building id -> { id, phys, group, floors: Map(level -> built), garden, queue, ready }
 
     const world = app.world;
     this.group = new THREE.Group();
-    this.group.name = 'interior';
-    this.group.visible = false;
+    this.group.name = 'interiors';
     world.scene.add(this.group);
 
     const lam = (map) => new THREE.MeshLambertMaterial({ map, vertexColors: true });
@@ -335,7 +329,6 @@ export class Interiors {
       bark: lam(IT.barkTexture()),
       leaf: new THREE.MeshLambertMaterial({ map: IT.leafTexture(false), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide }),
       shrub: new THREE.MeshLambertMaterial({ map: IT.leafTexture(true), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide }),
-      facade: lam(IT.arcadeFacade()),
       paver: lam(IT.hexPaver()),
       grass: lam(grass),
       decor: lam(decor.texture),
@@ -356,12 +349,96 @@ export class Interiors {
     warm.add(new THREE.Mesh(signQuad(0.01, 0.01), this.warmSign));
     this.group.add(warm);
     warm.visible = true;
+
+    // what the viewer stands on and bumps into: the campus and the floors of every building that has an inside
+    this.ground = new WorldGround({ doorFrames: world.doorFrames, outdoor: world.colliders, boundary: world.boundary });
+    for (const b of app.data.buildings) if (b.floorPlans?.length) this._attach(b);
+    this.ground.buildings = [...this.units.values()].map((u) => u.phys);
+    if (app.walk) app.walk.onRawTap = (e) => this._rawTap(e);
+  }
+
+  /** a building with floor plans: its group in the scene (at the place and turn of the building) and what is still to build */
+  _attach(b) {
+    const phys = new BuildingPhysics(b);
+    const group = new THREE.Group();
+    group.name = `interior-${b.id}`;
+    group.visible = false;
+    this.group.add(group);
+    const unit = { id: b.id, phys, group, floors: new Map(), garden: null, queue: [...phys.floors.map((f) => f.level).sort((x, y) => x - y)], ready: false };
+    unit.queue.splice(1, 0, 'garden'); // the ground floor, the garden, then the floors above
+    this.units.set(b.id, unit);
+    this._place(unit);
+  }
+
+  _place(unit) {
+    const { phys, group } = unit;
+    group.position.set(phys.building.position.x, PLINTH, phys.building.position.z); // the ground floor stands on its plinth
+    group.rotation.y = phys.rotY;
+  }
+
+  /** one queued part per frame (a floor takes about 30 ms), so the first visit to a building does not stall */
+  _pump() {
+    for (const u of this.units.values()) {
+      if (!u.ready) {
+        this._buildNext(u);
+        return;
+      }
+    }
+  }
+
+  _buildNext(u) {
+    const job = u.queue.shift();
+    if (job === 'garden') this._garden(u);
+    else if (job !== undefined) this._floor(u, job);
+    if (!u.queue.length && !u.ready) {
+      u.ready = true;
+      this._merge(u);
+    }
+  }
+
+  /**
+   * The floors are always drawn together, so the static meshes of one kind (walls, each kind of floor, ceilings, parapets, details,
+   * windows) of all the floors become one mesh each: a quarter of the draw calls. Signs (one atlas per floor), the pick volumes and the
+   * furniture of the rooms stay with their floor.
+   */
+  _merge(unit) {
+    const KINDS = new Set(['walls-corridor', 'walls-rooms', 'floor-granite', 'floor-marble', 'floor-green', 'floor-concrete', 'ceiling', 'parapets', 'parapets-outside', 'details', 'windows']);
+    const lists = new Map(); // name -> { material, geos }
+    for (const [level, built] of unit.floors) {
+      for (const m of [...built.group.children]) {
+        if (!m.isMesh || !KINDS.has(m.name)) continue;
+        const g = m.geometry.clone();
+        g.translate(0, built.group.position.y, 0);
+        const e = lists.get(m.name) ?? { material: m.material, geos: [] };
+        e.geos.push(g);
+        lists.set(m.name, e);
+        built.group.remove(m);
+        m.geometry.dispose();
+      }
+    }
+    for (const [name, { material, geos }] of lists) {
+      const mesh = new THREE.Mesh(merge(geos), material);
+      mesh.name = `${name}-all`;
+      unit.group.add(mesh);
+      for (const g of geos) g.dispose();
+    }
+  }
+
+  /** build everything of a building now (tests, or a viewer who got there before the idle frames did) */
+  ensureBuilt(id) {
+    const u = this.units.get(id);
+    while (u && !u.ready) this._buildNext(u);
+  }
+
+  /** the campus changed (calibration): the obstacles and door frames of the open campus */
+  refresh() {
+    this.ground.setOutdoor(this.app.world.colliders, this.app.world.doorFrames);
   }
 
   /** the automatic quality level: the hanging foliage of the trees is the first thing to go */
   setQuality(q) {
     this.quality = q;
-    for (const g of this.gardens.values()) if (g.userData.extra) g.userData.extra.visible = q.trees >= 0.7;
+    for (const u of this.units.values()) if (u.garden?.userData.extra) u.garden.userData.extra.visible = q.trees >= 0.7;
   }
 
   /** upload the interior textures to the GPU at start-up (the first draw would otherwise stall) */
@@ -392,9 +469,10 @@ export class Interiors {
   }
 
   has(id) {
-    return !!this.building(id)?.floorPlans?.length;
+    return this.units.has(id);
   }
 
+  /** the floors of the building the viewer is in */
   get floorPlans() {
     return this.building()?.floorPlans ?? [];
   }
@@ -403,8 +481,9 @@ export class Interiors {
     return this.floorPlans.find((f) => f.level === this.level) ?? null;
   }
 
+  /** the built floor the viewer is on, or null in the open */
   get current() {
-    return this.active ? this.floors.get(`${this.buildingId}:${this.level}`) ?? null : null;
+    return this.active ? this.units.get(this.buildingId)?.floors.get(this.level) ?? null : null;
   }
 
   subscribe(fn) {
@@ -416,14 +495,14 @@ export class Interiors {
     for (const fn of this._listeners) fn(type, data, this);
   }
 
-  // ---------- the courtyard garden (one per building, moved down with the floor) ----------
+  // ---------- the courtyard garden (one per building, on the campus ground) ----------
 
-  _garden(buildingId, plan) {
-    if (this.gardens.has(buildingId)) return this.gardens.get(buildingId);
-    const g = plan.garden;
+  _garden(unit) {
+    if (unit.garden) return unit.garden;
+    const g = unit.phys.plans[0].garden;
     const group = new THREE.Group();
     group.name = 'garden';
-    const y = -PLINTH;
+    const y = -PLINTH + 0.04; // the campus ground, a little above its planes
     const mesh = (geo, mat, name) => {
       if (!geo) return;
       const m = new THREE.Mesh(geo, mat);
@@ -528,24 +607,22 @@ export class Interiors {
     group.userData.extra.visible = this.quality.trees >= 0.7;
     mesh(shrubs.build(), this.mats.shrub, 'shrubs');
 
-    group.visible = false;
-    this.group.add(group);
-    this.gardens.set(buildingId, group);
+    unit.group.add(group);
+    unit.garden = group;
     return group;
   }
 
   // ---------- building a floor ----------
 
-  _floor(buildingId, level) {
-    const key = `${buildingId}:${level}`;
-    if (this.floors.has(key)) return this.floors.get(key);
-    const b = this.building(buildingId);
-    const floor = b.floorPlans.find((f) => f.level === level);
-    const plan = buildPlan(floor);
+  _floor(unit, level) {
+    const have = unit.floors.get(level);
+    if (have) return have;
+    const plan = unit.phys.plans[level];
+    const floor = unit.phys.floors[level];
     const H = plan.height;
     const group = new THREE.Group();
     group.name = `floor-${level}`;
-    group.visible = false;
+    group.position.y = level * H; // the floors stand on each other
     const add = (geo, mat, name) => {
       if (!geo) return null;
       const m = new THREE.Mesh(geo, mat);
@@ -556,10 +633,17 @@ export class Interiors {
 
     // walls: the face towards a room is cream, every other face carries the white wall with the tan dado
     const corr = new BoxBatch(), room = new BoxBatch();
+    const OL = plan.outline, EPS = 1e-3;
     for (const w of plan.walls) {
       const inner = w.inner ? (w.inner[0] > 0 ? 0 : w.inner[0] < 0 ? 1 : w.inner[1] > 0 ? 4 : 5) : -1;
       const d = { x0: w.x0, x1: w.x1, z0: w.z0, z1: w.z1, y0: w.y0, y1: w.y1, uvT: [2, IT.STOREY] };
-      corr.push({ ...d, faces: inner >= 0 ? ALL_FACES & ~(1 << inner) : ALL_FACES });
+      let faces = inner >= 0 ? ALL_FACES & ~(1 << inner) : ALL_FACES;
+      // the faces on the outline are not drawn: the outside of the building is its skin (world/buildings.js), which has the doorway
+      if (Math.abs(w.x1 - OL.x1) < EPS) faces &= ~(1 << 0);
+      if (Math.abs(w.x0 - OL.x0) < EPS) faces &= ~(1 << 1);
+      if (Math.abs(w.z1 - OL.z1) < EPS) faces &= ~(1 << 4);
+      if (Math.abs(w.z0 - OL.z0) < EPS) faces &= ~(1 << 5);
+      corr.push({ ...d, faces });
       if (inner >= 0) room.push({ ...d, faces: 1 << inner });
     }
     add(corr.build(), this.mats.wallCorr, 'walls-corridor');
@@ -588,34 +672,6 @@ export class Interiors {
     for (const col of plan.columns) det.push(box(col.x, col.z, col.w, col.d, H, 0, 0xf1ede5));
     for (const f of plan.fascia) det.push(boxAB(f.x0, f.z0, f.x1, f.z1, f.y0, f.y1, 0xf1ede5));
 
-    // what is seen across the courtyard: the other wings' storeys above and below this one
-    if (plan.court) {
-      const c = plan.court;
-      const topY = (b.floors - level) * H + PARAPET_H;
-      const botY = -(level * H + PLINTH);
-      const sides = [
-        { orient: 'h', coord: c.z0, lo: c.x0, hi: c.x1, face: 1 }, // north wing seen from the court: faces +z
-        { orient: 'h', coord: c.z1, lo: c.x0, hi: c.x1, face: -1 },
-        { orient: 'v', coord: c.x0, lo: c.z0, hi: c.z1, face: 1 },
-        { orient: 'v', coord: c.x1, lo: c.z0, hi: c.z1, face: -1 },
-      ];
-      const facade = [];
-      for (const s of sides) {
-        const len = s.hi - s.lo, bays = 2 * Math.max(1, Math.round(len / 7.4)); // two bays per texture tile
-        for (const [ya, yb] of [[botY, 0], [H, topY]]) {
-          if (plan.walkway && ya === botY) continue; // hidden under the walkway floor
-          if (yb - ya < 0.01) continue;
-          const va = ya / H, vb = yb / H;
-          // corners left to right as seen from the court
-          const [l, r] = (s.orient === 'h') === (s.face > 0) ? [s.lo, s.hi] : [s.hi, s.lo];
-          const pt = (a, y) => (s.orient === 'h' ? [a, y, s.coord] : [s.coord, y, a]);
-          const ul = ((l - s.lo) / len) * (bays / 2), ur = ((r - s.lo) / len) * (bays / 2);
-          facade.push(paint(quad([pt(l, ya), pt(r, ya), pt(r, yb), pt(l, yb)], [[ul, va], [ur, va], [ur, vb], [ul, vb]]), 0xffffff));
-        }
-      }
-      add(merge(facade), this.mats.facade, 'courtyard-facade');
-    }
-
     // doors: jambs and a leaf swung open into the room so the opening stays clear
     const along = (nx, nz) => [-nz, nx];
     for (const d of plan.doors) {
@@ -638,19 +694,15 @@ export class Interiors {
     for (const s of plan.stairs) for (const q of s.boxes) det.push(boxAB(q.x0, q.z0, q.x1, q.z1, q.y0, q.y1, q.color));
     for (const l of plan.lifts) det.push(...liftBoxes(l, H));
 
-    // entrance door frame and glass doors (ground floor)
+    // the entrance (ground floor): an open doorway with a steel frame, as wide and high as the opening in the wall
     if (plan.entrance) {
       const e = plan.entrance;
       const vertical = e.nx !== 0;
-      const s = vertical ? e.nx : e.nz;
+      const sgn = vertical ? e.nx : e.nz;
       const c = vertical ? e.z : e.x;
-      const at = (a, depth, w, d, h, y, color) => (vertical ? box(e.x - s * depth, a, w, d, h, y, color) : box(a, e.z - s * depth, d, w, h, y, color));
-      det.push(at(c - e.width / 2 - 0.05, 0.1, 0.16, 0.1, 2.4, 0, 0x35545f), at(c + e.width / 2 + 0.05, 0.1, 0.16, 0.1, 2.4, 0, 0x35545f));
-      det.push(at(c, 0.1, 0.16, e.width + 0.2, 0.1, 2.3, 0x35545f));
-      det.push(at(c, 0.03, 0.04, e.width - 0.1, 2.3, 0, 0xc9e3f1)); // glass doors
-      // steel mullions between the door leaves (one leaf per 1.2 m) and a transom
-      for (let k = 1; k < Math.round(e.width / 1.2); k++) det.push(at(c - e.width / 2 + (k * e.width) / Math.round(e.width / 1.2), 0.07, 0.06, 0.06, 2.3, 0, 0x6b7a84));
-      if (e.width > 2.6) det.push(at(c, 0.07, 0.06, e.width - 0.1, 0.06, 2.15, 0x6b7a84));
+      const at = (a, depth, w, d, h, y, color) => (vertical ? box(e.x - sgn * depth, a, w, d, h, y, color) : box(a, e.z - sgn * depth, d, w, h, y, color));
+      det.push(at(c - e.width / 2 - 0.05, 0.1, 0.16, 0.1, e.height, 0, 0x35545f), at(c + e.width / 2 + 0.05, 0.1, 0.16, 0.1, e.height, 0, 0x35545f));
+      det.push(at(c, 0.1, 0.16, e.width + 0.2, 0.1, e.height - 0.1, 0x35545f));
     }
     add(det.build(), this.mats.detail, 'details');
 
@@ -700,20 +752,15 @@ export class Interiors {
       picks.push(m);
     };
     for (const p of plan.picks) pk(p, { roomId: p.roomId, kind: p.kind });
-    if (plan.entrance) {
-      const e = plan.entrance;
-      pk({ x: e.x - 0.2 * e.nx, y: 1.2, z: e.z - 0.2 * e.nz, w: e.nx ? 0.6 : e.width + 0.4, h: 2.4, d: e.nx ? e.width + 0.4 : 0.6 }, { kind: 'exit' });
-    }
 
     const rooms = new Map(floor.rooms.map((r) => [r.id, r]));
     const roomMeshes = new Map(); // roomId -> Group (built when the viewer comes near)
     const built = {
       level, floor, plan, group, picks, rooms, roomMeshes,
       centres: floor.rooms.map((r) => ({ id: r.id, x: (r.bounds.x0 + r.bounds.x1) / 2, z: (r.bounds.z0 + r.bounds.z1) / 2 })),
-      collider: new Collider(plan.colliders, plan.boundary),
     };
-    this.group.add(group);
-    this.floors.set(key, built);
+    unit.group.add(group);
+    unit.floors.set(level, built);
     return built;
   }
 
@@ -731,129 +778,9 @@ export class Interiors {
     return g;
   }
 
-  // ---------- enter / exit / floors ----------
+  // ---------- the building as part of the world ----------
 
-  async enter(buildingId, { level = 0 } = {}) {
-    const app = this.app;
-    if (this.active || !this.has(buildingId)) return false;
-    app.nav.end();
-    app.navUi.closeSheets();
-    if (app.mode !== 'walk') {
-      const f = app.world.doorFrames.find((d) => d.id === buildingId);
-      await app.setMode('walk', f ? { spawn: { x: f.x + f.nx * 2.6, z: f.z + f.nz * 2.6, yaw: Math.atan2(f.nx, f.nz) } } : undefined); // facing the door
-    }
-    const built = this._floor(buildingId, level);
-    this._garden(buildingId, built.plan);
-    await app.hud.transition(() => this._swapIn(buildingId, built, built.plan.spawn), app.reducedMotion);
-    return true;
-  }
-
-  _swapIn(buildingId, built, spawn) {
-    const app = this.app, walk = app.walk, world = app.world;
-    this._saved = { collider: walk.collider, onTap: walk.onTap, onRawTap: walk.onRawTap, pos: { x: walk.pos.x, z: walk.pos.z }, yaw: walk.yaw };
-    this.buildingId = buildingId;
-    this.level = built.level;
-    this.active = true;
-    this.prompt = null;
-    world.setInterior(true, INDOOR);
-    this.group.visible = true;
-    built.group.visible = true;
-    this._showGarden(built);
-    walk.collider = built.collider;
-    walk.groundFn = built.plan.walkway ? built.plan.groundAt : null; // the yard is lower than the walkway
-    walk.onRawTap = (e) => this._rawTap(e);
-    this._place(spawn);
-    app.hud.root.dataset.interior = '1';
-    app.hud.sync();
-    this.emit('enter');
-  }
-
-  _showGarden(built) {
-    const g = this.gardens.get(this.buildingId);
-    if (!g) return;
-    g.visible = true;
-    g.position.y = -(built.level * built.plan.height);
-  }
-
-  _place({ x, z, yaw }) {
-    const w = this.app.walk;
-    w.pos.x = x;
-    w.pos.z = z;
-    w.collider.resolve(w.pos, PLAYER.radius);
-    w.vel.x = w.vel.z = 0;
-    w.yaw = yaw;
-    w.pitch = 0;
-    w.cancelTarget();
-    w._apply(0);
-  }
-
-  /** Leave the building. `immediate`: no fade (used when another mode switch already fades). */
-  async exit({ immediate = false } = {}) {
-    if (!this.active) return;
-    const app = this.app;
-    const swap = () => this._swapOut();
-    if (immediate) swap();
-    else await app.hud.transition(swap, app.reducedMotion);
-  }
-
-  _swapOut() {
-    const app = this.app, walk = app.walk, world = app.world;
-    this.current?.group && (this.current.group.visible = false);
-    const garden = this.gardens.get(this.buildingId);
-    if (garden) garden.visible = false;
-    this.group.visible = false;
-    world.setInterior(false);
-    walk.collider = this._saved.collider;
-    walk.groundFn = null;
-    walk.groundY = 0;
-    walk.onTap = this._saved.onTap;
-    walk.onRawTap = this._saved.onRawTap ?? null;
-    const f = world.doorFrames.find((d) => d.id === this.buildingId);
-    const b = this.building();
-    const out = f ? { x: f.x + f.nx * 2.6, z: f.z + f.nz * 2.6 } : { x: b.doorPosition.x, z: b.doorPosition.z };
-    // facing away from the door, as if you had just stepped out
-    const w = walk;
-    w.pos.x = out.x;
-    w.pos.z = out.z;
-    w.collider.resolve(w.pos, PLAYER.radius);
-    w.vel.x = w.vel.z = 0;
-    w.yaw = f ? Math.atan2(-f.nx, -f.nz) : 0;
-    w.pitch = -6 * DEG;
-    w.cancelTarget();
-    w._apply(0);
-    this.active = false;
-    this.prompt = null;
-    delete app.hud.root.dataset.interior;
-    app.hud.sync();
-    this.emit('exit');
-  }
-
-  /** Go to another floor. via: 'stairs' | 'lift' | 'selector' (the lift landing). `spotId`: the stairs the viewer is at. */
-  async goToFloor(level, via = 'selector', spotId = null) {
-    if (!this.active || level === this.level || !this.floorPlans.some((f) => f.level === level)) return false;
-    const app = this.app;
-    const built = this._floor(this.buildingId, level);
-    const spot = via === 'stairs'
-      ? built.plan.stairs.find((s) => s.id === spotId) ?? built.plan.stairs[0]
-      : built.plan.lifts[0] ?? built.plan.stairs.find((s) => s.id === spotId) ?? built.plan.stairs[0];
-    const swap = () => {
-      this.current.group.visible = false;
-      this.level = level;
-      built.group.visible = true;
-      this._showGarden(built);
-      app.walk.collider = built.collider;
-      app.walk.groundFn = built.plan.walkway ? built.plan.groundAt : null;
-      this._place({ x: spot.landing.x, z: spot.landing.z, yaw: ARRIVE_YAW[spot.arrive] ?? 0 });
-      this.prompt = null;
-      this.emit('floor');
-    };
-    await app.hud.transition(swap, app.reducedMotion);
-    return true;
-  }
-
-  // ---------- taps and prompts ----------
-
-  /** screen tap: door or sign -> room card; the exit door -> leave. Returns true when handled. */
+  /** the sign or door of a room under a tap: opens its card. Returns true when handled. */
   _rawTap(e) {
     const cur = this.current;
     if (!cur) return false;
@@ -865,12 +792,7 @@ export class Interiors {
     ray.far = 14;
     const hit = ray.intersectObjects(cur.picks, false)[0];
     if (!hit) return false;
-    const d = hit.object.userData;
-    if (d.kind === 'exit') {
-      this.exit();
-      return true;
-    }
-    this.emit('room', { room: cur.rooms.get(d.roomId), floor: cur.floor });
+    this.emit('room', { room: cur.rooms.get(hit.object.userData.roomId), floor: cur.floor });
     return true;
   }
 
@@ -880,77 +802,100 @@ export class Interiors {
     if (room) this.emit('room', { room, floor: cur.floor });
   }
 
-  /** go inside (if needed), to the right floor, and stand in front of a room's door with its card open */
+  /** move the viewer to a spot (in the open or in a building), facing a direction, standing on the floor at height y */
+  _stand(x, z, yaw, y = 0) {
+    const w = this.app.walk;
+    w.placeAt(x, z, yaw, { y });
+  }
+
+  /** go to the door of a room on any floor and open its card (the viewer is moved there, with the usual fade; nothing else changes) */
   async showRoom(buildingId, roomId, level = 0) {
-    if (!this.has(buildingId)) return false;
-    if (!this.active) await this.enter(buildingId, { level });
-    else if (this.level !== level) await this.goToFloor(level, 'selector');
-    const d = this.current?.plan.doors.find((x) => x.roomId === roomId && x.main);
+    const u = this.units.get(buildingId);
+    if (!u) return false;
+    this.ensureBuilt(buildingId);
+    const d = u.phys.plans[level]?.doors.find((q) => q.roomId === roomId && q.main);
     if (!d) return false;
-    this._place({ x: d.x + d.nx * 1.8, z: d.z + d.nz * 1.8, yaw: Math.atan2(d.nx, d.nz) }); // facing the door
+    const app = this.app, ph = u.phys;
+    const at = ph.toWorld(d.x + d.nx * 1.8, d.z + d.nz * 1.8);
+    // facing the door: the way from the viewer to the door is (-nx, -nz) in the building's frame, turned by the building's rotation
+    const fx = -d.nx * ph.cos + d.nz * ph.sin, fz = -d.nx * ph.sin - d.nz * ph.cos;
+    const yaw = Math.atan2(-fx, -fz), y = ph.baseY(level);
+    if (app.mode !== 'walk') await app.setMode('walk', { spawn: { x: at.x, z: at.z, yaw, y } });
+    else await app.hud.transition(() => this._stand(at.x, at.z, yaw, y), app.reducedMotion);
+    this.update(0);
     this.openRoom(roomId);
     return true;
   }
 
-  /** viewer walks to the corridor in front of a room door */
+  /** the viewer walks to the corridor in front of a room door */
   walkToRoom(roomId) {
     const cur = this.current;
     const d = cur?.plan.doors.find((x) => x.roomId === roomId && x.main);
-    if (d) this.app.walk.walkTo(d.x + d.nx * 1.3, d.z + d.nz * 1.3);
+    if (!d) return;
+    const p = this.units.get(this.buildingId).phys.toWorld(d.x + d.nx * 1.3, d.z + d.nz * 1.3);
+    this.app.walk.walkTo(p.x, p.z);
   }
 
-  _setPrompt(best) {
-    const key = best ? `${best.kind}:${best.id}` : '';
-    if (key !== (this.prompt ? `${this.prompt.kind}:${this.prompt.id}` : '')) {
-      this.prompt = best;
-      this.emit('prompt');
-    }
-  }
-
+  /** per frame: which building and floor the viewer is in, what is drawn, which obstacles apply, the light, the furniture nearby */
   update() {
-    const app = this.app;
-    if (!this.active) {
-      // outside: offer to go in when the viewer stands at the door of a building that has an interior
-      let best = null;
-      if (app.mode === 'walk' && app.walk?.active && app.nav.mode === 'none') {
-        const p = app.walk.pos;
-        let bd = ENTER_R;
-        for (const f of app.world.doorFrames) {
-          if (!this.has(f.id)) continue;
-          const d = Math.hypot(p.x - f.x, p.z - f.z) - (f.reach ?? 0) * 0.5; // a deep porch is noticed from a little further away
-          if (d < bd) { bd = d; best = { kind: 'enter', id: f.id }; }
+    const app = this.app, w = app.walk, mode = app.mode;
+    this._pump();
+    const p = w.pos; // the viewer: walking, or driving (the car keeps the position here too)
+    const low = mode !== 'overview';
+    let inside = null, depth = 0;
+    for (const u of this.units.values()) {
+      if (u.phys.refresh()) this._place(u);
+      const d = u.phys.depth(p.x, p.z);
+      const door = app.world.doorFrames.find((f) => f.id === u.id);
+      const show = low && (d > 0 || (door ? Math.hypot(p.x - door.x, p.z - door.z) : -d) < NEAR_R);
+      if (show && !u.ready) this.ensureBuilt(u.id);
+      if (u.group.visible !== show) u.group.visible = show;
+      if (low && d > 0) { inside = u; depth = d; }
+    }
+
+    // inside which building, on which floor
+    const id = inside?.id ?? null, level = inside ? inside.phys.levelAt(w.groundY) : 0;
+    const was = { active: this.active, id: this.buildingId, level: this.level };
+    this.active = !!inside;
+    this.buildingId = id ?? (was.active ? was.id : this.buildingId);
+    this.level = level;
+    if (this.active && (!was.active || was.id !== id)) this.emit('enter');
+    else if (!this.active && was.active) this.emit('exit');
+    else if (this.active && was.level !== level) this.emit('floor');
+
+    if (low) {
+      // the obstacles of the floor they are on (the walls of the building are the same whether you walk or drive)
+      const c = this.ground.colliderFor(p.x, p.z, w.groundY);
+      if (w.collider !== c) w.collider = c;
+      if (app.drive && app.drive.collider !== c) app.drive.collider = c;
+    }
+    app.world.setIndoor(inside ? smooth01(depth / 3) : 0, INDOOR); // the light follows how far inside they are
+    app.world.setDeep(!!inside && depth > 9.5); // in the verandahs and the court the far trees are hidden behind the building
+
+    // furniture only for the rooms around the viewer, on the floors above and below as well
+    for (const u of this.units.values()) {
+      if (!u.group.visible) continue;
+      const l = u.phys.toLocal(p.x, p.z);
+      for (const [lv, built] of u.floors) {
+        const near = inside === u ? Math.abs(lv - level) <= 1 : lv === 0; // inside: the floor and the ones next to it; at the door: the ground floor
+        for (const c of built.centres) {
+          const close = near && Math.hypot(l.x - c.x, l.z - c.z) < ROOM_SHOW_R;
+          const g = built.roomMeshes.get(c.id);
+          if (close && !g) this._roomMesh(built, c.id);
+          else if (g && g.visible !== close) g.visible = close;
         }
       }
-      this._setPrompt(best);
-      return;
-    }
-    const cur = this.current;
-    if (!cur) return;
-    const p = app.walk.pos;
-    let best = null, bd = Infinity;
-    const consider = (kind, id, x, z, r) => {
-      const d = Math.hypot(p.x - x, p.z - z);
-      if (d < r && d < bd) { bd = d; best = { kind, id }; }
-    };
-    for (const s of cur.plan.stairs) consider('stairs', s.id, s.landing.x, s.landing.z, PROMPT_R);
-    for (const l of cur.plan.lifts) consider('lift', l.id, l.landing.x, l.landing.z, PROMPT_R);
-    if (cur.plan.entrance) consider('exit', 'exit', cur.plan.entrance.x, cur.plan.entrance.z, EXIT_R);
-    this._setPrompt(best);
-
-    // furniture only for the rooms around the viewer
-    for (const c of cur.centres) {
-      const near = Math.hypot(p.x - c.x, p.z - c.z) < ROOM_SHOW_R;
-      const g = cur.roomMeshes.get(c.id);
-      if (near && !g) this._roomMesh(cur, c.id);
-      else if (g && g.visible !== near) g.visible = near;
     }
   }
 
-  /** floors reachable with the stairs (one up or down) */
-  stairTargets() {
-    const levels = this.floorPlans.map((f) => f.level).sort((a, b) => a - b);
-    const i = levels.indexOf(this.level);
-    return { up: levels[i + 1] ?? null, down: levels[i - 1] ?? null };
+  /** the height of the ceiling above (x, z) for something at height y in the building the viewer is in, or null where the sky is open */
+  ceilingAt(x, z, y) {
+    const u = this.active ? this.units.get(this.buildingId) : null;
+    if (!u) return null;
+    const l = u.phys.toLocal(x, z), c = u.phys.plans[0].court, o = u.phys.outline;
+    if (!(l.x > o.x0 && l.x < o.x1 && l.z > o.z0 && l.z < o.z1)) return null;
+    if (c && l.x > c.x0 && l.x < c.x1 && l.z > c.z0 && l.z < c.z1) return null;
+    return u.phys.baseY(u.phys.levelAt(y)) + u.phys.H;
   }
 
   floorInfo(level) {

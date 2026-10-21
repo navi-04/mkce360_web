@@ -23,6 +23,7 @@ if (!block) throw new Error('apj-block not found');
 
 // ---- geometry (metres, floor frame: x east, z south), the ring is the footprint 92 x 113 m of block 1 ----
 const O = { x0: -46, z0: -56.5, x1: 46, z1: 56.5 };
+const WALL_IN = 0.2; // the outer walls are 0.2 m thick, inside the outline
 const RD = 9.0; // depth of the room row
 const VD = 3.2; // verandah
 const C = { x0: O.x0 + RD + VD, z0: O.z0 + RD + VD, x1: O.x1 - RD - VD, z1: O.z1 - RD - VD }; // courtyard
@@ -106,15 +107,17 @@ function buildFloor(level) {
     add(typeAt(n++), { x0: ROOM_X0 + i * sw, z0: O.z0, x1: ROOM_X0 + (i + 1) * sw, z1: O.z0 + RD }, 's', i % 2 === 0);
   }
 
-  // stairs in every corner, a lift in the north-east one; the corner lobbies are open to the verandah
-  const flight = 4.6;
+  // a stair well in every corner (two flights side by side and a landing, walled in against the outer walls; the viewer climbs them),
+  // and a lift in the north-east corner (a closed steel door; it only stands there, as in the photos)
+  const WELL_W = 3.4, WELL_L = 4.6, IN = WALL_IN; // the well: across the two flights, along them; IN = inner face of the outer walls
   const stairs = [
-    { id: 'stairs-ne', label: 'Stairs', rise: 'n', arrive: 'w', bounds: { x0: O.x1 - 2.4, z0: O.z0 + RD - 0.2 - flight, x1: O.x1 - 0.2, z1: O.z0 + RD - 0.2 }, landing: { x: O.x1 - 1.3, z: O.z0 + RD + 1.5 } },
-    { id: 'stairs-nw', label: 'Stairs', rise: 'n', arrive: 'e', bounds: { x0: O.x0 + 0.2, z0: O.z0 + RD - 0.2 - flight, x1: O.x0 + 2.4, z1: O.z0 + RD - 0.2 }, landing: { x: O.x0 + 1.3, z: O.z0 + RD + 1.5 } },
-    { id: 'stairs-se', label: 'Stairs', rise: 's', arrive: 'w', bounds: { x0: O.x1 - 2.4, z0: O.z1 - RD + 0.2, x1: O.x1 - 0.2, z1: O.z1 - RD + 0.2 + flight }, landing: { x: O.x1 - 1.3, z: O.z1 - RD - 1.5 } },
-    { id: 'stairs-sw', label: 'Stairs', rise: 's', arrive: 'e', bounds: { x0: O.x0 + 0.2, z0: O.z1 - RD + 0.2, x1: O.x0 + 2.4, z1: O.z1 - RD + 0.2 + flight }, landing: { x: O.x0 + 1.3, z: O.z1 - RD - 1.5 } },
-  ].map((s) => ({ ...s, bounds: Object.fromEntries(Object.entries(s.bounds).map(([k, v]) => [k, r2(v)])), landing: { x: r2(s.landing.x), z: r2(s.landing.z) } }));
-  const lifts = [{ id: 'lift-ne', label: 'Lift', facing: 's', arrive: 's', bounds: { x0: ROOM_X1 + 0.4, z0: O.z0 + 0.8, x1: ROOM_X1 + 2.6, z1: O.z0 + 3.0 }, landing: { x: r2(ROOM_X1 + 1.5), z: r2(O.z0 + 5.2) } }];
+    { id: 'stairs-ne', label: 'Stairs', foot: 'w', bounds: { x0: O.x1 - IN - WELL_L, z0: O.z0 + IN, x1: O.x1 - IN, z1: O.z0 + IN + WELL_W } },
+    { id: 'stairs-nw', label: 'Stairs', foot: 'e', bounds: { x0: O.x0 + IN, z0: O.z0 + IN, x1: O.x0 + IN + WELL_L, z1: O.z0 + IN + WELL_W } },
+    { id: 'stairs-se', label: 'Stairs', foot: 'w', bounds: { x0: O.x1 - IN - WELL_L, z0: O.z1 - IN - WELL_W, x1: O.x1 - IN, z1: O.z1 - IN } },
+    { id: 'stairs-sw', label: 'Stairs', foot: 'e', bounds: { x0: O.x0 + IN, z0: O.z1 - IN - WELL_W, x1: O.x0 + IN + WELL_L, z1: O.z1 - IN } },
+  ].map((s) => ({ ...s, bounds: Object.fromEntries(Object.entries(s.bounds).map(([k, v]) => [k, r2(v)])) }));
+  const liftZ0 = O.z0 + IN + WELL_W + 0.8;
+  const lifts = [{ id: 'lift-ne', label: 'Lift', facing: 'w', bounds: { x0: r2(O.x1 - IN - 2.2), z0: r2(liftZ0), x1: r2(O.x1 - IN), z1: r2(liftZ0 + 2.2) }, landing: { x: r2(O.x1 - IN - 2.2 - 1.9), z: r2(liftZ0 + 1.1) } }];
 
   const floor = {
     level,
@@ -132,11 +135,16 @@ function buildFloor(level) {
     lifts,
   };
   // the entrance is in the middle of the north face, under the porch seen in the satellite crop of block 1 (the user asked for it on that side)
-  if (level === 0) floor.entrance = { x: 0, z: O.z0, facing: 'north', width: 4.8, label: 'Main entrance (exit)' };
+  if (level === 0) floor.entrance = { x: 0, z: O.z0, facing: 'north', width: 4.8, height: 2.6, label: 'Main entrance' };
   return floor;
 }
 
 block.floorPlans = [0, 1, 2, 3].map(buildFloor);
+// the outside follows the plan: wings as thick as the plan's (rooms + verandah, the courtyard of the satellite image), four storeys,
+// and the entrance opening of the porch as wide and high as the one in the plan
+block.ring = { ...(block.ring ?? {}), thickness: RD + VD };
+block.heightM = block.floorPlans.length * 3.6;
+if (block.porch) block.porch = { ...block.porch, doorW: 4.8, doorH: 2.6 };
 block.interiorNote = 'SAMPLE interior. The ring shape, verandahs, courtyard, entrance hall, corridors, stairs, lift and classroom furnishing follow the photos supplied for this block; which room is where, the room numbers and names, capacities, faculty and timetables are placeholders. Only the four-floor count is confirmed.';
 fs.writeFileSync(FILE, JSON.stringify(data, null, 2) + '\n');
 console.log('floors', block.floorPlans.length, 'rooms per floor', block.floorPlans.map((f) => f.rooms.length).join('/'));

@@ -371,3 +371,11 @@ islands in front. Nothing like it shows on the east face, so the east-face door 
 - **The 102 m no longer applies.** By road the gate is now 133 m from the door (117 m in a straight line), so "main gate to the entrance,
   about 102 m" cannot refer to this door. Either it was measured to something else or the gate marker is off; the user has been asked.
 - The sample interior follows: the entrance hall is the middle of the north wing, and the east wing has ten rooms on every floor.
+
+## 14. Revision 7: the wings of block 1 are 12.2 m thick, the building is part of the world
+
+The interior of block 1 became part of the world (see `docs/interiors.md`), so the outside and the inside have to agree. The outside
+had wings 20 m thick (an early estimate); the interior, built from the photos, has 12.2 m (rooms 9 m and a verandah 3.2 m). The
+rectified satellite crop (`assets/satellite/apj block.png` in the block's own frame) shows a courtyard of about 66 x 85 m, which is the
+interior's 67.6 x 88.6 m, so `ring.thickness` is now 12.2 and `heightM` 14.4 (four storeys of 3.6 m). The courtyard seen from Overview is
+larger and matches the satellite photo better.

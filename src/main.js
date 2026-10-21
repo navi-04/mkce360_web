@@ -76,8 +76,10 @@ async function boot() {
     ready: Promise.resolve(true),
     setMode: (m) => app.setMode(m, { instant: true }),
     stats: () => app.stats(),
+    drive: app.drive,
     input: (v) => {
-      app.walk.sim = v;
+      if (app.mode === 'drive') app.drive.sim = v; // { throttle, brake, steer, handbrake }
+      else app.walk.sim = v; // { forward, strafe, turn }
     },
   };
 

@@ -980,10 +980,10 @@
         "d": 113
       },
       "rotationDeg": 8.7,
-      "heightM": 15,
+      "heightM": 14.4,
       "floors": 4,
       "ring": {
-        "thickness": 20
+        "thickness": 12.2
       },
       "doorPosition": {
         "x": -116.6,
@@ -2119,65 +2119,45 @@
             {
               "id": "stairs-ne",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": -52.3,
+                "x0": 41.2,
+                "z0": -56.3,
                 "x1": 45.8,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": 44.7,
-                "z": -46
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-nw",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": -52.3,
-                "x1": -43.6,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": -44.7,
-                "z": -46
+                "z0": -56.3,
+                "x1": -41.2,
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-se",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": 47.7,
+                "x0": 41.2,
+                "z0": 52.9,
                 "x1": 45.8,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": 44.7,
-                "z": 46
+                "z1": 56.3
               }
             },
             {
               "id": "stairs-sw",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": 47.7,
-                "x1": -43.6,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": -44.7,
-                "z": 46
+                "z0": 52.9,
+                "x1": -41.2,
+                "z1": 56.3
               }
             }
           ],
@@ -2185,17 +2165,16 @@
             {
               "id": "lift-ne",
               "label": "Lift",
-              "facing": "s",
-              "arrive": "s",
+              "facing": "w",
               "bounds": {
-                "x0": 37.4,
-                "z0": -55.7,
-                "x1": 39.6,
-                "z1": -53.5
+                "x0": 43.6,
+                "z0": -52.1,
+                "x1": 45.8,
+                "z1": -49.9
               },
               "landing": {
-                "x": 38.5,
-                "z": -51.3
+                "x": 41.7,
+                "z": -51
               }
             }
           ],
@@ -2204,7 +2183,8 @@
             "z": -56.5,
             "facing": "north",
             "width": 4.8,
-            "label": "Main entrance (exit)"
+            "height": 2.6,
+            "label": "Main entrance"
           }
         },
         {
@@ -3257,65 +3237,45 @@
             {
               "id": "stairs-ne",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": -52.3,
+                "x0": 41.2,
+                "z0": -56.3,
                 "x1": 45.8,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": 44.7,
-                "z": -46
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-nw",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": -52.3,
-                "x1": -43.6,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": -44.7,
-                "z": -46
+                "z0": -56.3,
+                "x1": -41.2,
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-se",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": 47.7,
+                "x0": 41.2,
+                "z0": 52.9,
                 "x1": 45.8,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": 44.7,
-                "z": 46
+                "z1": 56.3
               }
             },
             {
               "id": "stairs-sw",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": 47.7,
-                "x1": -43.6,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": -44.7,
-                "z": 46
+                "z0": 52.9,
+                "x1": -41.2,
+                "z1": 56.3
               }
             }
           ],
@@ -3323,17 +3283,16 @@
             {
               "id": "lift-ne",
               "label": "Lift",
-              "facing": "s",
-              "arrive": "s",
+              "facing": "w",
               "bounds": {
-                "x0": 37.4,
-                "z0": -55.7,
-                "x1": 39.6,
-                "z1": -53.5
+                "x0": 43.6,
+                "z0": -52.1,
+                "x1": 45.8,
+                "z1": -49.9
               },
               "landing": {
-                "x": 38.5,
-                "z": -51.3
+                "x": 41.7,
+                "z": -51
               }
             }
           ]
@@ -4388,65 +4347,45 @@
             {
               "id": "stairs-ne",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": -52.3,
+                "x0": 41.2,
+                "z0": -56.3,
                 "x1": 45.8,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": 44.7,
-                "z": -46
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-nw",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": -52.3,
-                "x1": -43.6,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": -44.7,
-                "z": -46
+                "z0": -56.3,
+                "x1": -41.2,
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-se",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": 47.7,
+                "x0": 41.2,
+                "z0": 52.9,
                 "x1": 45.8,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": 44.7,
-                "z": 46
+                "z1": 56.3
               }
             },
             {
               "id": "stairs-sw",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": 47.7,
-                "x1": -43.6,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": -44.7,
-                "z": 46
+                "z0": 52.9,
+                "x1": -41.2,
+                "z1": 56.3
               }
             }
           ],
@@ -4454,17 +4393,16 @@
             {
               "id": "lift-ne",
               "label": "Lift",
-              "facing": "s",
-              "arrive": "s",
+              "facing": "w",
               "bounds": {
-                "x0": 37.4,
-                "z0": -55.7,
-                "x1": 39.6,
-                "z1": -53.5
+                "x0": 43.6,
+                "z0": -52.1,
+                "x1": 45.8,
+                "z1": -49.9
               },
               "landing": {
-                "x": 38.5,
-                "z": -51.3
+                "x": 41.7,
+                "z": -51
               }
             }
           ]
@@ -5519,65 +5457,45 @@
             {
               "id": "stairs-ne",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": -52.3,
+                "x0": 41.2,
+                "z0": -56.3,
                 "x1": 45.8,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": 44.7,
-                "z": -46
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-nw",
               "label": "Stairs",
-              "rise": "n",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": -52.3,
-                "x1": -43.6,
-                "z1": -47.7
-              },
-              "landing": {
-                "x": -44.7,
-                "z": -46
+                "z0": -56.3,
+                "x1": -41.2,
+                "z1": -52.9
               }
             },
             {
               "id": "stairs-se",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "w",
+              "foot": "w",
               "bounds": {
-                "x0": 43.6,
-                "z0": 47.7,
+                "x0": 41.2,
+                "z0": 52.9,
                 "x1": 45.8,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": 44.7,
-                "z": 46
+                "z1": 56.3
               }
             },
             {
               "id": "stairs-sw",
               "label": "Stairs",
-              "rise": "s",
-              "arrive": "e",
+              "foot": "e",
               "bounds": {
                 "x0": -45.8,
-                "z0": 47.7,
-                "x1": -43.6,
-                "z1": 52.3
-              },
-              "landing": {
-                "x": -44.7,
-                "z": 46
+                "z0": 52.9,
+                "x1": -41.2,
+                "z1": 56.3
               }
             }
           ],
@@ -5585,17 +5503,16 @@
             {
               "id": "lift-ne",
               "label": "Lift",
-              "facing": "s",
-              "arrive": "s",
+              "facing": "w",
               "bounds": {
-                "x0": 37.4,
-                "z0": -55.7,
-                "x1": 39.6,
-                "z1": -53.5
+                "x0": 43.6,
+                "z0": -52.1,
+                "x1": 45.8,
+                "z1": -49.9
               },
               "landing": {
-                "x": 38.5,
-                "z": -51.3
+                "x": 41.7,
+                "z": -51
               }
             }
           ]
@@ -5618,7 +5535,8 @@
         "w": 20,
         "d": 6,
         "h": 4.2,
-        "doorW": 4.8
+        "doorW": 4.8,
+        "doorH": 2.6
       },
       "doorNote": "Entrance in the middle of the north face, the side facing the play ground (side told by the user; the porch, about 20 m wide and 6 m deep, shows in the satellite crop assets/satellite/apj block.png). Its place along the face is an estimate from that crop: check with ?calibrate=1. The earlier east-face door was a guess and is gone."
     },

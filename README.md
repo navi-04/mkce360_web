@@ -33,10 +33,13 @@ Requires Node 20.19+ (or 22.12+).
 | **Walk: look** | drag on the right half, or **Gyro** (turn the phone) | drag the mouse, or `←` `→` |
 | **Walk: run** | **Run** button | hold `Shift` or use the **Run** button |
 | **Walk: go to a spot** | tap the ground | click the ground |
+| **Drive** | steering arrows (left thumb), gold gas and red brake pedals (right thumb), **View** button | `W A S D` or arrows, `Space` handbrake, `C` view |
 
 **Search and directions:** the gold **Search** button (bottom right) opens a bottom sheet with a search field and category chips. Tapping a result (or a building in Overview) opens its card with **Directions**. Directions plan the shortest walk over the campus paths from your position or from a gate (distance, walking time, turn-by-turn steps), draw a glowing line on the ground and a beacon at the door. **Start guided walk** moves the camera along the route; **Pause**, **Resume** or **Take control** at any time (moving the joystick, using the keys or tapping the ground also takes control). **Walk it myself** shows the line and live hints ("Go straight for 60 m, then turn left") while you walk. On arrival a card appears at the door.
 
-**Interiors (look from photos, layout is sample):** block 1 can be entered: walk up to its door (the porch in the middle of the north face, the side facing the play ground) and tap **Enter**, or use **Go inside** on its building card, the arrival card, or **Go to room** on a room found in Search. Inside you walk the verandahs round the tree courtyard, the entrance hall, the corridors and the classrooms, with the look of the photos supplied for the block. On the ground floor you can step down from the roofed walkway onto the lawn and walk the paver paths between the trees; the lawn, pavers and bark are cut out of your photos (`scripts/make-interior-photo-textures.py`). A floor selector (G, 1, 2, 3), the corner stairs and the lift change floors, and tapping a door or a room sign opens a room card with type, capacity, department, faculty, equipment and a live **Now in session** status from the timetable. **Exit** puts you back outside at the door. Which room is where, and every room name, number and timetable, is **sample data** until the college provides real plans; see [docs/interiors.md](docs/interiors.md).
+**Interiors (look from photos, layout is sample):** block 1 is part of the world, so there is nothing to press: walk up to the porch in the middle of its north face (the side facing the play ground), up its steps and through the open doorway into the entrance hall; every door of every room stands open; the stairs in the four corners are real flights you climb, floor by floor (G, 1, 2, 3), and the eye rises with the steps. Inside you walk the verandahs round the tree courtyard, the corridors and the classrooms, with the look of the photos supplied for the block. On the ground floor you can step down from the roofed walkway onto the lawn and walk the paver paths between the trees; the lawn, pavers and bark are cut out of your photos (`scripts/make-interior-photo-textures.py`). Tapping a door or a room sign opens a room card with type, capacity, department, faculty, equipment and a live **Now in session** status from the timetable, and **Go to room** on a room found in Search puts you in front of its door. Which room is where, and every room name, number and timetable, is **sample data** until the college provides real plans; see [docs/interiors.md](docs/interiors.md).
+
+**Driving:** the **Drive** tab puts a small car where you stand. It goes anywhere you can walk, **including in through the entrance and along the ground floor of block 1** and out onto the courtyard lawn; walls, trees, lamp posts, benches and the columns stop it. On a phone the steering arrows are under the left thumb and the brake and gas pedals under the right (both thumbs at once); on a computer use the keys. See [docs/driving.md](docs/driving.md).
 
 **Welcome, mini-map and updates:** the first visit shows a welcome screen (email, college, location, all optional; only this college is available and any other shows "Not available yet"). The details stay in this browser only and can be edited or cleared in Settings. In Walk mode a mini-map shows your position and heading; tap it for the full campus map (drag to move, tap a numbered building for its card). Tap the **MKCE 360** pill for About and the college updates (read from `campus.json`). Every control is at least 48 px, landscape is supported, and `prefers-reduced-motion` turns animations off.
 
@@ -55,8 +58,9 @@ Both can be combined: `?debug=1&calibrate=1`.
 ```bash
 npm run build
 npm run test:nav  # search and routing on the real campus.json, no browser (36 checks)
-npm run test:interiors  # floor plans: walls, doors, walkability of the whole ring, courtyard, timetable (76 checks)
-npm run e2e       # 118 checks with real touch events: speed, joystick + look together, tap-to-walk,
+npm run test:interiors  # floor plans: walls, doors, stair wells, a viewer who walks in and up all four stairs, courtyard, timetable (100 checks)
+npm run test:car  # car physics and an autopilot that drives in through the entrance and round the verandahs, no browser (16 checks)
+npm run e2e       # checks with real touch events: speed, joystick + look together, tap-to-walk, walking in and up the stairs, driving with pedals,
                   # collisions, gyro (simulated), search, directions, guided walk, calibration, debug map.
                   # Needs Microsoft Edge or Chrome.
 npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU slowdown)
@@ -74,9 +78,9 @@ npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU 
 | `scripts/` | `validate-campus.mjs`, `e2e.mjs`, `perf-test.mjs`, `satellite-mosaic.py` (optional dev tool that rebuilds the overview ground texture from the satellite crops; needs Python and OpenCV) |
 | `src/data/campus.json` | All campus content; code contains no campus facts |
 | `src/world/` | Scene: textures, buildings, roads, scenery, sky and lighting |
-| `src/modes/` | Overview orbit, first-person walk, collision, gyro |
+| `src/modes/` | Overview orbit, first-person walk, drive (car, car physics), collision, gyro |
 | `src/nav/` | Search, route planning, route line, guided walk |
-| `src/interiors/` | Floor plans to walls, rooms, furniture, stairs and the courtyard garden; enter/exit, floors |
+| `src/interiors/` | Floor plans to walls, rooms, furniture, stair wells and the courtyard garden; the height and walls of a building for a viewer |
 | `src/ui/`, `src/core/`, `src/tools/` | HUD and sheets, app shell and quality manager, debug and calibration |
 | `privacy-policy/` | Static privacy policy page (served at `/privacy-policy`) |
 

@@ -313,7 +313,7 @@ async function main() {
     await sleep(500);
     await page.evaluate(() => { const a = window.__mkce.app; a.overview.controls.target.set(-125, 0, 68); a.camera.position.set(-125, 330, 150); });
     await sleep(500);
-    const scr2 = await page.evaluate(() => { const a = window.__mkce.app; const v = new a.camera.position.constructor(-150, 15, 60).project(a.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight]; });
+    const scr2 = await page.evaluate(() => { const a = window.__mkce.app; const v = new a.camera.position.constructor(-164.6, 14.4, 61.7).project(a.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight]; });
     await page.touchscreen.tap(scr2[0], scr2[1]);
     await sleep(500);
     check('tapping a building in Overview opens its card', await page.evaluate(() => /KALAM/.test(document.querySelector('.xsheet.open .card h3')?.textContent ?? '')));
@@ -321,14 +321,14 @@ async function main() {
   }
 
 
-  // ================= phone: interiors (sample data, block 1) =================
-  console.log('Interiors (sample data)');
+  // ================= phone: the building is part of the world (sample data, block 1) =================
+  console.log('Building as part of the world (sample data)');
   {
     const { ctx, page } = await newPage();
     const cdp = await ctx.newCDPSession(page);
     const tp = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y, id]) => ({ x, y, id, radiusX: 1, radiusY: 1, force: 1 })) });
     const programs = () => page.evaluate(() => window.__mkce.app.renderer.info.programs.length);
-    const st = () => page.evaluate(() => { const i = window.__mkce.interiors, w = window.__mkce.app.walk; return { active: i.active, level: i.level, x: w.pos.x, z: w.pos.z, yaw: (w.yaw * 180) / Math.PI, mode: window.__mkce.app.mode, prompt: i.prompt?.kind ?? null, outdoors: window.__mkce.app.world.root.visible }; });
+    const st = () => page.evaluate(() => { const i = window.__mkce.interiors, w = window.__mkce.app.walk; return { active: i.active, level: i.level, x: w.pos.x, z: w.pos.z, gy: w.groundY, eye: window.__mkce.app.camera.position.y, yaw: (w.yaw * 180) / Math.PI, mode: window.__mkce.app.mode, indoor: window.__mkce.app.world.indoor }; });
     const p0 = await programs();
     const { sessionNow } = await import(pathToFileURL(path.join(ROOT, 'src/interiors/plan.js')).href);
     const data = JSON.parse(readFileSync(path.join(ROOT, 'src/data/campus.json'), 'utf8'));
@@ -337,42 +337,70 @@ async function main() {
     const inSession = rooms0.find((r) => sessionNow(r, FAKE).current);
     const notIn = rooms0.find((r) => r.timetable.length && !sessionNow(r, FAKE).current) ?? rooms0.find((r) => !sessionNow(r, FAKE).current);
     await page.evaluate((t) => { window.__mkce.interiors.clock = () => new Date(t); }, FAKE.getTime());
+    // helpers in the page: the frame of the building (x east, z south, before its turn) in the world
+    await page.evaluate(() => {
+      const i = window.__mkce.interiors, u = i.units.get('apj-block');
+      window.L = {
+        world: (lx, lz) => u.phys.toWorld(lx, lz),
+        local: (x, z) => u.phys.toLocal(x, z),
+        yaw: (dx, dz) => { const c = u.phys.cos, s = u.phys.sin; return Math.atan2(-(dx * c - dz * s), -(dx * s + dz * c)); },
+        place: (lx, lz, dx, dz, y = 0, pitch = 0) => { const p = window.L.world(lx, lz); window.__mkce.app.walk.placeAt(p.x, p.z, window.L.yaw(dx, dz), { y, pitch: (pitch * Math.PI) / 180 }); },
+        walk: (lx, lz) => { const p = window.L.world(lx, lz); window.__mkce.app.walk.walkTo(p.x, p.z); },
+        idle: () => !window.__mkce.app.walk.target,
+      };
+    });
+    const walkTo = async (lx, lz) => {
+      await page.evaluate(([x, z]) => window.L.walk(x, z), [lx, lz]);
+      for (let i = 0; i < 100 && !(await page.evaluate(() => window.L.idle())); i++) await sleep(200);
+    };
+    const local = () => page.evaluate(() => { const w = window.__mkce.app.walk; return window.L.local(w.pos.x, w.pos.z); });
 
-    // enter from the building card
+    // there are no buttons for entering, leaving or choosing a floor: the card of the building only offers the usual ones
     await page.tap('.search-btn');
     await sleep(400);
     await page.fill('.sbar input', 'kalam');
     await sleep(200);
     await page.tap('.srow');
     await sleep(400);
-    check('building card offers "Go inside" for the sample building', await page.evaluate(() => [...document.querySelectorAll('.cacts .btn')].some((b) => /Go inside/.test(b.textContent))));
-    await page.tap('.cacts .btn:has-text("Go inside")');
-    await sleep(2800);
-    let s = await st();
-    check('"Go inside" walks to the door, fades and enters on the ground floor', s.active && s.level === 0 && s.mode === 'walk', `floor ${s.level}`);
-    check('outdoor scene is hidden inside', s.outdoors === false);
-    check('floor selector shows G 1 2 3', await page.evaluate(() => [...document.querySelectorAll('.floors .fbtn')].map((b) => b.textContent).join(',') === '3,2,1,G'));
-    check('Exit button is visible and Search is hidden inside', await page.evaluate(() => getComputedStyle(document.querySelector('.iexit')).display !== 'none' && getComputedStyle(document.querySelector('.search-btn')).display === 'none'));
-    check('starts in the entrance hall just inside the north entrance, facing south into the building', Math.abs(s.x) < 1 && Math.abs(s.z + 53.9) < 1 && Math.abs(((s.yaw % 360) + 360) % 360 - 180) < 3, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
+    const cardBtns = await page.evaluate(() => [...document.querySelectorAll('.cacts .btn')].map((b) => b.textContent.trim()));
+    check('the building card offers Directions, Show on map and Go to door, but no "Go inside"', cardBtns.some((t) => /Directions/.test(t)) && cardBtns.some((t) => /Go to door/.test(t)) && !cardBtns.some((t) => /inside|Enter/i.test(t)), cardBtns.join(' | '));
+    await page.evaluate(() => document.querySelector('.xs-close')?.click());
+    await sleep(300);
+    await page.evaluate(() => window.__mkce.setMode('walk'));
+    await sleep(500);
+    check('there is no Enter, Exit, floor or stairs button in the interface at all', await page.evaluate(() => !document.querySelector('.iprompt, .iexit, .floors, .fbtn, .liftrow')));
 
-    // walking and collisions with real input
+    // walk in through the open entrance with the joystick: a porch with steps, the doorway, the hall
+    await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); window.__mkce.app.walk.placeAt(f.x + f.nx * 13, f.z + f.nz * 13, Math.atan2(f.nx, f.nz), { y: 0 }); });
+    await sleep(400);
+    let s = await st();
+    check('outside, in front of the porch: not inside, the eye is at 1.6 m, no building light', !s.active && Math.abs(s.eye - 1.6) < 0.05 && s.indoor === 0);
+    await tp('touchStart', [[80, 700, 1]]);
+    await tp('touchMove', [[80, 640, 1]]);
+    await sleep(8200);
+    s = await st();
+    check('walking up the three steps of the porch lifts the eye by the 0.45 m of the plinth', s.gy > 0.4 && Math.abs(s.eye - (1.6 + 0.45)) < 0.1, `ground ${s.gy.toFixed(2)}, eye ${s.eye.toFixed(2)}`);
+    await sleep(6500);
+    s = await st();
+    await tp('touchEnd', []);
+    const where = await local();
+    check('with only the joystick you walk through the doorway into the entrance hall (no button, no fade)', s.active && s.level === 0 && where.z > -56 && where.z < -45 && Math.abs(where.x) < 2.5, `local ${where.x.toFixed(1)}, ${where.z.toFixed(1)}`);
+    check('inside, the light is the softer light of the building', s.indoor > 0.9);
+    check('still no prompt or button inside the hall', await page.evaluate(() => !document.querySelector('.iprompt, .iexit, .floors')));
+
+    // walls and furniture stop the player: the seats along the west end wall of the hall
+    await page.evaluate(() => window.L.place(-4, -50.5, -1, 0, 0.45));
     await page.evaluate(() => window.__mkce.input({ forward: 1 }));
-    await sleep(3000);
+    await sleep(3400);
     await page.evaluate(() => window.__mkce.input(null));
-    const w1 = await st();
-    check('walks south through the hall towards the verandah and the courtyard', w1.z > s.z + 3 && Math.abs(w1.x - s.x) < 1.2, `z ${w1.z.toFixed(1)}`);
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -4; w.pos.z = -50.5; w.yaw = Math.PI / 2; w.cancelTarget(); });
-    await page.evaluate(() => window.__mkce.input({ forward: 1 }));
-    await sleep(3200);
-    await page.evaluate(() => window.__mkce.input(null));
-    const w2 = await st();
+    const w2 = await local();
     check('the hall seats and end wall stop the player (west wall at x -9.05)', w2.x < -7.4 && w2.x > -8.4, `x ${w2.x.toFixed(2)}`);
 
-    // door and sign taps open the room card
-    const g2 = await page.evaluate(() => { const d = window.__mkce.interiors.current.plan.doors.find((q) => q.roomId === 'room-g-02' && q.main); return { x: d.x + d.nx * 2.2, z: d.z + d.nz * 2.2, yaw: Math.atan2(d.nx, d.nz) }; });
-    await page.evaluate((t) => { const w = window.__mkce.app.walk; w.pos.x = t.x; w.pos.z = t.z; w.yaw = t.yaw; w.pitch = (8 * Math.PI) / 180; w.cancelTarget(); }, g2);
-    await sleep(400);
-    const signScr = await page.evaluate(() => { const a = window.__mkce.app, i = window.__mkce.interiors; const s = i.current.plan.signs.find((q) => q.roomId === 'room-g-02'); const v = new a.camera.position.constructor(s.x, s.y, s.z).project(a.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight, v.z]; });
+    // door and sign taps open the room card (the door of room G-02 is on the east verandah)
+    const g2 = await page.evaluate(() => { const u = window.__mkce.interiors.units.get('apj-block'); const d = u.phys.plans[0].doors.find((q) => q.roomId === 'room-g-02' && q.main); return { x: d.x + d.nx * 2.2, z: d.z + d.nz * 2.2, dx: -d.nx, dz: -d.nz }; });
+    await page.evaluate((t) => window.L.place(t.x, t.z, t.dx, t.dz, 0.45, 8), g2);
+    await sleep(500);
+    const signScr = await page.evaluate(() => { const a = window.__mkce.app, i = window.__mkce.interiors; const sg = i.current.plan.signs.find((q) => q.roomId === 'room-g-02'); const p = i.units.get('apj-block').phys.toWorld(sg.x, sg.z); const pt = new a.camera.position.constructor(p.x, 0.45 + sg.y, p.z).project(a.camera); return [(pt.x * 0.5 + 0.5) * innerWidth, (-pt.y * 0.5 + 0.5) * innerHeight, pt.z]; });
     await page.touchscreen.tap(signScr[0], signScr[1]);
     await sleep(500);
     const card = await page.evaluate(() => ({ open: !!document.querySelector('.xsheet.open .roomcard'), text: document.querySelector('.roomcard')?.textContent ?? '' }));
@@ -392,64 +420,64 @@ async function main() {
     await page.evaluate(() => document.querySelector('.xs-close').click());
     await sleep(300);
 
-    // floors: selector
-    await page.tap('.fbtn:has-text("3")');
-    await sleep(1200);
+    // the stairs are real: walk up the flights of the north-east well to every floor with tap-to-walk, then back down
+    const stairs = async (wps) => { for (const [x, z] of wps) await walkTo(x, z); };
+    const up = [[40.2, -53.7], [43.4, -53.7], [44.9, -54.2], [44.3, -55.4], [42.0, -55.4], [39.6, -55.2]];
+    await page.evaluate(() => window.L.place(36, -45.6, 1, 0, 0.45));
+    await sleep(300);
+    await stairs(up.slice(0, 3));
     s = await st();
-    check('floor selector changes the floor', s.level === 3 && (await page.evaluate(() => document.querySelector('.fbtn.on')?.textContent)) === '3');
-    check('upper floor has its own rooms (3-01 ...)', await page.evaluate(() => window.__mkce.interiors.current.floor.rooms[0].number === '3-01'));
-    // stairs prompt
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 44.7; w.pos.z = -46; w.yaw = (-90 * Math.PI) / 180; w.cancelTarget(); });
-    await sleep(500);
-    check('standing at the stairs shows the stairs prompt', await page.evaluate(() => /Stairs down/.test(document.querySelector('.iprompt.on')?.textContent ?? '')));
-    await page.tap('.iprompt .btn:has-text("Stairs down")');
-    await sleep(1200);
+    check('on the landing of the first flight the eye is half a storey up (no teleport, the height rose along the steps)', s.level === 0 && Math.abs(s.gy - (0.45 + 1.8)) < 0.1, `ground ${s.gy.toFixed(2)}`);
+    await stairs(up.slice(3));
     s = await st();
-    check('stairs take you one floor down', s.level === 2, `floor ${s.level}`);
-    // lift prompt
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 38.5; w.pos.z = -51.3; w.cancelTarget(); });
-    await sleep(500);
-    check('standing at the lift shows the lift buttons', await page.evaluate(() => document.querySelectorAll('.iprompt.on .liftrow .btn').length === 3));
-    await page.tap('.iprompt .liftrow .btn:has-text("G")');
-    await sleep(1200);
+    check('the second flight leads to the first floor: the eye is 3.6 m higher', s.level === 1 && Math.abs(s.gy - (0.45 + 3.6)) < 0.08 && Math.abs(s.eye - (1.6 + 0.45 + 3.6)) < 0.12, `floor ${s.level}, ground ${s.gy.toFixed(2)}`);
+    check('upper floor has its own rooms (1-01 ...)', await page.evaluate(() => window.__mkce.interiors.current.floor.rooms[0].number === '1-01'));
+    await stairs([[40.2, -53.7], ...up.slice(1)]);
+    await stairs([[40.2, -53.7], ...up.slice(1)]);
     s = await st();
-    check('the lift goes to any floor', s.level === 0, `floor ${s.level}`);
+    check('and on up to the top floor (3)', s.level === 3 && Math.abs(s.gy - (0.45 + 10.8)) < 0.1, `floor ${s.level}, ground ${s.gy.toFixed(2)}`);
+    check('still no prompt or floor button', await page.evaluate(() => !document.querySelector('.iprompt, .iexit, .floors')));
+    // back down by the same stairs
+    const down = [[39.6, -55.2], [42.0, -55.4], [44.4, -55.2], [44.9, -54.0], [43.0, -53.7], [40.2, -53.7]]; // from the top of the upper flight, down both flights to the foot
+    for (let f = 0; f < 3; f++) await stairs(down);
+    s = await st();
+    check('the same stairs lead back down to the ground floor', s.level === 0 && Math.abs(s.gy - 0.45) < 0.08, `floor ${s.level}, ground ${s.gy.toFixed(2)}`);
 
-    // exit puts you back outside at the door
-    await page.tap('.iexit');
-    await sleep(1500);
-    s = await st();
-    const doorDist = await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); const w = window.__mkce.app.walk; return Math.hypot(w.pos.x - f.x, w.pos.z - f.z); });
-    check('Exit returns outside at the building door', !s.active && s.outdoors === true && doorDist > 1.5 && doorDist < 4, `${doorDist.toFixed(1)} m from the door`);
-    check('the Search button is back outside', await page.evaluate(() => getComputedStyle(document.querySelector('.search-btn')).display !== 'none'));
-
-    // standing at the door outside offers to go in again
-    await sleep(400);
-    check('at the door outside, an "Enter" prompt appears', await page.evaluate(() => /Enter Dr. A.P.J. Abdul Kalam Block/.test(document.querySelector('.iprompt.on')?.textContent ?? '')));
-    await page.tap('.iprompt .btn');
-    await sleep(2000);
-    s = await st();
-    check('tapping the prompt goes inside, at the entrance hall', s.active && s.level === 0 && Math.abs(s.x) < 1 && s.z < -52, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
     // the ground floor opens onto the courtyard: down the steps and along the paver path
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 33; w.pos.z = 0; w.yaw = Math.PI / 2; w.pitch = 0; w.vel.x = w.vel.z = 0; w.cancelTarget(); });
-    await sleep(500);
+    await page.evaluate(() => window.L.place(33, 0, -1, 0, 0.45));
+    await sleep(400);
     const eye0 = await page.evaluate(() => window.__mkce.app.camera.position.y);
     await page.evaluate(() => window.__mkce.input({ forward: 1 }));
     await sleep(4000);
     await page.evaluate(() => window.__mkce.input(null));
     await sleep(400);
-    const yard = await page.evaluate(() => ({ x: window.__mkce.app.walk.pos.x, y: window.__mkce.app.camera.position.y }));
-    check('the ground floor opens onto the courtyard: down the steps onto the lawn path, the eye drops 0.45 m', yard.x < 29.5 && Math.abs(eye0 - yard.y - 0.45) < 0.08, `x ${yard.x.toFixed(1)}, eye ${eye0.toFixed(2)} -> ${yard.y.toFixed(2)}`);
-    await page.tap('.iexit');
-    await sleep(1500);
-    check('leaving from the courtyard puts the eye back at 1.6 m', Math.abs((await page.evaluate(() => window.__mkce.app.camera.position.y)) - 1.6) < 0.06);
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -20; w.pos.z = 150; w.cancelTarget(); });
-    await sleep(400);
-    check('away from every door the Enter prompt is gone', await page.evaluate(() => !document.querySelector('.iprompt.on')));
-    await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); const w = window.__mkce.app.walk; w.pos.x = f.x + f.nx * 2.6; w.pos.z = f.z + f.nz * 2.6; w.cancelTarget(); });
-    await sleep(300);
+    const yard = await local();
+    const eye1 = await page.evaluate(() => window.__mkce.app.camera.position.y);
+    check('the ground floor opens onto the courtyard: down the steps onto the lawn path, the eye drops 0.45 m', yard.x < 29.5 && Math.abs(eye0 - eye1 - 0.45) < 0.08, `x ${yard.x.toFixed(1)}, eye ${eye0.toFixed(2)} -> ${eye1.toFixed(2)}`);
 
-    // searching for a room: the card offers "Go to room", which goes inside to that floor and stands at the door
+    // walking out through the entrance is as plain as walking in
+    await page.evaluate(() => window.L.place(0, -50, 0, -1, 0.45));
+    await sleep(300);
+    await tp('touchStart', [[80, 700, 1]]);
+    await tp('touchMove', [[80, 640, 1]]);
+    await sleep(9000);
+    await tp('touchEnd', []);
+    s = await st();
+    check('walking north out of the hall, through the doorway and down the porch steps, you are outside again at ground level', !s.active && s.gy < 0.15 && Math.abs(s.eye - 1.6) < 0.2, `ground ${s.gy.toFixed(2)}`);
+    check('outside the light is the daylight again', s.indoor === 0);
+
+    // the outer wall stops the player
+    await page.evaluate(() => window.L.place(50, 0, -1, 0, 0));
+    await page.evaluate(() => window.__mkce.input({ forward: 1 }));
+    await sleep(3500);
+    await page.evaluate(() => window.__mkce.input(null));
+    const wall = await local();
+    s = await st();
+    check('the outside wall of the building stops the player where there is no doorway', !s.active && wall.x > 46.2, `x ${wall.x.toFixed(2)}`);
+
+    // searching for a room: the card offers "Go to room", which puts you in front of its door on its floor
+    await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); window.__mkce.app.walk.placeAt(f.x + f.nx * 8, f.z + f.nz * 8, Math.atan2(f.nx, f.nz), { y: 0 }); });
+    await sleep(300);
     await page.tap('.search-btn');
     await sleep(400);
     await page.fill('.sbar input', '2-05');
@@ -459,37 +487,140 @@ async function main() {
     await sleep(500);
     check('the card of a room offers "Go to room"', await page.evaluate(() => [...document.querySelectorAll('.cacts .btn')].some((b) => /Go to room/.test(b.textContent))));
     await page.tap('.cacts .btn:has-text("Go to room")');
-    await sleep(3000);
+    await sleep(2200);
     s = await st();
     const roomCardText = await page.evaluate(() => document.querySelector('.xsheet.open .roomcard')?.textContent ?? '');
-    check('"Go to room" goes inside, to floor 2, with the room card open', s.active && s.level === 2 && /2-05/.test(roomCardText), `floor ${s.level}`);
+    check('"Go to room" puts you on floor 2, with the room card open', s.active && s.level === 2 && /2-05/.test(roomCardText) && Math.abs(s.gy - (0.45 + 7.2)) < 0.1, `floor ${s.level}`);
     await page.evaluate(() => document.querySelector('.xs-close')?.click());
     await sleep(300);
-    const faced = await page.evaluate(() => { const i = window.__mkce.interiors, w = window.__mkce.app.walk; const d = i.current.plan.doors.find((q) => q.roomId === 'room-2-05' && q.main); const want = Math.atan2(-(d.x - w.pos.x), -(d.z - w.pos.z)); let dl = Math.abs(w.yaw - want) % (2 * Math.PI); if (dl > Math.PI) dl = 2 * Math.PI - dl; return { dist: Math.hypot(d.x - w.pos.x, d.z - w.pos.z), off: (dl * 180) / Math.PI }; });
+    const faced = await page.evaluate(() => { const i = window.__mkce.interiors, w = window.__mkce.app.walk; const u = i.units.get('apj-block'); const d = u.phys.plans[2].doors.find((q) => q.roomId === 'room-2-05' && q.main); const t = u.phys.toWorld(d.x, d.z); const want = Math.atan2(-(t.x - w.pos.x), -(t.z - w.pos.z)); let dl = Math.abs(w.yaw - want) % (2 * Math.PI); if (dl > Math.PI) dl = 2 * Math.PI - dl; return { dist: Math.hypot(t.x - w.pos.x, t.z - w.pos.z), off: (dl * 180) / Math.PI }; });
     check('the viewer stands about 2 m in front of that door, facing it', faced.dist > 1.2 && faced.dist < 2.6 && faced.off < 10, `${faced.dist.toFixed(1)} m, ${faced.off.toFixed(0)} deg off`);
-    await page.tap('.iexit');
-    await sleep(1500);
-    await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); const w = window.__mkce.app.walk; w.pos.x = f.x + f.nx * 2.6; w.pos.z = f.z + f.nz * 2.6; w.cancelTarget(); });
-    await sleep(300);
 
-    // arrival card -> Enter
-    await page.evaluate(() => { const n = window.__mkce.nav; n.planTo({ buildingId: 'apj-block' }, 'gate:main-gate'); n.speedMult = 5; });
+    // Overview and back: the floor you were on is kept, the building is not drawn from the air
+    await page.click('.segmented button[data-mode="overview"]');
+    await sleep(900);
+    s = await st();
+    check('Overview shows the campus and does not draw the inside of the building', !s.active && s.mode === 'overview' && (await page.evaluate(() => window.__mkce.app.world.root.visible && !window.__mkce.interiors.units.get('apj-block').group.visible)));
+    await page.click('.segmented button[data-mode="walk"]');
+    await sleep(1100);
+    s = await st();
+    check('back in Walk you are where you were, on floor 2', s.active && s.level === 2 && Math.abs(s.gy - (0.45 + 7.2)) < 0.1, `floor ${s.level}`);
+
+    // a guided walk to the building ends at its porch; the card does not offer to enter
+    await page.evaluate(() => { window.__mkce.app.walk.placeAt(-40, 110, 0, { y: 0 }); });
+    await sleep(500);
+    await page.evaluate(() => { const n = window.__mkce.nav; n.planTo({ buildingId: 'apj-block' }, 'me'); n.speedMult = 5; });
     await page.evaluate(async () => { await window.__mkce.nav.start(); window.__mkce.app.walk.run = true; });
     for (let i = 0; i < 80 && (await page.evaluate(() => window.__mkce.nav.mode)) !== 'arrived'; i++) await sleep(500);
     await sleep(600);
-    check('arrival card now has an enabled Enter button', await page.evaluate(() => { const b = document.querySelector('.arrival .btn.primary'); return !!b && !b.disabled && /Enter/.test(b.textContent); }));
+    check('the arrival card at the porch has only Done, and says the doors are open', await page.evaluate(() => { const bs = [...document.querySelectorAll('.arrival .btn')]; return bs.length === 1 && /Done/.test(bs[0].textContent) && /doors are open/.test(document.querySelector('.arrival').textContent); }));
     await page.tap('.arrival .btn.primary');
-    await sleep(2200);
-    s = await st();
-    check('Enter on the arrival card goes inside and ends the route', s.active && (await page.evaluate(() => window.__mkce.nav.mode)) === 'none');
+    await sleep(300);
     await page.evaluate(() => { window.__mkce.app.walk.run = false; });
-
-    // leaving to Overview from inside exits cleanly
-    await page.click('.segmented button[data-mode="overview"]');
-    await sleep(1000);
-    s = await st();
-    check('switching to Overview from inside leaves the building', !s.active && s.mode === 'overview' && s.outdoors);
     check('no new shader programs were compiled by the interiors (precompiled)', (await programs()) === p0, `${p0} -> ${await programs()}`);
+    await ctx.close();
+  }
+
+
+  // ================= phone: driving a car (pedals and steering buttons with real touch events) =================
+  console.log('Drive (touch phone 390x844)');
+  {
+    const { ctx, page } = await newPage();
+    const cdp = await ctx.newCDPSession(page);
+    const tp = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y, id]) => ({ x, y, id, radiusX: 1, radiusY: 1, force: 1 })) });
+    const programs = () => page.evaluate(() => window.__mkce.app.renderer.info.programs.length);
+    const p0 = await programs();
+    const car = () => page.evaluate(() => { const d = window.__mkce.drive, c = d.car; return { x: c.x, z: c.z, y: c.y, yaw: c.yaw, speed: c.speed, kmh: d.kmh, parked: d.parked, mode: window.__mkce.app.mode, visible: d.mesh.visible }; });
+    const centre = async (sel) => { const r = await page.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return [b.x + b.width / 2, b.y + b.height / 2, b.width, b.height]; }, sel); return r; };
+
+    check('the mode switch has Overview, Walk and Drive', await page.evaluate(() => [...document.querySelectorAll('.mode-seg button')].map((b) => b.dataset.mode).join(',') === 'overview,walk,drive'));
+    check('the three mode tabs fit on the phone screen without overflowing', await page.evaluate(() => { const r = document.querySelector('.mode-seg').getBoundingClientRect(); return r.right <= innerWidth - 6 && r.left > document.querySelector('.brand').getBoundingClientRect().right - 2; }));
+    // stand on the road in front of the building facing the porch, then get in
+    await page.evaluate(() => window.__mkce.setMode('walk'));
+    await sleep(400);
+    await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); window.__mkce.app.walk.placeAt(f.x + f.nx * 40, f.z + f.nz * 40, Math.atan2(f.nx, f.nz), { y: 0 }); });
+    await sleep(300);
+    check('the drive controls are hidden while walking', await page.evaluate(() => getComputedStyle(document.querySelector('.drive')).display === 'none'));
+    await page.tap('.mode-seg button[data-mode="drive"]');
+    await sleep(900);
+    let c = await car();
+    check('tapping Drive puts the car where the walker stood, facing the same way', c.mode === 'drive' && c.visible && Math.abs(c.speed) < 0.01);
+    const boxes = await Promise.all(['.dleft', '.dright', '.dbrake', '.dgas'].map(centre));
+    check('steering buttons, brake and accelerator are there, each at least 64 px', boxes.every((b) => b[2] >= 64 && b[3] >= 64), boxes.map((b) => `${b[2] | 0}x${b[3] | 0}`).join(' '));
+    check('the accelerator is on the right, the steering on the left, nothing overlaps', boxes[0][0] < boxes[1][0] && boxes[1][0] < boxes[2][0] && boxes[2][0] < boxes[3][0] && boxes[1][0] + boxes[1][2] / 2 < boxes[2][0] - boxes[2][2] / 2);
+    check('the Run and Gyro buttons are gone, a View button is there', await page.evaluate(() => getComputedStyle(document.querySelector('.hbtn[aria-label="Run"]')).display === 'none' && getComputedStyle(document.querySelector('.hbtn[aria-label="View"]')).display !== 'none'));
+
+    // the accelerator: hold it, the car speeds up, let go, it rolls on and slows
+    const gas = await centre('.dgas');
+    await tp('touchStart', [[gas[0], gas[1], 1]]);
+    await sleep(1800);
+    c = await car();
+    check('holding the accelerator speeds the car up (over 5 m/s after under two seconds)', c.speed > 5, `${c.kmh.toFixed(0)} km/h`);
+    check('the speedometer shows it', await page.evaluate(() => { const v = +document.querySelector('.dspeed b').textContent; return v > 15; }));
+    // the left button with the other thumb while the gas is down: the car turns, the speed stays
+    const left = await centre('.dleft');
+    const y0 = c.yaw;
+    await tp('touchStart', [[gas[0], gas[1], 1], [left[0], left[1], 2]]);
+    await sleep(900);
+    c = await car();
+    check('steering left with one thumb while the other holds the gas turns the car to the left (counter-clockwise) and it keeps its speed', c.yaw > y0 + 0.15 && c.speed > 4, `yaw ${(c.yaw - y0).toFixed(2)} rad, ${c.kmh.toFixed(0)} km/h`);
+    const right = await centre('.dright');
+    await tp('touchEnd', []); // both thumbs lift
+    await sleep(500);
+    await tp('touchStart', [[gas[0], gas[1], 1]]);
+    await sleep(500);
+    await tp('touchStart', [[gas[0], gas[1], 1], [right[0], right[1], 3]]);
+    await sleep(350);
+    const y1 = (await car()).yaw;
+    await sleep(900);
+    c = await car();
+    check('the right button turns it to the right (clockwise)', c.yaw < y1 - 0.15, `yaw ${(c.yaw - y1).toFixed(2)} rad`);
+    await tp('touchEnd', []);
+    await sleep(300);
+    // the brake: hold it, the car stops and then backs up
+    const brake = await centre('.dbrake');
+    await tp('touchStart', [[brake[0], brake[1], 4]]);
+    await sleep(2500);
+    c = await car();
+    check('holding the brake stops the car and then backs it up', c.speed < -0.5, `${c.speed.toFixed(1)} m/s`);
+    await tp('touchEnd', []);
+    await sleep(300);
+
+    // View: the car body is hidden in the driver's view
+    await page.tap('.hbtn[aria-label="View"]');
+    await sleep(300);
+    check('the View button switches to the view from the driver seat (the body of the car is not drawn)', !(await car()).visible);
+    await page.tap('.hbtn[aria-label="View"]');
+    await sleep(300);
+    check('and back to the view from behind', (await car()).visible);
+
+    // drive in through the entrance of the building: in front of the porch, hold the accelerator, the building is simply entered
+    await page.evaluate(() => { const f = window.__mkce.app.world.doorFrames.find((d) => d.id === 'apj-block'); const c = window.__mkce.drive.car; c.place(f.x + f.nx * 16, f.z + f.nz * 16, Math.atan2(f.nx, f.nz), 0); });
+    await sleep(500);
+    await tp('touchStart', [[gas[0], gas[1], 5]]);
+    await sleep(2300);
+    await tp('touchEnd', []);
+    await sleep(500);
+    const inside = await page.evaluate(() => { const i = window.__mkce.interiors, c = window.__mkce.drive.car, ph = i.units.get('apj-block').phys; return { active: i.active, level: i.level, depth: ph.depth(c.x, c.z), y: c.y, indoor: window.__mkce.app.world.indoor }; });
+    check('driving at the entrance takes the car up the porch steps, through the doorway and into the entrance hall, with no button and no fade', inside.active && inside.level === 0 && inside.depth > 2 && Math.abs(inside.y - 0.45) < 0.06, `${inside.depth.toFixed(1)} m inside, y ${inside.y.toFixed(2)}`);
+    check('inside the building the light is the light of the building', inside.indoor > 0.5);
+    // the minimap follows the car and shows the plan of the floor
+    check('the walls of the building stop the car (it did not drive out through the far wall or the roof)', await page.evaluate(() => { const i = window.__mkce.interiors, c = window.__mkce.drive.car; return i.units.get('apj-block').phys.depth(c.x, c.z) > 0; }));
+
+    // getting out: the walker stands beside the car, the car stays parked and blocks the way; getting in again uses the same car
+    await page.evaluate(() => window.__mkce.input(null));
+    for (let i = 0; i < 60 && Math.abs((await car()).speed) > 0.03; i++) await sleep(250); // it rolls out (the engine brakes it)
+    await sleep(200);
+    const before = await car();
+    await page.tap('.mode-seg button[data-mode="walk"]');
+    await sleep(900);
+    const w = await page.evaluate(() => { const wk = window.__mkce.app.walk, d = window.__mkce.drive; return { x: wk.pos.x, z: wk.pos.z, cx: d.car.x, cz: d.car.z, parked: d.parked, visible: d.mesh.visible, mode: window.__mkce.app.mode }; });
+    check('Walk puts the walker beside the car, which stays where it is, parked and visible', w.mode === 'walk' && w.parked && w.visible && Math.hypot(w.x - w.cx, w.z - w.cz) > 1.2 && Math.hypot(w.x - w.cx, w.z - w.cz) < 3.2 && Math.hypot(w.cx - before.x, w.cz - before.z) < 0.01, `${Math.hypot(w.x - w.cx, w.z - w.cz).toFixed(1)} m from the car`);
+    await page.tap('.mode-seg button[data-mode="drive"]');
+    await sleep(900);
+    const again = await car();
+    check('Drive again takes the same car, where it was left', Math.abs(again.x - before.x) < 0.05 && Math.abs(again.z - before.z) < 0.05 && !again.parked);
+    check('no new shader programs were compiled for the car and its controls (precompiled)', (await programs()) === p0, `${p0} -> ${await programs()}`);
     await ctx.close();
   }
 
@@ -635,9 +766,12 @@ async function main() {
     await step('expanded map', async () => { await p2.tap('.minimap'); });
     await p2.tap('.mapfull .xs-close');
     await sleep(300);
-    await step('interior', async () => { await p2.evaluate(() => window.__mkce.interiors.enter('apj-block')); await sleep(1600); });
+    await step('interior', async () => { await p2.evaluate(() => { const ph = window.__mkce.interiors.units.get('apj-block').phys; const p = ph.toWorld(0, -50); window.__mkce.app.walk.placeAt(p.x, p.z, 0, { y: 0.45 }); }); await sleep(900); });
     await step('room card', async () => { await p2.evaluate(() => window.__mkce.interiors.openRoom('room-g-01')); });
-    check('every control is at least 48 px (walk, settings, search, card, directions, guide, map, interior, room)', small.length === 0, small.slice(0, 4).join(' | '));
+    await p2.evaluate(() => document.querySelector('.xs-close')?.click());
+    await sleep(300);
+    await step('drive', async () => { await p2.evaluate(() => window.__mkce.setMode('drive')); await sleep(900); });
+    check('every control is at least 48 px (walk, settings, search, card, directions, guide, map, interior, room, drive)', small.length === 0, small.slice(0, 4).join(' | '));
     await c2.close();
 
     // ---- page gestures are blocked on the canvas and the app name is MKCE 360 everywhere
@@ -705,6 +839,46 @@ async function main() {
     check('W key walks forward', Math.hypot(k1.x - k0.x, k1.z - k0.z) > 1.2);
     await page.keyboard.down('ArrowLeft'); await sleep(500); await page.keyboard.up('ArrowLeft');
     check('left arrow turns', Math.abs((await walkState(page)).yaw - k1.yaw) > 30);
+
+    // driving with the keys: W is the gas, A and D steer, S brakes and backs up, Space is the handbrake, C changes the view
+    await page.click('.mode-seg button[data-mode="drive"]');
+    await sleep(900);
+    const dcar = () => page.evaluate(() => { const d = window.__mkce.drive, c = d.car; return { speed: c.speed, yaw: c.yaw, x: c.x, z: c.z, visible: d.mesh.visible, mode: window.__mkce.app.mode }; });
+    check('on a computer the Drive tab switches to the car and the touch pedals stay out of the way of the keys', (await dcar()).mode === 'drive');
+    await page.keyboard.down('KeyW');
+    await sleep(2200);
+    let d1 = await dcar();
+    check('W is the accelerator', d1.speed > 6, `${(d1.speed * 3.6).toFixed(0)} km/h`);
+    await page.keyboard.down('KeyA');
+    await sleep(800);
+    await page.keyboard.up('KeyA');
+    const d2 = await dcar();
+    check('A steers left (counter-clockwise)', d2.yaw > d1.yaw + 0.1, `${(d2.yaw - d1.yaw).toFixed(2)} rad`);
+    await page.keyboard.down('KeyD');
+    await sleep(1000);
+    await page.keyboard.up('KeyD');
+    const d3 = await dcar();
+    check('D steers right', d3.yaw < d2.yaw - 0.1);
+    await page.keyboard.down('ArrowLeft');
+    await sleep(500);
+    await page.keyboard.up('ArrowLeft');
+    check('the arrow keys steer as well', (await dcar()).yaw > d3.yaw + 0.05);
+    await page.keyboard.up('KeyW');
+    await page.keyboard.down('Space');
+    await sleep(1500);
+    await page.keyboard.up('Space');
+    const d4 = await dcar();
+    check('Space is the handbrake: the car stops fast', Math.abs(d4.speed) < 1.0, `${(d4.speed * 3.6).toFixed(0)} km/h`);
+    await page.keyboard.down('KeyS');
+    await sleep(1800);
+    await page.keyboard.up('KeyS');
+    check('S backs the car up', (await dcar()).speed < -2);
+    await page.keyboard.press('KeyC');
+    await sleep(250);
+    check('C changes the view', !(await dcar()).visible);
+    await page.keyboard.press('KeyC');
+    await sleep(250);
+    check('and changes it back', (await dcar()).visible);
     await ctx.close();
   }
 
@@ -725,7 +899,7 @@ async function main() {
     await sleep(500);
     const b1 = await page.evaluate(() => structuredClone(window.__mkce.app.data.buildings[0]));
     check('nudge moves the building and its door together', Math.abs(b1.position.x - b0.position.x - 2) < 0.01 && Math.abs(b1.doorPosition.x - b0.doorPosition.x - 2) < 0.01);
-    check('the 3D collider follows the edit', await page.evaluate(() => Math.abs(window.__mkce.app.world.colliders.find((c) => c.id === 'apj-block').cx - (-125.1 + 2)) < 0.1));
+    check('the inside of the building (its group and its walls) follows the edit', await page.evaluate(() => { const u = window.__mkce.interiors.units.get('apj-block'); const w = u.phys.toWorld(0, 0); const c0 = u.phys.plans[0].colliders[0], w0 = u.phys.toWorld(c0.cx, c0.cz), c1 = u.phys.colliders(0)[0]; return Math.abs(u.group.position.x - (-125.1 + 2)) < 0.1 && Math.abs(w.x - (-125.1 + 2)) < 0.1 && Math.abs(c1.cx - w0.x) < 0.01 && Math.abs(c1.cz - w0.z) < 0.01; }));
     check('door stays linked to the path graph', await page.evaluate(() => { const d = window.__mkce.app.data; const b = d.buildings[0]; return d.paths.edges.filter((e) => e.from === b.doorNode || e.to === b.doorNode).length === 1; }));
     const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 8000 }).catch(() => null), page.click('[data-k=export]')]);
     let exported = null;

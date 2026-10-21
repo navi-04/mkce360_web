@@ -66,7 +66,7 @@ export function createNavUi(app) {
   const mainGate = data.gates.find((g) => g.type === 'main') ?? data.gates[0];
 
   const here = () =>
-    app.mode === 'walk'
+    app.inWorld
       ? { x: app.walk.pos.x, z: app.walk.pos.z, label: 'you' }
       : { x: mainGate.position.x, z: mainGate.position.z, label: `the ${mainGate.name.toLowerCase()}` };
 
@@ -225,7 +225,6 @@ export function createNavUi(app) {
       button('btn', 'map', 'Show on map', () => showOnMap(b)),
       button('btn', 'door', 'Go to door', () => goToDoor(b)),
     );
-    if (app.interiors?.has(b.id)) act.append(button('btn', 'enter', 'Go inside', () => { sheets.close(); app.interiors.enter(b.id); }));
     root.appendChild(act);
     sheets.show({ id: 'card', title: 'Building', node: root, modal: true, label: b.name });
   }
@@ -459,19 +458,10 @@ export function createNavUi(app) {
     t.append(el('h3', null, 'You have arrived'), el('small', null, r.to.label));
     top.append(badge(r.to.number, r.to.type), t);
     root.appendChild(top);
-    const canEnter = !!(b && app.interiors?.has?.(b.id));
     const act = el('div', 'cacts');
-    if (b) {
-      const e = button('btn primary', 'enter', 'Enter building', () => {
-        sheets.close('arrival');
-        app.interiors.enter(b.id);
-      });
-      e.disabled = !canEnter;
-      act.appendChild(e);
-    }
-    act.appendChild(button(b ? 'btn' : 'btn primary', 'close', 'Done', () => sheets.close('arrival')));
+    act.appendChild(button('btn primary', 'close', 'Done', () => sheets.close('arrival')));
     root.appendChild(act);
-    if (b && !canEnter) root.appendChild(el('p', 'cwarn', 'The inside of this building is not available yet.'));
+    if (b && app.interiors?.has?.(b.id)) root.appendChild(el('p', 'cdesc', 'The doors are open: walk in.'));
     sheets.show({ id: 'arrival', title: 'Arrived', node: root, modal: false, onClose: () => nav.end() });
   }
 

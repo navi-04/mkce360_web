@@ -135,14 +135,17 @@ export function createScenery(data, T, { doorFrames, colliders }) {
       (i % 3 === 2 ? palms : trees).push({ x, z, s: 0.9 + R() * 0.4, r: R() * 6.28 });
     }
   }
-  // inner courtyard of ring-shaped blocks
+  // inner courtyard of ring-shaped blocks (a block with an inside has its own garden there: these trees are for Overview only)
+  const courtTrees = [];
   for (const b of data.buildings) {
     if (b.form !== 'ring') continue;
     const iw = b.size.w - 2 * b.ring.thickness, id = b.size.d - 2 * b.ring.thickness;
     const rot = -b.rotationDeg * DEG, c = Math.cos(rot), s = Math.sin(rot);
-    for (let k = 0; k < 26; k++) {
+    const own = !!b.floorPlans?.length;
+    const count = own ? Math.max(26, Math.round((iw * id) / 120)) : 26;
+    for (let k = 0; k < count; k++) {
       const lx = (R() - 0.5) * (iw - 5), lz = (R() - 0.5) * (id - 5);
-      trees.push({ x: b.position.x + lx * c + lz * s, z: b.position.z - lx * s + lz * c, s: 0.8 + R() * 0.5, r: R() * 6.28 });
+      (own ? courtTrees : trees).push({ x: b.position.x + lx * c + lz * s, z: b.position.z - lx * s + lz * c, s: 0.8 + R() * 0.5, r: R() * 6.28 });
     }
   }
   // scattered shade trees near the buildings
@@ -184,6 +187,11 @@ export function createScenery(data, T, { doorFrames, colliders }) {
   treeMesh.name = 'trees';
   treeMesh.castShadow = true;
   group.add(treeMesh);
+  const courtMesh = new THREE.InstancedMesh(treeMesh.geometry, treeMat, Math.max(1, courtTrees.length));
+  fill(courtMesh, courtTrees, 1);
+  courtMesh.count = courtTrees.length;
+  courtMesh.name = 'court-trees';
+  group.add(courtMesh);
 
   const palmGeoFull = palmGeometry(true);
   const palmGeoLow = palmGeometry(false);
@@ -347,6 +355,20 @@ export function createScenery(data, T, { doorFrames, colliders }) {
     group.add(board);
   }
 
+  // ---------- obstacles for the car ----------
+  // trunks, lamp posts and benches, only of what is drawn (a lower quality draws fewer trees). The walking viewer passes through
+  // them as it always did; the car does not.
+  let obstacleList = [];
+  function rebuildObstacles() {
+    const out = [];
+    const sq = (x, z, h, rot = 0) => out.push({ id: 'scenery', cx: x, cz: z, hw: h, hd: h, rot });
+    for (const t of trees.slice(0, treeMesh.count)) sq(t.x, t.z, 0.3 * t.s);
+    for (const t of palms.slice(0, palmMesh.count)) sq(t.x, t.z, 0.26 * t.s);
+    for (const l of lamps.slice(0, lampMesh.count)) sq(l.x, l.z, 0.14);
+    for (const b of benches) out.push({ id: 'scenery', cx: b.x, cz: b.z, hw: 0.85, hd: 0.25, rot: b.r });
+    obstacleList = out;
+  }
+
   // ---------- quality ----------
   const totals = { trees: trees.length, palms: palms.length, lamps: lamps.length };
   function setQuality(q) {
@@ -354,7 +376,9 @@ export function createScenery(data, T, { doorFrames, colliders }) {
     palmMesh.count = Math.floor(totals.palms * q.palms);
     lampMesh.count = Math.floor(totals.lamps * q.lamps);
     palmMesh.geometry = q.fronds ? palmGeoFull : palmGeoLow;
+    rebuildObstacles();
   }
+  rebuildObstacles();
 
-  return { group, setQuality, totals };
+  return { group, setQuality, totals, courtTrees: courtMesh, obstacles: () => obstacleList };
 }

@@ -67,7 +67,7 @@ export class Navigator {
   /** where a route could start from, with availability */
   fromOptions() {
     const app = this.app;
-    const opts = [{ id: 'me', label: 'My position', available: app.mode === 'walk' || !!app.lastWalk }];
+    const opts = [{ id: 'me', label: 'My position', available: app.inWorld || !!app.lastWalk }];
     for (const g of app.data.gates) opts.push({ id: `gate:${g.id}`, label: g.name, available: true });
     return opts;
   }
@@ -75,7 +75,7 @@ export class Navigator {
   _startSpec(fromId) {
     const app = this.app;
     if (fromId === 'me') {
-      const p = app.mode === 'walk' ? app.walk.pos : app.lastWalk;
+      const p = app.inWorld ? app.walk.pos : app.lastWalk;
       if (p) return { x: p.x, z: p.z, label: 'My position' };
       fromId = 'gate:main-gate';
     }
@@ -84,7 +84,7 @@ export class Navigator {
 
   defaultFromId() {
     const app = this.app;
-    if (app.mode === 'walk') return 'me';
+    if (app.inWorld) return 'me';
     return 'gate:main-gate';
   }
 
@@ -127,7 +127,7 @@ export class Navigator {
 
   replan() {
     if (!this.spec) return null;
-    const fromId = this.app.mode === 'walk' ? 'me' : this.spec.fromId;
+    const fromId = this.app.inWorld ? 'me' : this.spec.fromId;
     return this.planTo(this.spec.target, fromId);
   }
 
@@ -159,7 +159,7 @@ export class Navigator {
     const app = this.app;
     if (!this.route) return false;
     const fromMe = this.spec.fromId === 'me';
-    if (fromMe && app.mode === 'walk') this.replan(); // the walker may have moved since the route was drawn
+    if (fromMe && app.inWorld) this.replan(); // the walker may have moved since the route was drawn
     const r = this.route;
     const spawn = { x: r.poly.p[0].x, z: r.poly.p[0].z, yaw: -r.poly.bearingAt(0, 6) * DEG };
     if (app.mode !== 'walk') await app.setMode('walk', { spawn: fromMe && app.lastWalk ? { ...app.lastWalk } : spawn });
@@ -179,7 +179,7 @@ export class Navigator {
     const app = this.app;
     if (!this.route) return false;
     const fromMe = this.spec.fromId === 'me';
-    if (fromMe && app.mode === 'walk') this.replan();
+    if (fromMe && app.inWorld) this.replan();
     const r = this.route;
     const spawn = { x: r.poly.p[0].x, z: r.poly.p[0].z, yaw: -r.poly.bearingAt(0, 6) * DEG };
     if (app.mode !== 'walk') await app.setMode('walk', { spawn: fromMe && app.lastWalk ? { ...app.lastWalk } : spawn });
@@ -282,7 +282,7 @@ export class Navigator {
     const r = this.route;
     if (!r) return;
 
-    if (app.mode === 'walk') {
+    if (app.inWorld) {
       const walk = app.walk;
       if (this.mode === 'arrived') {
         if (this._face && !walk.gyroOn) {
