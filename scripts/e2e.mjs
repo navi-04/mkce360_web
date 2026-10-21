@@ -235,7 +235,7 @@ async function main() {
     await page.tap('.cacts .btn.primary');
     await sleep(1200);
     let n = await nav();
-    check('Directions plans the route from the main gate to the door (~102 m)', n.mode === 'preview' && Math.abs(n.len - 102.5) < 3, `${n.len.toFixed(1)} m`);
+    check('Directions plans the route from the main gate to the entrance on the north face (about 133 m by road)', n.mode === 'preview' && Math.abs(n.len - 133.3) < 6, `${n.len.toFixed(1)} m`);
     check('route line is shown', n.layer);
     check('planner sheet lists the steps', await page.evaluate(() => document.querySelectorAll('.psteps li').length >= 2));
 
@@ -280,11 +280,11 @@ async function main() {
     check('hint card offers to guide again', await page.evaluate(() => [...document.querySelectorAll('.navcard.on .btn')].some((b) => /Guide me/.test(b.textContent))));
 
     // far off the route: re-plan from where the walker stands
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -40; w.pos.z = 110; w.cancelTarget(); });
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -120; w.pos.z = -50; w.cancelTarget(); }); // on the play ground, 45 m north of the road to the entrance
     await sleep(3600);
     n = await nav();
     const startNow = await page.evaluate(() => window.__mkce.nav.route.poly.p[0]);
-    check('wandering far off the route re-plans from where you stand', n.mode === 'manual' && Math.hypot(startNow.x + 40, startNow.z - 110) < 1.5, `new route starts ${Math.hypot(startNow.x + 40, startNow.z - 110).toFixed(1)} m from the walker, ${n.len.toFixed(0)} m long`);
+    check('wandering far off the route re-plans from where you stand', n.mode === 'manual' && Math.hypot(startNow.x + 120, startNow.z + 50) < 1.5, `new route starts ${Math.hypot(startNow.x + 120, startNow.z + 50).toFixed(1)} m from the walker, ${n.len.toFixed(0)} m long`);
 
     // guide again, at running speed, all the way to the door
     await page.tap('.navcard.on .btn:has-text("Guide me")');
@@ -353,23 +353,24 @@ async function main() {
     check('outdoor scene is hidden inside', s.outdoors === false);
     check('floor selector shows G 1 2 3', await page.evaluate(() => [...document.querySelectorAll('.floors .fbtn')].map((b) => b.textContent).join(',') === '3,2,1,G'));
     check('Exit button is visible and Search is hidden inside', await page.evaluate(() => getComputedStyle(document.querySelector('.iexit')).display !== 'none' && getComputedStyle(document.querySelector('.search-btn')).display === 'none'));
-    check('starts in the entrance hall facing into the building (west)', s.x > 42 && s.x < 45 && Math.abs(s.z + 37.15) < 1 && Math.abs(((s.yaw % 360) + 360) % 360 - 90) < 3, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
+    check('starts in the entrance hall just inside the north entrance, facing south into the building', Math.abs(s.x) < 1 && Math.abs(s.z + 53.9) < 1 && Math.abs(((s.yaw % 360) + 360) % 360 - 180) < 3, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
 
     // walking and collisions with real input
     await page.evaluate(() => window.__mkce.input({ forward: 1 }));
     await sleep(3000);
     await page.evaluate(() => window.__mkce.input(null));
     const w1 = await st();
-    check('walks west through the hall towards the verandah', w1.x < s.x - 3 && Math.abs(w1.z - s.z) < 1.2, `x ${w1.x.toFixed(1)}`);
-    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 41; w.pos.z = -40; w.yaw = 0; w.cancelTarget(); });
+    check('walks south through the hall towards the verandah and the courtyard', w1.z > s.z + 3 && Math.abs(w1.x - s.x) < 1.2, `z ${w1.z.toFixed(1)}`);
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -4; w.pos.z = -50.5; w.yaw = Math.PI / 2; w.cancelTarget(); });
     await page.evaluate(() => window.__mkce.input({ forward: 1 }));
-    await sleep(2500);
+    await sleep(3200);
     await page.evaluate(() => window.__mkce.input(null));
     const w2 = await st();
-    check('the hall wall and its benches stop the player (north wall at z -44.1)', w2.z > -43.4 && w2.z < -42.4, `z ${w2.z.toFixed(2)}`);
+    check('the hall seats and end wall stop the player (west wall at x -9.05)', w2.x < -7.4 && w2.x > -8.4, `x ${w2.x.toFixed(2)}`);
 
     // door and sign taps open the room card
-    await page.evaluate(([x, z]) => { const w = window.__mkce.app.walk; w.pos.x = x; w.pos.z = z; w.yaw = (-90 * Math.PI) / 180; w.pitch = (8 * Math.PI) / 180; w.cancelTarget(); }, [34.8, -28.3]);
+    const g2 = await page.evaluate(() => { const d = window.__mkce.interiors.current.plan.doors.find((q) => q.roomId === 'room-g-02' && q.main); return { x: d.x + d.nx * 2.2, z: d.z + d.nz * 2.2, yaw: Math.atan2(d.nx, d.nz) }; });
+    await page.evaluate((t) => { const w = window.__mkce.app.walk; w.pos.x = t.x; w.pos.z = t.z; w.yaw = t.yaw; w.pitch = (8 * Math.PI) / 180; w.cancelTarget(); }, g2);
     await sleep(400);
     const signScr = await page.evaluate(() => { const a = window.__mkce.app, i = window.__mkce.interiors; const s = i.current.plan.signs.find((q) => q.roomId === 'room-g-02'); const v = new a.camera.position.constructor(s.x, s.y, s.z).project(a.camera); return [(v.x * 0.5 + 0.5) * innerWidth, (-v.y * 0.5 + 0.5) * innerHeight, v.z]; });
     await page.touchscreen.tap(signScr[0], signScr[1]);
@@ -428,7 +429,7 @@ async function main() {
     await page.tap('.iprompt .btn');
     await sleep(2000);
     s = await st();
-    check('tapping the prompt goes inside, at the entrance hall', s.active && s.level === 0 && s.x > 42, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
+    check('tapping the prompt goes inside, at the entrance hall', s.active && s.level === 0 && Math.abs(s.x) < 1 && s.z < -52, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
     // the ground floor opens onto the courtyard: down the steps and along the paver path
     await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 33; w.pos.z = 0; w.yaw = Math.PI / 2; w.pitch = 0; w.vel.x = w.vel.z = 0; w.cancelTarget(); });
     await sleep(500);
@@ -474,7 +475,7 @@ async function main() {
     // arrival card -> Enter
     await page.evaluate(() => { const n = window.__mkce.nav; n.planTo({ buildingId: 'apj-block' }, 'gate:main-gate'); n.speedMult = 5; });
     await page.evaluate(async () => { await window.__mkce.nav.start(); window.__mkce.app.walk.run = true; });
-    for (let i = 0; i < 40 && (await page.evaluate(() => window.__mkce.nav.mode)) !== 'arrived'; i++) await sleep(500);
+    for (let i = 0; i < 80 && (await page.evaluate(() => window.__mkce.nav.mode)) !== 'arrived'; i++) await sleep(500);
     await sleep(600);
     check('arrival card now has an enabled Enter button', await page.evaluate(() => { const b = document.querySelector('.arrival .btn.primary'); return !!b && !b.disabled && /Enter/.test(b.textContent); }));
     await page.tap('.arrival .btn.primary');

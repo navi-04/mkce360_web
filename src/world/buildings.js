@@ -77,35 +77,95 @@ export function createBuildings(data, T) {
       const n = new THREE.Vector3(ln[0], 0, ln[1]).applyMatrix4(tmpM.clone().makeRotationY(rotY));
       const theta = Math.atan2(n.x, n.z);
       const px = b.doorPosition.x + n.x * 0.06, pz = b.doorPosition.z + n.z * 0.06;
-      const leaf = boxGeo(1.9, 2.5, 0.14);
-      place(leaf, px, 0, pz, theta);
-      paint(leaf, 0x7a3f28);
-      acc.solid.push(leaf);
-      const frame = boxGeo(2.4, 2.9, 0.1);
-      place(frame, px - n.x * 0.04, 0, pz - n.z * 0.04, theta);
-      paint(frame, trimCol);
-      acc.solid.push(frame);
-      if (hasPortico) {
-        const slab = boxGeo(4.8, 0.28, 2.4, { y: 3.05 });
-        place(slab, px + n.x * 1.1, 0, pz + n.z * 1.1, theta);
-        paint(slab, trimCol);
-        acc.solid.push(slab);
-        for (const sx of [-2.2, 2.2]) {
-          const col = boxGeo(0.34, 3.05, 0.34);
-          const o = new THREE.Vector3(sx, 0, 2.15).applyMatrix4(tmpM.clone().makeRotationY(theta));
-          place(col, px + o.x, 0, pz + o.z, theta);
-          paint(col, trimCol);
-          acc.solid.push(col);
+      const porch = b.porch ?? null;
+      if (porch) entrancePorch(porch, n, theta, px, pz);
+      else {
+        const leaf = boxGeo(1.9, 2.5, 0.14);
+        place(leaf, px, 0, pz, theta);
+        paint(leaf, 0x7a3f28);
+        acc.solid.push(leaf);
+        const frame = boxGeo(2.4, 2.9, 0.1);
+        place(frame, px - n.x * 0.04, 0, pz - n.z * 0.04, theta);
+        paint(frame, trimCol);
+        acc.solid.push(frame);
+        if (hasPortico) {
+          const slab = boxGeo(4.8, 0.28, 2.4, { y: 3.05 });
+          place(slab, px + n.x * 1.1, 0, pz + n.z * 1.1, theta);
+          paint(slab, trimCol);
+          acc.solid.push(slab);
+          for (const sx of [-2.2, 2.2]) {
+            const col = boxGeo(0.34, 3.05, 0.34);
+            const o = new THREE.Vector3(sx, 0, 2.15).applyMatrix4(tmpM.clone().makeRotationY(theta));
+            place(col, px + o.x, 0, pz + o.z, theta);
+            paint(col, trimCol);
+            acc.solid.push(col);
+          }
         }
       }
-      doorFrames.push({ id: b.id, x: px, z: pz, nx: n.x, nz: n.z, theta, portico: hasPortico, type: b.type, form: b.form, h });
-      return { n, theta, px, pz };
+      // reach/half: how far a porch stands out from the door and half its width (lamps, benches and trees keep clear of it)
+      doorFrames.push({ id: b.id, x: px, z: pz, nx: n.x, nz: n.z, theta, portico: hasPortico, type: b.type, form: b.form, h, reach: porch?.d ?? 0, half: porch ? porch.w / 2 : 0 });
+      return { n, theta, px, pz, porch };
     };
 
-    const sign = (text, info, { wide = false, high = 3.7 } = {}) => {
-      const width = wide ? 7.2 : 5.0;
+    /**
+     * The entrance porch (`porch: {w, d, h, doorW}` in campus.json): a flat concrete roof on square columns, two low steps, a wide
+     * glass entrance in the facade. w across the face, d out from it, h to the top of the roof slab. Drawn in the door's frame:
+     * `lat` runs along the facade, `out` away from it.
+     */
+    function entrancePorch({ w, d, h, doorW = 4.8 }, n, theta, px, pz) {
+      const side = new THREE.Vector3(1, 0, 0).applyMatrix4(tmpM.clone().makeRotationY(theta));
+      const at = (lat, out) => ({ x: px + side.x * lat + n.x * out, z: pz + side.z * lat + n.z * out });
+      const slab = (lat0, lat1, out0, out1, y0, y1, color) => {
+        const g = boxGeo(lat1 - lat0, y1 - y0, out1 - out0, { y: y0 });
+        const c = at((lat0 + lat1) / 2, (out0 + out1) / 2);
+        place(g, c.x, 0, c.z, theta);
+        paint(g, color);
+        acc.solid.push(g);
+        return c;
+      };
+      /** the underside of the roof: wound to face down but lit as if it faced up, so it reads as pale concrete in shade, not green from the ground light */
+      const soffit = (lat0, lat1, out0, out1, y, color) => {
+        const P = [at(lat0, out0), at(lat1, out0), at(lat1, out1), at(lat0, out1)];
+        const up = (P[1].z - P[0].z) * (P[2].x - P[0].x) - (P[1].x - P[0].x) * (P[2].z - P[0].z) > 0; // is this winding facing up?
+        const order = up ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3];
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(order.flatMap((i) => [P[i].x, y - 0.012, P[i].z]), 3));
+        g.setAttribute('normal', new THREE.Float32BufferAttribute(order.flatMap(() => [0, 1, 0]), 3));
+        g.setAttribute('uv', new THREE.Float32BufferAttribute(order.flatMap(() => [0, 0]), 2));
+        paint(g, color);
+        acc.solid.push(g);
+      };
+      const PARAPET = 1.5;
+      const concrete = 0xd8d2c4, light = 0xf6f2e6, post = 0xf3eee2, steel = 0x34414a, glass = 0x8fb2c6;
+      const hw = w / 2;
+      // two steps up to the porch floor
+      slab(-hw - 0.3, hw + 0.3, 0, d, 0, 0.15, concrete);
+      slab(-hw, hw, 0, d - 0.55, 0.15, 0.3, concrete);
+      // flat roof slab with a low lip along the sides and a tall front parapet that carries the name board
+      slab(-hw - 0.4, hw + 0.4, 0, d + 0.5, h - 0.5, h, light);
+      soffit(-hw - 0.4, hw + 0.4, 0, d + 0.5, h - 0.5, 0xf3eee2);
+      slab(-hw - 0.4, hw + 0.4, d + 0.2, d + 0.5, h, h + PARAPET, light);
+      slab(-hw - 0.4, -hw - 0.15, 0, d + 0.2, h, h + 0.3, light);
+      slab(hw + 0.15, hw + 0.4, 0, d + 0.2, h, h + 0.3, light);
+      // six square columns along the front; the middle bay stays open to frame the doors
+      for (const f of [-0.95, -0.57, -0.19, 0.19, 0.57, 0.95]) {
+        const lat = f * hw;
+        const c = slab(lat - 0.28, lat + 0.28, d - 0.78, d - 0.22, 0.3, h - 0.5, post);
+        slab(lat - 0.38, lat + 0.38, d - 0.88, d - 0.12, 0.3, 0.55, concrete);
+        colliders.push({ id: b.id, cx: c.x, cz: c.z, hw: 0.3, hd: 0.3, rot: rotY });
+      }
+      // wide glass entrance in the facade: steel frame, glass, three mullions
+      const dw = doorW / 2;
+      slab(-dw - 0.25, dw + 0.25, 0, 0.14, 0.3, 3.1, steel);
+      slab(-dw, dw, 0.1, 0.2, 0.3, 2.95, glass);
+      for (const m of [-dw / 2, 0, dw / 2]) slab(m - 0.05, m + 0.05, 0.1, 0.24, 0.3, 2.95, steel);
+      slab(-dw, dw, 0.1, 0.24, 2.2, 2.28, steel); // transom
+    }
+
+    const sign = (text, info, { wide = false, high = 3.7, width: w0 = null, out = 0.13 } = {}) => {
+      const width = w0 ?? (wide ? 7.2 : 5.0);
       signReq.push({
-        text, x: info.px + info.n.x * 0.13, y: high, z: info.pz + info.n.z * 0.13, theta: info.theta, width, height: (width * 96) / 512,
+        text, x: info.px + info.n.x * out, y: high, z: info.pz + info.n.z * out, theta: info.theta, width, height: (width * 96) / 512,
       });
     };
     const postSign = (text, info) => {
@@ -135,7 +195,9 @@ export function createBuildings(data, T) {
         );
         obbOf({ x: 0, z: 0, w, d });
         const info = door(true);
-        sign(b.shortName, info, { wide: true, high: 3.75 });
+        // with a porch the name board is on the front parapet of its roof
+        if (info.porch) sign(b.shortName, info, { width: 7.2, high: info.porch.h + 0.08, out: info.porch.d + 0.53 });
+        else sign(b.shortName, info, { wide: true, high: 3.75 });
         break;
       }
       case 'block': {

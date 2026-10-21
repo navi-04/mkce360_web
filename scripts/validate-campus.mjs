@@ -241,6 +241,17 @@ function validateFloor(f, where) {
     }
   }
   if (f.entrance && !(isXZ(f.entrance) && outlineOk)) err(`${where}: entrance {x,z} required and the outline too`);
+  if (f.entrance && outlineOk && isXZ(f.entrance)) {
+    const e = f.entrance, o = f.outline, facing = e.facing ?? 'east';
+    const wall = { east: ['x', o.x1], west: ['x', o.x0], north: ['z', o.z0], south: ['z', o.z1] }[facing];
+    if (!wall) err(`${where} floor ${f.level}: entrance.facing must be north|south|east|west`);
+    else {
+      if (Math.abs(e[wall[0]] - wall[1]) > 0.05) err(`${where} floor ${f.level}: the entrance must stand on the ${facing} wall of the outline`);
+      const along = wall[0] === 'x' ? e.z : e.x, [lo, hi] = wall[0] === 'x' ? [o.z0, o.z1] : [o.x0, o.x1];
+      if (e.width != null && !(isNum(e.width) && e.width >= 1.2 && e.width <= 8)) err(`${where} floor ${f.level}: entrance.width must be 1.2 to 8 metres`);
+      if (along - (e.width ?? 2.4) / 2 < lo + 0.2 || along + (e.width ?? 2.4) / 2 > hi - 0.2) err(`${where} floor ${f.level}: the entrance does not fit on its wall`);
+    }
+  }
 }
 
 for (const b of buildings) {
@@ -270,6 +281,14 @@ for (const b of buildings) {
     if (b.verified?.floors && b.floorPlans.length !== b.floors) warn(`${w}: ${b.floorPlans.length} floor plans but floors is ${b.floors}`);
     if (!b.floorPlans.some((f) => f.entrance)) warn(`${w}: no floor has an entrance, so there is no way in`);
     if (b.floorPlans.some((f) => f.sample)) warn(`${w}: floor plans are SAMPLE data`);
+  }
+  if (b.porch != null) {
+    const p = b.porch;
+    const okDims = isNum(p.w) && p.w > 0 && isNum(p.d) && p.d > 0 && isNum(p.h) && p.h > 2.5 && p.h < b.heightM;
+    if (!okDims || (p.doorW != null && !(isNum(p.doorW) && p.doorW > 0 && p.doorW < p.w))) err(`${w}: porch needs w, d and h in metres (h above 2.5 and below the building height) and an optional doorW narrower than w`);
+  }
+  if (b.doorFacing != null && b.floorPlans?.length) {
+    for (const f of b.floorPlans) if (f.entrance && (f.entrance.facing ?? 'east') !== b.doorFacing) err(`${w}: floor ${f.level} entrance faces ${f.entrance.facing ?? 'east'} but doorFacing is ${b.doorFacing}`);
   }
   if (b.form === 'ring' && !(isNum(b.ring?.thickness) && b.ring.thickness > 0)) err(`${w}: ring form needs ring.thickness`);
   if (b.sport != null && !isStr(b.sport)) err(`${w}: sport must be a non-empty string when present`);

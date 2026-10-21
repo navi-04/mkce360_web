@@ -84,7 +84,14 @@ for (const floor of b.floorPlans) {
   } else {
     check('upper floors: nobody can step into the courtyard or leave the building', !yardCentre && blocked(o.x1 + 1, 0));
   }
-  if (floor.level === 0) check('the entrance door can be reached', reach(plan.entrance.x - 1.5, plan.entrance.z));
+  if (floor.level === 0) {
+    const e = plan.entrance, hall = floor.rooms.find((r) => r.type === 'lobby');
+    check('the entrance door can be reached (from inside, one step before the door)', reach(e.x - e.nx * 1.5, e.z - e.nz * 1.5));
+    check('the entrance is in the middle of the north wall and opens into the entrance hall', e.facing === 'north' && Math.abs(e.x) < 0.5 && Math.abs(e.z - o.z0) < 0.05 && hall && e.x > hall.bounds.x0 && e.x < hall.bounds.x1 && Math.abs(hall.bounds.z0 - o.z0) < 0.05, `${e.facing} at ${e.x}, ${e.z}`);
+    check('the entrance is an opening in the wall, 4.8 m wide, and the walls beside it are solid', !wallAt(e.x, e.z + 0.1) && !wallAt(e.x + e.width / 2 - 0.1, e.z + 0.1) && wallAt(e.x + e.width / 2 + 0.6, e.z + 0.1) && wallAt(e.x - e.width / 2 - 0.6, e.z + 0.1) && e.width === 4.8);
+    check('the entrance hall opens wide onto the verandah (an opening, not a door) and a sign hangs above it', plan.doors.some((d) => d.roomId === hall.id && d.open && d.width >= 5) && plan.signs.find((s) => s.roomId === hall.id).y > 2.8);
+    check('the spawn is inside the hall, 2.6 m in from the entrance, facing south into the building', Math.abs(plan.spawn.z - (e.z + 2.6)) < 0.01 && Math.abs(plan.spawn.yaw - Math.PI) < 1e-9 && plan.spawn.x === 0);
+  }
   let free = 0;
   for (let i = 0; i < seen.length; i++) free += seen[i];
   check('a good share of the floor is walkable', free * step * step > 1500, `${(free * step * step).toFixed(0)} m2`);

@@ -207,7 +207,8 @@ export function createMinimap(app) {
     const e = cur.plan.entrance;
     if (e) {
       ctx.fillStyle = '#f2c230';
-      ctx.fillRect(sx(e.x) - 3, sz(e.z) - 5, 6, 10);
+      const across = e.nz !== 0; // an entrance on the north or south wall is drawn wide, on the east or west wall tall
+      ctx.fillRect(sx(e.x) - (across ? 5 : 3), sz(e.z) - (across ? 3 : 5), across ? 10 : 6, across ? 6 : 10);
     }
     marker(ctx, sx(app.walk.pos.x), sz(app.walk.pos.z), heading(), big ? 1.1 : 0.8);
   }

@@ -11,7 +11,10 @@ is not empty. Nothing else is needed.
 
 ## Getting in
 
-- Outdoors, standing within 8 m of the door of a building that has an interior shows **Enter <building>** at the bottom.
+- The entrance of block 1 is in the middle of its **north face, the side facing the play ground**, under a porch about 20 m wide and
+  6 m deep (a flat roof on six square columns, two steps, a wide glass entrance, the name board on the front parapet).
+- Outdoors, standing within 8 m of the door of a building that has an interior (a little more for a deep porch) shows
+  **Enter <building>** at the bottom.
 - The building card has **Go inside**, the arrival card of a guided walk has **Enter building**, and a room found in Search
   has **Go to room** (goes in, to the right floor, and stands in front of that door with the room card open).
 - Inside, **Exit** (top left) or the exit prompt at the entrance door leaves again; the floor selector (G 1 2 3) is on the left.
@@ -27,12 +30,19 @@ is not empty. Nothing else is needed.
 | Lattice ventilators above the doors and windows, white conduit along the corridor walls, cross beams at every column | ventilator pictures, conduit boxes and ceiling beams |
 | Polished red granite in the corridors (concrete grey on one upper corridor) | `corridorFloor`: `granite` (default) or `concrete` |
 | White corridor walls with a tan dado, steel-blue doors, steel windows with grilles, notice boards, fire extinguisher, water coolers | corridor wall texture, door leaf and jambs, window pictures, notice boards, extinguishers, coolers |
-| Entrance hall: pale marble, brown honour boards, rows of steel seats, wall display, black directory board, ceiling fans | the `lobby` room type |
+| The main entrance: a porch in the middle of the north face, about 20 m wide and 6 m deep, with steps in front and a curved forecourt with planted islands (satellite crop `assets/satellite/apj block.png`, rectified in a local frame) | `porch` on the building in campus.json (w 20, d 6, h 4.2, doorW 4.8): flat roof with a tall front parapet and the name board, six square columns, two steps, glass entrance; a paver forecourt in front; lamps and benches beyond it |
+| Entrance hall: pale marble, brown honour boards, rows of steel seats, wall display, black directory board, ceiling fans | the `lobby` room type: the two middle bays of the north wing on the ground floor, behind a 4.8 m wide glass entrance, opening 6 m wide onto the verandah and the courtyard |
 | Classrooms: green floor, cream walls, blue-grey desk-and-bench sets, a low wooden dais with two white boards and a wall panel, ceiling fans, curtains | the `classroom` room type: rows of bench sets in two groups, dais, boards, panel, fans |
 | Wood-panelled lift with a steel door, wide straight stair flights with brown parapets and blue nosings | `lifts` and `stairs` blocks (a flight rises into a wall; the stairs prompt moves one floor) |
 
 Shapes follow the satellite footprint of block 1 (92 x 113 m ring). Dimensions inside (room depth 9 m, verandah 3.2 m, storey
 3.6 m, canopy 3 m) are estimates from the photos.
+
+**The entrance (user, then the satellite).** The side is the user's: the entrance is on the north face. The satellite crop shows a porch
+in the middle of that face and nothing comparable on the east face, so the east-face door that the first version had (a guess, matched to
+"main gate to the entrance, 102 m") is gone. The place along the face (the middle), the porch size and the glass width are read off that
+crop, so check them with `?calibrate=1`. The road distance from the main gate to the new door is about 133 m, so the 102 m cannot refer
+to it (the straight line is already 117 m); the number is not used any more.
 
 **Assumption to confirm:** the photos show the steel-column walkway on at least one wing, but not which. The sample puts it on all
 four wings of the ground floor (`groundCanopy`), in front of the ground verandah. Likewise the wings are all four storeys high, while
@@ -72,7 +82,7 @@ the outdoor scene is hidden, so the two never meet.
     "groundCanopy": 3,                // metres of roofed walkway beyond the verandah on the ground floor (0 = none); put it on every floor
     "outline": { "x0": -46, "z0": -56.5, "x1": 46, "z1": 56.5 },   // outer rectangle
     "court":   { "x0": -33.8, "z0": -44.3, "x1": 33.8, "z1": 44.3 },// optional open courtyard (a hole in the ring)
-    "entrance": { "x": 46, "z": -37.15, "facing": "east" },        // the exit door; ground floor only
+    "entrance": { "x": 0, "z": -56.5, "facing": "north", "width": 4.8 }, // the exit door on the outline wall; ground floor only; width optional (2.4)
     "rooms": [
       {
         "id": "room-g-02", "number": "G-02", "name": "Sample classroom B",
@@ -115,7 +125,8 @@ device. In tests the clock can be replaced: `window.__mkce.interiors.clock = () 
 
 ## Rules the validator enforces (`npm run validate`)
 
-Outline present; `court` inside the outline; room bounds inside the outline, not overlapping each other or the courtyard;
+Outline present; `court` inside the outline; the entrance on the wall it faces and fitting on it, and facing the same way as the
+building's `doorFacing`; `porch` (w, d, h, doorW) sensible; room bounds inside the outline, not overlapping each other or the courtyard;
 every room has a door that fits on its wall; stairs and lift landings inside the floor, outside any room and the courtyard;
 unique levels including 0; the room fields above. Warnings: floor count differing from `floors` when `verified.floors`
 is true, no entrance on any floor, sample data.

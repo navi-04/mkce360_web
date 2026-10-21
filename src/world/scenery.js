@@ -93,6 +93,12 @@ export function createScenery(data, T, { doorFrames, colliders }) {
       if (Math.abs(x - o.position.x) < o.size.w / 2 + margin && Math.abs(z - o.position.z) < o.size.d / 2 + margin) return false;
     }
     for (const s of segs) if (segDist(x, z, s.a, s.b) < s.hw + margin) return false;
+    // the porch of a building and the paved forecourt in front of it stay clear
+    for (const f of doorFrames) {
+      if (!f.reach) continue;
+      const out = (x - f.x) * f.nx + (z - f.z) * f.nz, lat = Math.abs((x - f.x) * f.nz - (z - f.z) * f.nx);
+      if (out > -1 && out < f.reach + 10 + margin && lat < f.half + 2 + margin) return false;
+    }
     return true;
   };
 
@@ -208,7 +214,10 @@ export function createScenery(data, T, { doorFrames, colliders }) {
   }
   // lamps at the gate and in front of the larger blocks' doors
   for (const f of doorFrames) {
-    if (f.portico) lamps.push({ x: f.x + f.nx * 5 + f.nz * 4, z: f.z + f.nz * 5 - f.nx * 4, r: f.theta });
+    if (f.half) {
+      // a porch: a lamp post at each end of its front, beyond the roof edge
+      for (const s of [-1, 1]) lamps.push({ x: f.x + f.nx * (f.reach + 3) + f.nz * (f.half + 2.5) * s, z: f.z + f.nz * (f.reach + 3) - f.nx * (f.half + 2.5) * s, r: f.theta });
+    } else if (f.portico) lamps.push({ x: f.x + f.nx * 5 + f.nz * 4, z: f.z + f.nz * 5 - f.nx * 4, r: f.theta });
   }
   shuffle(lamps);
   const lampMesh = new THREE.InstancedMesh(lampGeometry(), new THREE.MeshLambertMaterial({ vertexColors: true }), lamps.length);
@@ -226,8 +235,8 @@ export function createScenery(data, T, { doorFrames, colliders }) {
     if (!['block', 'ring'].includes(f.form) || f.h < 6) continue;
     for (const s of [-1, 1]) {
       benches.push({
-        x: f.x + f.nx * 8 + f.nz * 4.2 * s * -1,
-        z: f.z + f.nz * 8 + f.nx * 4.2 * s,
+        x: f.x + f.nx * (8 + (f.reach ?? 0)) + f.nz * 4.2 * s * -1,
+        z: f.z + f.nz * (8 + (f.reach ?? 0)) + f.nx * 4.2 * s,
         r: f.theta,
       });
     }

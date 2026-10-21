@@ -268,7 +268,8 @@ export function createNavUi(app) {
   async function goToDoor(b) {
     sheets.close();
     const f = app.world.doorFrames.find((d) => d.id === b.id);
-    const x = f ? f.x + f.nx * 4.5 : b.doorPosition.x, z = f ? f.z + f.nz * 4.5 : b.doorPosition.z;
+    const out = 4.5 + (f?.reach ?? 0); // in front of a porch, not under it
+    const x = f ? f.x + f.nx * out : b.doorPosition.x, z = f ? f.z + f.nz * out : b.doorPosition.z;
     const yaw = f ? Math.atan2(f.nx, f.nz) : 0;
     if (app.mode === 'walk') await app.teleportWalk({ x, z, yaw });
     else await app.setMode('walk', { spawn: { x, z, yaw } });

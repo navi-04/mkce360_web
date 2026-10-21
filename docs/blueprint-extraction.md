@@ -356,3 +356,18 @@ Their last estimated positions (from the board and a homography fit) are kept un
 road that is visible in the satellite (from its north end, round the bend and east to the white houses), drawn as a 4 m road. The
 link from that road to the main network (a 46 m walkway to the junction at about -251, 123) and the walkways through the palm grove
 along z = 122 are **assumed connectors**, not visible in the imagery. Dead-end stubs that only served parked items were removed.
+
+## 13. Revision 6: the entrance of block 1 moved to the north face
+
+The user asked for the entrance of block 1 on the side that faces the play ground (the north face). The satellite crop
+`assets/satellite/apj block.png` (registered to the base map with `scripts/satellite-mosaic.py`'s method and rectified into the block's own
+frame) shows a porch there: in the middle of the north face, about 20 m wide and 6 m deep, with a curved, kerbed forecourt and planted
+islands in front. Nothing like it shows on the east face, so the east-face door of Revision 3 (a guess placed to make the road distance
+102 m) is gone.
+
+- `doorPosition` is now (-116.6, 11.9), `doorFacing` is `north`, `porch` is `{ w: 20, d: 6, h: 4.2, doorW: 4.8 }` and the door node is
+  linked to the north road by a new 19 m walkway. `verified.door` stays `false`: the side is the user's, the place along the face and the
+  porch size are read off the crop.
+- **The 102 m no longer applies.** By road the gate is now 133 m from the door (117 m in a straight line), so "main gate to the entrance,
+  about 102 m" cannot refer to this door. Either it was measured to something else or the gate marker is off; the user has been asked.
+- The sample interior follows: the entrance hall is the middle of the north wing, and the east wing has ten rooms on every floor.

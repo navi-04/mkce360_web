@@ -62,9 +62,10 @@ export function createRoads(data, T, doorFrames) {
   // paver forecourts in front of the larger blocks
   for (const f of doorFrames) {
     if (!['block', 'ring'].includes(f.form) || f.h < 8) continue;
-    const w = f.portico ? 14 : 8, d = 9;
+    const w = f.half ? f.half * 2 + 4 : f.portico ? 14 : 8, d = 9;
     const g = flatQuad(w, d, Y_WALK + 0.002, w / 2, d / 2);
-    place(g, f.x + f.nx * (d / 2 + 0.2), 0, f.z + f.nz * (d / 2 + 0.2), f.theta);
+    const out = (f.reach ?? 0) + d / 2 + 0.2; // beyond the porch, when there is one
+    place(g, f.x + f.nx * out, 0, f.z + f.nz * out, f.theta);
     pads.push(paint(g, 0xffffff));
   }
 

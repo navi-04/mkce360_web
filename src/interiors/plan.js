@@ -110,6 +110,7 @@ export function buildPlan(floor) {
 
   // ---------- the entrance: an opening cut into whichever wall it lies on ----------
   const ent = floor.entrance ?? null;
+  const entW = ent?.width ?? ENTRANCE_W; // the opening in the outer wall, `entrance.width` metres wide (default 2.4)
   let entrance = null;
   const entranceCut = (orient, coord, lo, hi) => {
     if (!ent) return [];
@@ -118,12 +119,12 @@ export function buildPlan(floor) {
     if ((orient === 'v') !== vertical) return [];
     const line = vertical ? ent.x : ent.z, along = vertical ? ent.z : ent.x;
     if (!near(line, coord, 0.05) || along < lo || along > hi) return [];
-    return [[along - ENTRANCE_W / 2, along + ENTRANCE_W / 2, 2.4]];
+    return [[along - entW / 2, along + entW / 2, 2.4]];
   };
   if (ent) {
     const facing = ent.facing ?? 'east';
     const dir = { east: [1, 0], west: [-1, 0], north: [0, -1], south: [0, 1] }[facing] ?? [1, 0];
-    entrance = { x: ent.x, z: ent.z, width: ENTRANCE_W, facing, nx: dir[0], nz: dir[1] };
+    entrance = { x: ent.x, z: ent.z, width: entW, facing, nx: dir[0], nz: dir[1] };
   }
 
   // ---------- rooms: walls, doors, signs, windows ----------
@@ -163,8 +164,9 @@ export function buildPlan(floor) {
       const rec = { roomId: r.id, side: d.side, width: d.w ?? DOOR.w, height: d.h ?? DOOR.h, open: !!d.open, x, z, nx: e.nx, nz: e.nz, main: i === 0 };
       doors.push(rec);
       if (i !== 0) return;
-      signs.push({ roomId: r.id, text: String(r.number), sub: r.name, x: x + e.nx * 0.03, y: 2.5, z: z + e.nz * 0.03, nx: e.nx, nz: e.nz, w: 1.5, h: 0.4 });
-      picks.push({ roomId: r.id, kind: 'sign', x: x + e.nx * 0.05, y: 2.7, z: z + e.nz * 0.05, w: 1.6, h: 0.6, d: 0.3 });
+      const signY = d.open ? (d.h ?? DOOR.h) + 0.45 : 2.5; // a wide opening carries its sign on the lintel above it
+      signs.push({ roomId: r.id, text: String(r.number), sub: r.name, x: x + e.nx * 0.03, y: signY, z: z + e.nz * 0.03, nx: e.nx, nz: e.nz, w: 1.5, h: 0.4 });
+      picks.push({ roomId: r.id, kind: 'sign', x: x + e.nx * 0.05, y: signY + 0.2, z: z + e.nz * 0.05, w: 1.6, h: 0.6, d: 0.3 });
       if (!d.open) picks.push({ roomId: r.id, kind: 'door', x: x + e.nx * 0.12, y: DOOR.h / 2, z: z + e.nz * 0.12, w: (d.w ?? DOOR.w) + 0.2, h: DOOR.h, d: 0.5, nx: e.nx, nz: e.nz });
     });
   }
@@ -687,31 +689,37 @@ function furnish(room, slot, addCollider, T, H) {
       break;
     }
     case 'lobby': {
-      // the entrance hall: bench rows along two walls, honour boards, a display, a directory board and a bin
-      const x0 = b.x0 + T, x1 = b.x1 - T, z0 = b.z0 + T, z1 = b.z1 - T;
-      const along = (nx, nz, px, pz, w, y0, y1, cell) => slot.decor.push({ cell, x: r2(px), z: r2(pz), y: y0, w, h: y1 - y0, nx, nz });
-      // the hall is long north to south: benches along the north and south walls, boards above them
-      const benchRow = (zc, towards) => {
-        const xs = [];
-        for (let k = 0; k < 11; k++) xs.push(x0 + 1.2 + k * 0.6);
-        for (const x of xs) {
-          if (x > x1 - 0.8) break;
-          slot.boxes.push({ x: r2(x), z: r2(zc), w: 0.5, d: 0.46, h: 0.05, y: 0.45, color: COLORS.steel });
-          slot.boxes.push({ x: r2(x), z: r2(zc - towards * 0.2), w: 0.5, d: 0.05, h: 0.34, y: 0.5, color: COLORS.steel });
-          slot.boxes.push({ x: r2(x), z: r2(zc), w: 0.06, d: 0.4, h: 0.45, y: 0, color: COLORS.deskDark });
-        }
-        addCollider(x0 + 0.9, zc - 0.28, Math.min(x1 - 0.5, x0 + 1.2 + 10 * 0.6 + 0.3), zc + 0.28, 'furniture');
+      // the entrance hall (photos: pale marble, honour boards, rows of steel seats, a display, the black directory board, ceiling fans).
+      // In the door frame: u runs along the wide opening, v from it into the hall, and the far wall (v = Dr) carries the entrance.
+      const o0 = toWorld(0, 0), eu = toWorld(1, 0), ev = toWorld(0, 1);
+      const du = { x: eu.x - o0.x, z: eu.z - o0.z }, dv = { x: ev.x - o0.x, z: ev.z - o0.z }; // unit vectors of u and v in the floor frame
+      /** flat picture on a wall at (u, v), facing along +/-u (fu) or +/-v (fv) */
+      const pic = (cell, u, v, w, y0, y1, fu, fv) => {
+        const p = toWorld(u, v);
+        slot.decor.push({ cell, x: r2(p.x), z: r2(p.z), y: y0, w, h: y1 - y0, nx: fu * du.x + fv * dv.x, nz: fu * du.z + fv * dv.z });
       };
-      benchRow(z0 + 0.55, 1);
-      benchRow(z1 - 0.55, -1);
-      // honour boards on the north and south walls, a display on the south wall, a directory beside the opening
-      for (let k = 0; k < 3; k++) along(0, 1, x0 + 1.6 + k * 2.4, z0 + 0.012, 1.5, 1.05, 2.85, 'honour');
-      for (let k = 0; k < 2; k++) along(0, -1, x0 + 1.8 + k * 3.0, z1 - 0.012, 1.5, 1.05, 2.85, 'honour');
-      along(0, -1, x0 + 6.8, z1 - 0.012, 0.9, 1.1, 2.3, 'display');
-      slot.boxes.push({ x: r2(x1 - 0.6), z: r2(z0 + 0.8), w: 0.45, d: 0.45, h: 0.8, y: 0, color: COLORS.bin });
-      // the black directory board on the hall wall beside the opening, and ceiling fans
-      slot.decor.push({ cell: 'directory', x: r2(b.x0 + T + 0.012), z: r2(b.z0 + 2.2), y: 0.95, w: 0.95, h: 1.9, nx: 1, nz: 0 });
-      for (const fz of [0.22, 0.5, 0.78]) fan(slot, { x: (b.x0 + b.x1) / 2, z: b.z0 + (b.z1 - b.z0) * fz }, H);
+      // a row of steel seats along each end wall (wall = +1 at u = 0, -1 at the far end), honour boards above them
+      const seats = (u, wall) => {
+        for (let k = 0; k < 11; k++) {
+          const v = 1.2 + k * 0.6;
+          if (v > Dr - 0.8) break;
+          box(u - 0.23, u + 0.23, v - 0.25, v + 0.25, 0.45, 0.5, COLORS.steel);
+          box(u - wall * 0.2 - 0.025, u - wall * 0.2 + 0.025, v - 0.25, v + 0.25, 0.5, 0.84, COLORS.steel);
+          box(u - 0.2, u + 0.2, v - 0.03, v + 0.03, 0, 0.45, COLORS.deskDark);
+        }
+        addCollider(...worldRect(toWorld, u - 0.28, u + 0.28, 0.9, Math.min(Dr - 0.5, 1.2 + 10 * 0.6 + 0.3)), 'furniture');
+      };
+      seats(0.55, 1);
+      seats(Lr - 0.55, -1);
+      for (let k = 0; k < 3; k++) pic('honour', 0.012, 1.6 + k * 2.4, 1.5, 1.05, 2.85, 1, 0);
+      for (let k = 0; k < 2; k++) pic('honour', Lr - 0.012, 1.8 + k * 3.0, 1.5, 1.05, 2.85, -1, 0);
+      pic('display', Lr - 0.012, 6.8, 0.9, 1.1, 2.3, -1, 0);
+      box(0.575, 1.025, Dr - 0.825, Dr - 0.375, 0, 0.8, COLORS.bin); // a bin in the corner by the entrance
+      // the black directory board and a display on the wall either side of the opening
+      pic('directory', 2.2, 0.012, 0.95, 0.95, 2.85, 0, 1);
+      pic('display', Lr - 2.2, 0.012, 0.9, 1.1, 2.3, 0, 1);
+      const nFans = Math.max(2, Math.round(Lr / 4.8));
+      for (let i = 0; i < nFans; i++) fan(slot, toWorld((Lr * (i + 0.5)) / nFans, Dr / 2), H);
       break;
     }
     default:

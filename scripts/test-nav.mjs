@@ -63,7 +63,18 @@ check('gym marker is searchable and sits in a building', (() => { const g = firs
 console.log('Routes');
 const gateRoute = planRoute(data, { gate: 'main-gate' }, { buildingId: 'apj-block' });
 check('main gate to block 1 exists', !!gateRoute);
-check('gate to block 1 door is about 102 m (user supplied)', Math.abs(gateRoute.length - 102) < 4, `${gateRoute.length.toFixed(1)} m`);
+// The entrance of block 1 is on its north face, the side facing the play ground (user), under the porch that the satellite crop shows
+// in the middle of that face. The user's "main gate to the entrance, about 102 m" cannot be met by it (the straight line is already
+// 117 m), so only a plausible road distance is checked here; see the hand-off note.
+{
+  const blk = data.buildings[0], rr = (blk.rotationDeg * Math.PI) / 180;
+  const dx = blk.doorPosition.x - blk.position.x, dz = blk.doorPosition.z - blk.position.z;
+  const lx = dx * Math.cos(rr) + dz * Math.sin(rr), lz = -dx * Math.sin(rr) + dz * Math.cos(rr); // block frame: x along the block, z across it
+  check('the entrance of block 1 is in the middle of its north face', blk.doorFacing === 'north' && Math.abs(lz + blk.size.d / 2) < 1 && Math.abs(lx) < 6, `local ${lx.toFixed(1)}, ${lz.toFixed(1)}`);
+  check('the entrance has a porch', blk.porch && blk.porch.w > 10 && blk.porch.d > 3 && blk.porch.h > 3);
+  const straight = Math.hypot(blk.doorPosition.x, blk.doorPosition.z);
+  check('gate to the block 1 entrance is a plausible road distance', gateRoute.length > straight && gateRoute.length < straight * 1.6, `${gateRoute.length.toFixed(1)} m by road, ${straight.toFixed(1)} m straight`);
+}
 check('walking time at 1.4 m/s', Math.abs(gateRoute.duration - gateRoute.length / 1.4) < 0.01, formatDuration(gateRoute.duration));
 check('route ends at the door', Math.hypot(gateRoute.poly.p.at(-1).x - data.buildings[0].doorPosition.x, gateRoute.poly.p.at(-1).z - data.buildings[0].doorPosition.z) < 0.5);
 check('steps start with a heading and end with arrival', gateRoute.steps[0].text.startsWith('Head ') && gateRoute.steps.at(-1).kind === 'arrive');

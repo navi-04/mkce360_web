@@ -73,35 +73,38 @@ function buildFloor(level) {
   };
   const typeAt = (i) => TYPES[(i + level * 3) % TYPES.length];
   let n = 0;
+  const sw = (ROOM_X1 - ROOM_X0) / 8; // eight bays along the north and south wings
 
-  // east wing, north to south (the entrance hall first on the ground floor)
-  let z = ROOM_Z0;
+  // the entrance hall (ground floor): the middle two bays of the north wing, behind the entrance porch and the glass entrance
+  // in the middle of the north face (the side facing the play ground); it opens wide onto the verandah and the courtyard
   if (level === 0) {
-    const lobbyD = 14.3;
     counter++;
     const number = `${prefix}-${String(counter).padStart(2, '0')}`;
+    const hx0 = ROOM_X0 + 3 * sw, hx1 = ROOM_X0 + 5 * sw;
     rooms.push({
       id: `room-${number.toLowerCase()}`, number, name: NAME.lobby, type: 'lobby', capacity: null, department: null, faculty: null,
       equipment: EQUIP.lobby, timetable: [],
-      bounds: { x0: ROOM_X1, z0: r2(z), x1: O.x1, z1: r2(z + lobbyD) },
-      door: { side: 'w', at: r2(z + lobbyD / 2), w: 5, h: 2.7, open: true },
+      bounds: { x0: r2(hx0), z0: O.z0, x1: r2(hx1), z1: r2(O.z0 + RD) },
+      door: { side: 's', at: r2((hx0 + hx1) / 2), w: 6, h: 2.7, open: true },
     });
-    z += lobbyD;
   }
-  const eastCount = level === 0 ? 8 : 10;
-  const ew = (ROOM_Z1 - z) / eastCount;
-  for (let i = 0; i < eastCount; i++) add(typeAt(n++), { x0: ROOM_X1, z0: z + i * ew, x1: O.x1, z1: z + (i + 1) * ew }, 'w', i % 2 === 0);
+
+  // east wing, north to south
+  const ew = (ROOM_Z1 - ROOM_Z0) / 10;
+  for (let i = 0; i < 10; i++) add(typeAt(n++), { x0: ROOM_X1, z0: ROOM_Z0 + i * ew, x1: O.x1, z1: ROOM_Z0 + (i + 1) * ew }, 'w', i % 2 === 0);
 
   // south wing, east to west
-  const sw = (ROOM_X1 - ROOM_X0) / 8;
   for (let i = 0; i < 8; i++) add(typeAt(n++), { x0: ROOM_X1 - (i + 1) * sw, z0: O.z1 - RD, x1: ROOM_X1 - i * sw, z1: O.z1 }, 'n', i % 2 === 1);
 
   // west wing, south to north
   const ww = (ROOM_Z1 - ROOM_Z0) / 10;
   for (let i = 0; i < 10; i++) add(typeAt(n++), { x0: O.x0, z0: ROOM_Z1 - (i + 1) * ww, x1: O.x0 + RD, z1: ROOM_Z1 - i * ww }, 'e', i % 2 === 1);
 
-  // north wing, west to east
-  for (let i = 0; i < 8; i++) add(typeAt(n++), { x0: ROOM_X0 + i * sw, z0: O.z0, x1: ROOM_X0 + (i + 1) * sw, z1: O.z0 + RD }, 's', i % 2 === 0);
+  // north wing, west to east (the ground floor leaves the two middle bays to the entrance hall)
+  for (let i = 0; i < 8; i++) {
+    if (level === 0 && (i === 3 || i === 4)) continue;
+    add(typeAt(n++), { x0: ROOM_X0 + i * sw, z0: O.z0, x1: ROOM_X0 + (i + 1) * sw, z1: O.z0 + RD }, 's', i % 2 === 0);
+  }
 
   // stairs in every corner, a lift in the north-east one; the corner lobbies are open to the verandah
   const flight = 4.6;
@@ -128,7 +131,8 @@ function buildFloor(level) {
     stairs,
     lifts,
   };
-  if (level === 0) floor.entrance = { x: O.x1, z: r2(ROOM_Z0 + 7.15), facing: 'east', label: 'Main entrance (exit)' };
+  // the entrance is in the middle of the north face, under the porch seen in the satellite crop of block 1 (the user asked for it on that side)
+  if (level === 0) floor.entrance = { x: 0, z: O.z0, facing: 'north', width: 4.8, label: 'Main entrance (exit)' };
   return floor;
 }
 

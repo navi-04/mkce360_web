@@ -246,8 +246,8 @@
       },
       {
         "id": "door-apj-block",
-        "x": -72.9,
-        "z": 31,
+        "x": -116.6,
+        "z": 11.9,
         "kind": "door"
       },
       {
@@ -495,6 +495,12 @@
         "x": -262,
         "z": 77.5,
         "kind": "path"
+      },
+      {
+        "id": "p80",
+        "x": -114.5,
+        "z": -7.4,
+        "kind": "path"
       }
     ],
     "edges": [
@@ -646,13 +652,6 @@
         "width": 7
       },
       {
-        "id": "e28",
-        "from": "p28",
-        "to": "door-apj-block",
-        "type": "walkway",
-        "width": 2.5
-      },
-      {
         "id": "e30",
         "from": "p31",
         "to": "p78",
@@ -669,7 +668,7 @@
       {
         "id": "e37",
         "from": "p38",
-        "to": "r2",
+        "to": "p80",
         "type": "road",
         "width": 7
       },
@@ -917,6 +916,20 @@
         "to": "door-veda-hostel",
         "type": "walkway",
         "width": 2.5
+      },
+      {
+        "id": "e112",
+        "from": "p80",
+        "to": "r2",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e113",
+        "from": "p80",
+        "to": "door-apj-block",
+        "type": "walkway",
+        "width": 2.5
       }
     ]
   },
@@ -973,8 +986,8 @@
         "thickness": 20
       },
       "doorPosition": {
-        "x": -72.9,
-        "z": 31
+        "x": -116.6,
+        "z": 11.9
       },
       "description": "Academic area, legend item 1. Placeholder: description to be provided by the college.",
       "floorPlans": [
@@ -1014,15 +1027,15 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": 37,
-                "z0": -44.3,
-                "x1": 46,
-                "z1": -30
+                "x0": -9.25,
+                "z0": -56.5,
+                "x1": 9.25,
+                "z1": -47.5
               },
               "door": {
-                "side": "w",
-                "at": -37.15,
-                "w": 5,
+                "side": "s",
+                "at": 0,
+                "w": 6,
                 "h": 2.7,
                 "open": true
               }
@@ -1042,13 +1055,13 @@
               "timetable": [],
               "bounds": {
                 "x0": 37,
-                "z0": -30,
+                "z0": -44.3,
                 "x1": 46,
-                "z1": -20.71
+                "z1": -35.44
               },
               "door": {
                 "side": "w",
-                "at": -28.3
+                "at": -42.6
               }
             },
             {
@@ -1097,13 +1110,13 @@
               ],
               "bounds": {
                 "x0": 37,
-                "z0": -20.71,
+                "z0": -35.44,
                 "x1": 46,
-                "z1": -11.42
+                "z1": -26.58
               },
               "door": {
                 "side": "w",
-                "at": -13.12
+                "at": -28.28
               }
             },
             {
@@ -1120,13 +1133,13 @@
               "timetable": [],
               "bounds": {
                 "x0": 37,
-                "z0": -11.42,
+                "z0": -26.58,
                 "x1": 46,
-                "z1": -2.14
+                "z1": -17.72
               },
               "door": {
                 "side": "w",
-                "at": -9.72
+                "at": -24.88
               }
             },
             {
@@ -1144,13 +1157,13 @@
               "timetable": [],
               "bounds": {
                 "x0": 37,
-                "z0": -2.14,
+                "z0": -17.72,
                 "x1": 46,
-                "z1": 7.15
+                "z1": -8.86
               },
               "door": {
                 "side": "w",
-                "at": 5.45
+                "at": -10.56
               }
             },
             {
@@ -1199,13 +1212,13 @@
               ],
               "bounds": {
                 "x0": 37,
-                "z0": 7.15,
+                "z0": -8.86,
                 "x1": 46,
-                "z1": 16.44
+                "z1": 0
               },
               "door": {
                 "side": "w",
-                "at": 8.85
+                "at": -7.16
               }
             },
             {
@@ -1222,13 +1235,13 @@
               "timetable": [],
               "bounds": {
                 "x0": 37,
-                "z0": 16.44,
+                "z0": 0,
                 "x1": 46,
-                "z1": 25.73
+                "z1": 8.86
               },
               "door": {
                 "side": "w",
-                "at": 24.03
+                "at": 7.16
               }
             },
             {
@@ -1246,13 +1259,13 @@
               "timetable": [],
               "bounds": {
                 "x0": 37,
-                "z0": 25.73,
+                "z0": 8.86,
                 "x1": 46,
-                "z1": 35.01
+                "z1": 17.72
               },
               "door": {
                 "side": "w",
-                "at": 27.42
+                "at": 10.56
               }
             },
             {
@@ -1301,13 +1314,13 @@
               ],
               "bounds": {
                 "x0": 37,
-                "z0": 35.01,
+                "z0": 17.72,
                 "x1": 46,
-                "z1": 44.3
+                "z1": 26.58
               },
               "door": {
                 "side": "w",
-                "at": 42.6
+                "at": 24.88
               }
             },
             {
@@ -1323,14 +1336,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": 27.75,
-                "z0": 47.5,
-                "x1": 37,
-                "z1": 56.5
+                "x0": 37,
+                "z0": 26.58,
+                "x1": 46,
+                "z1": 35.44
               },
               "door": {
-                "side": "n",
-                "at": 35.3
+                "side": "w",
+                "at": 28.28
               }
             },
             {
@@ -1347,14 +1360,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": 18.5,
-                "z0": 47.5,
-                "x1": 27.75,
-                "z1": 56.5
+                "x0": 37,
+                "z0": 35.44,
+                "x1": 46,
+                "z1": 44.3
               },
               "door": {
-                "side": "n",
-                "at": 20.2
+                "side": "w",
+                "at": 42.6
               }
             },
             {
@@ -1368,14 +1381,14 @@
               "equipment": [],
               "timetable": [],
               "bounds": {
-                "x0": 9.25,
+                "x0": 27.75,
                 "z0": 47.5,
-                "x1": 18.5,
+                "x1": 37,
                 "z1": 56.5
               },
               "door": {
                 "side": "n",
-                "at": 16.8
+                "at": 35.3
               }
             },
             {
@@ -1389,14 +1402,14 @@
               "equipment": [],
               "timetable": [],
               "bounds": {
-                "x0": 0,
+                "x0": 18.5,
                 "z0": 47.5,
-                "x1": 9.25,
+                "x1": 27.75,
                 "z1": 56.5
               },
               "door": {
                 "side": "n",
-                "at": 1.7
+                "at": 20.2
               }
             },
             {
@@ -1413,14 +1426,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -9.25,
+                "x0": 9.25,
                 "z0": 47.5,
-                "x1": 0,
+                "x1": 18.5,
                 "z1": 56.5
               },
               "door": {
                 "side": "n",
-                "at": -1.7
+                "at": 16.8
               }
             },
             {
@@ -1468,14 +1481,14 @@
                 }
               ],
               "bounds": {
-                "x0": -18.5,
+                "x0": 0,
                 "z0": 47.5,
-                "x1": -9.25,
+                "x1": 9.25,
                 "z1": 56.5
               },
               "door": {
                 "side": "n",
-                "at": -16.8
+                "at": 1.7
               }
             },
             {
@@ -1491,14 +1504,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -27.75,
+                "x0": -9.25,
                 "z0": 47.5,
-                "x1": -18.5,
+                "x1": 0,
                 "z1": 56.5
               },
               "door": {
                 "side": "n",
-                "at": -20.2
+                "at": -1.7
               }
             },
             {
@@ -1515,14 +1528,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -37,
+                "x0": -18.5,
                 "z0": 47.5,
-                "x1": -27.75,
+                "x1": -9.25,
                 "z1": 56.5
               },
               "door": {
                 "side": "n",
-                "at": -35.3
+                "at": -16.8
               }
             },
             {
@@ -1570,14 +1583,14 @@
                 }
               ],
               "bounds": {
-                "x0": -46,
-                "z0": 35.44,
-                "x1": -37,
-                "z1": 44.3
+                "x0": -27.75,
+                "z0": 47.5,
+                "x1": -18.5,
+                "z1": 56.5
               },
               "door": {
-                "side": "e",
-                "at": 42.6
+                "side": "n",
+                "at": -20.2
               }
             },
             {
@@ -1593,14 +1606,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -46,
-                "z0": 26.58,
-                "x1": -37,
-                "z1": 35.44
+                "x0": -37,
+                "z0": 47.5,
+                "x1": -27.75,
+                "z1": 56.5
               },
               "door": {
-                "side": "e",
-                "at": 28.28
+                "side": "n",
+                "at": -35.3
               }
             },
             {
@@ -1618,13 +1631,13 @@
               "timetable": [],
               "bounds": {
                 "x0": -46,
-                "z0": 17.72,
+                "z0": 35.44,
                 "x1": -37,
-                "z1": 26.58
+                "z1": 44.3
               },
               "door": {
                 "side": "e",
-                "at": 24.88
+                "at": 42.6
               }
             },
             {
@@ -1673,13 +1686,13 @@
               ],
               "bounds": {
                 "x0": -46,
-                "z0": 8.86,
+                "z0": 26.58,
                 "x1": -37,
-                "z1": 17.72
+                "z1": 35.44
               },
               "door": {
                 "side": "e",
-                "at": 10.56
+                "at": 28.28
               }
             },
             {
@@ -1696,13 +1709,13 @@
               "timetable": [],
               "bounds": {
                 "x0": -46,
-                "z0": 0,
+                "z0": 17.72,
                 "x1": -37,
-                "z1": 8.86
+                "z1": 26.58
               },
               "door": {
                 "side": "e",
-                "at": 7.16
+                "at": 24.88
               }
             },
             {
@@ -1720,13 +1733,13 @@
               "timetable": [],
               "bounds": {
                 "x0": -46,
-                "z0": -8.86,
+                "z0": 8.86,
                 "x1": -37,
-                "z1": 0
+                "z1": 17.72
               },
               "door": {
                 "side": "e",
-                "at": -7.16
+                "at": 10.56
               }
             },
             {
@@ -1741,13 +1754,13 @@
               "timetable": [],
               "bounds": {
                 "x0": -46,
-                "z0": -17.72,
+                "z0": 0,
                 "x1": -37,
-                "z1": -8.86
+                "z1": 8.86
               },
               "door": {
                 "side": "e",
-                "at": -10.56
+                "at": 7.16
               }
             },
             {
@@ -1762,13 +1775,13 @@
               "timetable": [],
               "bounds": {
                 "x0": -46,
-                "z0": -26.58,
+                "z0": -8.86,
                 "x1": -37,
-                "z1": -17.72
+                "z1": 0
               },
               "door": {
                 "side": "e",
-                "at": -24.88
+                "at": -7.16
               }
             },
             {
@@ -1786,13 +1799,13 @@
               "timetable": [],
               "bounds": {
                 "x0": -46,
-                "z0": -35.44,
+                "z0": -17.72,
                 "x1": -37,
-                "z1": -26.58
+                "z1": -8.86
               },
               "door": {
                 "side": "e",
-                "at": -28.28
+                "at": -10.56
               }
             },
             {
@@ -1841,13 +1854,13 @@
               ],
               "bounds": {
                 "x0": -46,
-                "z0": -44.3,
+                "z0": -26.58,
                 "x1": -37,
-                "z1": -35.44
+                "z1": -17.72
               },
               "door": {
                 "side": "e",
-                "at": -42.6
+                "at": -24.88
               }
             },
             {
@@ -1863,14 +1876,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -37,
-                "z0": -56.5,
-                "x1": -27.75,
-                "z1": -47.5
+                "x0": -46,
+                "z0": -35.44,
+                "x1": -37,
+                "z1": -26.58
               },
               "door": {
-                "side": "s",
-                "at": -35.3
+                "side": "e",
+                "at": -28.28
               }
             },
             {
@@ -1887,14 +1900,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -27.75,
-                "z0": -56.5,
-                "x1": -18.5,
-                "z1": -47.5
+                "x0": -46,
+                "z0": -44.3,
+                "x1": -37,
+                "z1": -35.44
               },
               "door": {
-                "side": "s",
-                "at": -20.2
+                "side": "e",
+                "at": -42.6
               }
             },
             {
@@ -1942,14 +1955,14 @@
                 }
               ],
               "bounds": {
-                "x0": -18.5,
+                "x0": -37,
                 "z0": -56.5,
-                "x1": -9.25,
+                "x1": -27.75,
                 "z1": -47.5
               },
               "door": {
                 "side": "s",
-                "at": -16.8
+                "at": -35.3
               }
             },
             {
@@ -1965,14 +1978,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": -9.25,
+                "x0": -27.75,
                 "z0": -56.5,
-                "x1": 0,
+                "x1": -18.5,
                 "z1": -47.5
               },
               "door": {
                 "side": "s",
-                "at": -1.7
+                "at": -20.2
               }
             },
             {
@@ -1989,14 +2002,14 @@
               ],
               "timetable": [],
               "bounds": {
-                "x0": 0,
+                "x0": -18.5,
                 "z0": -56.5,
-                "x1": 9.25,
+                "x1": -9.25,
                 "z1": -47.5
               },
               "door": {
                 "side": "s",
-                "at": 1.7
+                "at": -16.8
               }
             },
             {
@@ -2187,9 +2200,10 @@
             }
           ],
           "entrance": {
-            "x": 46,
-            "z": -37.15,
-            "facing": "east",
+            "x": 0,
+            "z": -56.5,
+            "facing": "north",
+            "width": 4.8,
             "label": "Main entrance (exit)"
           }
         },
@@ -5597,9 +5611,16 @@
       "confidence": "medium",
       "source": "satellite + user dimensions (113 x 92 m)",
       "floorsNote": "4 levels (Ground to Third), read from the directory sign at the entrance and confirmed by the user.",
-      "doorFacing": "east",
+      "doorFacing": "north",
       "doorNode": "door-apj-block",
-      "interiorNote": "SAMPLE interior. The ring shape, verandahs, courtyard, entrance hall, corridors, stairs, lift and classroom furnishing follow the photos supplied for this block; which room is where, the room numbers and names, capacities, faculty and timetables are placeholders. Only the four-floor count is confirmed."
+      "interiorNote": "SAMPLE interior. The ring shape, verandahs, courtyard, entrance hall, corridors, stairs, lift and classroom furnishing follow the photos supplied for this block; which room is where, the room numbers and names, capacities, faculty and timetables are placeholders. Only the four-floor count is confirmed.",
+      "porch": {
+        "w": 20,
+        "d": 6,
+        "h": 4.2,
+        "doorW": 4.8
+      },
+      "doorNote": "Entrance in the middle of the north face, the side facing the play ground (side told by the user; the porch, about 20 m wide and 6 m deep, shows in the satellite crop assets/satellite/apj block.png). Its place along the face is an estimate from that crop: check with ?calibrate=1. The earlier east-face door was a guess and is gone."
     },
     {
       "id": "radhakrishnan-block",

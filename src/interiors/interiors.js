@@ -648,6 +648,9 @@ export class Interiors {
       det.push(at(c - e.width / 2 - 0.05, 0.1, 0.16, 0.1, 2.4, 0, 0x35545f), at(c + e.width / 2 + 0.05, 0.1, 0.16, 0.1, 2.4, 0, 0x35545f));
       det.push(at(c, 0.1, 0.16, e.width + 0.2, 0.1, 2.3, 0x35545f));
       det.push(at(c, 0.03, 0.04, e.width - 0.1, 2.3, 0, 0xc9e3f1)); // glass doors
+      // steel mullions between the door leaves (one leaf per 1.2 m) and a transom
+      for (let k = 1; k < Math.round(e.width / 1.2); k++) det.push(at(c - e.width / 2 + (k * e.width) / Math.round(e.width / 1.2), 0.07, 0.06, 0.06, 2.3, 0, 0x6b7a84));
+      if (e.width > 2.6) det.push(at(c, 0.07, 0.06, e.width - 0.1, 0.06, 2.15, 0x6b7a84));
     }
     add(det.build(), this.mats.detail, 'details');
 
@@ -914,7 +917,7 @@ export class Interiors {
         let bd = ENTER_R;
         for (const f of app.world.doorFrames) {
           if (!this.has(f.id)) continue;
-          const d = Math.hypot(p.x - f.x, p.z - f.z);
+          const d = Math.hypot(p.x - f.x, p.z - f.z) - (f.reach ?? 0) * 0.5; // a deep porch is noticed from a little further away
           if (d < bd) { bd = d; best = { kind: 'enter', id: f.id }; }
         }
       }
