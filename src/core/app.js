@@ -249,6 +249,7 @@ export class App {
     this.pixelRatio = Math.min(window.devicePixelRatio || 1, q.pixelRatio, 2); // never above 2
     this.renderer.setPixelRatio(this.pixelRatio);
     this.world.setQuality(q);
+    this.interiors?.setQuality(q);
     this.onResize();
   }
 

@@ -22,9 +22,9 @@ function blotches(g, w, h, n, seed, palette, rMin, rMax) {
 /** polished red granite, 4 slabs of 0.9 m per tile (tile = 1.8 m) */
 export function graniteFloor() {
   const [c, g] = mk(256, 256);
-  g.fillStyle = '#85594d';
+  g.fillStyle = '#94776c';
   g.fillRect(0, 0, 256, 256);
-  blotches(g, 256, 256, 110, 41, ['176,110,94', '132,124,122', '96,62,54', '198,146,126', '150,138,134'], 10, 46);
+  blotches(g, 256, 256, 110, 41, ['176,120,104', '140,134,134', '110,74,66', '204,156,138', '160,150,146'], 10, 46);
   speckle(g, 256, 256, 2600, 0.45, 42, '236,196,178', '52,24,20');
   // grey veins, as in the photographed granite
   const r = rng(43);
@@ -111,7 +111,7 @@ export function corridorWall() {
 /** plain cream classroom wall */
 export function roomWall() {
   const [c, g] = mk(64, 256);
-  g.fillStyle = '#efe5cd';
+  g.fillStyle = '#f7f0df';
   g.fillRect(0, 0, 64, 256);
   speckle(g, 64, 256, 200, 0.04, 83, '255,250,235', '120,100,70');
   g.fillStyle = '#b9aa8d';
@@ -146,30 +146,217 @@ export function parapetWall() {
   return tex(c, { aniso: 4 });
 }
 
-/** the arcade seen across the courtyard: column, slab edge, brown parapet and a dark corridor behind (tile = 3.7 m x 3.6 m) */
+/**
+ * The wings seen across the courtyard (photos 2.34.14 PM and 2.34.15 PM): cream parapet with X-shaped and slot openings, a thick
+ * white slab edge above, white columns, a shaded verandah with doors and windows behind. One tile is two bays (7.4 m) wide and
+ * one storey (3.6 m) high.
+ */
 export function arcadeFacade() {
+  const W = 512, Hh = 256, ppm = 69; // 69 px per metre
+  const [c, g] = mk(W, Hh);
+  // shaded verandah behind the openings
+  const grd = g.createLinearGradient(0, 0, 0, Hh);
+  grd.addColorStop(0, '#a79d90');
+  grd.addColorStop(1, '#7d746a');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, W, Hh);
+  speckle(g, W, Hh, 500, 0.06, 101);
+  g.fillStyle = '#c4b49f'; // a tan dado on the back wall, as in the corridors
+  g.fillRect(0, 176, W, 40);
+  // back-wall openings: a door in the first bay, windows in both
+  const dark = '#3a342e', blue = '#4d6d8a', glass = '#6c7f86';
+  g.fillStyle = dark;
+  g.fillRect(70, 78, 60, 138);
+  g.fillStyle = blue;
+  g.fillRect(74, 82, 52, 130);
+  for (const x of [150, 330, 410]) {
+    g.fillStyle = '#e9e4da';
+    g.fillRect(x, 96, 80, 62);
+    g.fillStyle = glass;
+    g.fillRect(x + 4, 100, 72, 54);
+    g.fillStyle = '#e9e4da';
+    g.fillRect(x + 38, 100, 4, 54);
+    g.fillRect(x + 4, 124, 72, 4);
+  }
+  // slab edge: a wide white band with a shadow line under it
+  g.fillStyle = '#efeae1';
+  g.fillRect(0, 0, W, 40);
+  g.fillStyle = '#cfc7ba';
+  g.fillRect(0, 40, W, 4);
+  g.fillStyle = 'rgba(0,0,0,0.18)';
+  g.fillRect(0, 44, W, 10);
+  // parapet (bottom 1.0 m): cream with X squares and slot pairs
+  const top = Hh - ppm;
+  g.fillStyle = '#e6dac9';
+  g.fillRect(0, top, W, ppm);
+  g.fillStyle = '#f3eee6';
+  g.fillRect(0, top, W, 6);
+  g.fillStyle = '#cbbfae';
+  g.fillRect(0, top + 6, W, 2);
+  const xsq = (x, y, n) => {
+    g.fillStyle = '#4a433b';
+    g.fillRect(x, y, n, n);
+    g.strokeStyle = '#e6dac9';
+    g.lineWidth = 2.5;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + n, y + n);
+    g.moveTo(x + n, y);
+    g.lineTo(x, y + n);
+    g.stroke();
+  };
+  const slots = (x, y) => {
+    g.fillStyle = '#4a433b';
+    g.fillRect(x, y, 5, 20);
+    g.fillRect(x + 11, y, 5, 20);
+  };
+  for (const [kind, x] of [['x', 40], ['s', 100], ['x', 160], ['x', 210], ['s', 290], ['x', 346], ['s', 400], ['x', 456]]) {
+    if (kind === 'x') xsq(x, top + 22, 20);
+    else slots(x, top + 22);
+  }
+  // columns (cream-white), one at each bay edge
+  for (const x of [0, 256]) {
+    g.fillStyle = '#f0ebe2';
+    g.fillRect(x - 15, 40, 31, Hh - 40);
+    g.fillStyle = '#d2c9bb';
+    g.fillRect(x + 14, 40, 2, Hh - 40);
+  }
+  g.fillStyle = '#efeae1';
+  g.fillRect(W - 16, 40, 16, Hh - 40);
+  return tex(c, { aniso: 4 });
+}
+
+/** the parapet seen from the courtyard: cream, X squares and slot pairs (tile = 2.4 m wide, 1.28 m high; the wall is 1.0 m) */
+export function parapetOuter() {
+  const [c, g] = mk(256, 128);
+  g.fillStyle = '#e8dccb';
+  g.fillRect(0, 0, 256, 128);
+  speckle(g, 256, 128, 260, 0.05, 92, '255,250,240', '90,70,50');
+  g.fillStyle = '#f4efe7'; // plastered top ledge
+  g.fillRect(0, 0, 256, 14);
+  g.fillStyle = '#c9bdac';
+  g.fillRect(0, 14, 256, 3);
+  const xsq = (x, y, n) => {
+    g.fillStyle = '#4a433b';
+    g.fillRect(x, y, n, n);
+    g.strokeStyle = '#e8dccb';
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + n, y + n);
+    g.moveTo(x + n, y);
+    g.lineTo(x, y + n);
+    g.stroke();
+  };
+  const slots = (x, y) => {
+    g.fillStyle = '#4a433b';
+    g.fillRect(x, y, 8, 38);
+    g.fillRect(x + 18, y, 8, 38);
+  };
+  xsq(26, 42, 34);
+  slots(94, 38);
+  xsq(150, 42, 34);
+  slots(212, 38);
+  return tex(c, { aniso: 4 });
+}
+
+/** white ribbed roof sheet seen from below and above (tile = 1.2 m; ribs every 0.2 m) */
+export function roofSheet() {
+  const [c, g] = mk(256, 256);
+  g.fillStyle = '#ece8df';
+  g.fillRect(0, 0, 256, 256);
+  const rib = 256 / 6;
+  for (let i = 0; i < 6; i++) {
+    const x = i * rib;
+    const grd = g.createLinearGradient(x, 0, x + rib, 0);
+    grd.addColorStop(0, 'rgba(120,112,100,0.34)');
+    grd.addColorStop(0.18, 'rgba(255,255,255,0.28)');
+    grd.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    grd.addColorStop(0.82, 'rgba(255,255,255,0.22)');
+    grd.addColorStop(1, 'rgba(120,112,100,0.34)');
+    g.fillStyle = grd;
+    g.fillRect(x, 0, rib, 256);
+  }
+  speckle(g, 256, 256, 600, 0.07, 94, '255,255,255', '90,80,60');
+  return tex(c, { aniso: 4 });
+}
+
+/** the curved, finely ribbed fascia hanging at the edge of the roof (tile = 0.64 m wide, 0.64 m high) */
+export function fasciaRib() {
   const [c, g] = mk(128, 128);
-  g.fillStyle = '#4a4742'; // shaded corridor behind the opening
+  g.fillStyle = '#a49c8d';
   g.fillRect(0, 0, 128, 128);
-  g.fillStyle = '#b79a80'; // far wall dado, bright floor strip
-  g.fillRect(0, 70, 128, 38);
-  g.fillStyle = '#8a6a58';
-  g.fillRect(0, 100, 128, 12);
-  speckle(g, 128, 128, 300, 0.05, 101);
-  g.fillStyle = '#f1ede5'; // slab edge (top 0.45 m)
-  g.fillRect(0, 0, 128, 16);
-  g.fillStyle = '#c4bdae';
-  g.fillRect(0, 16, 128, 3);
-  g.fillStyle = '#6a4b3e'; // parapet (bottom 1.0 m)
-  g.fillRect(0, 92, 128, 36);
-  g.fillStyle = '#ebe5d9';
-  g.fillRect(0, 92, 128, 4);
-  g.fillStyle = '#efe9dc';
-  for (const x of [20, 44, 78, 102]) g.fillRect(x, 102, 6, 18);
-  g.fillStyle = '#f1ede5'; // column
-  g.fillRect(0, 16, 16, 112);
-  g.fillStyle = '#cfc8b9';
-  g.fillRect(14, 16, 2, 112);
+  for (let i = 0; i < 16; i++) {
+    const x = i * 8;
+    const grd = g.createLinearGradient(x, 0, x + 8, 0);
+    grd.addColorStop(0, 'rgba(60,52,42,0.42)');
+    grd.addColorStop(0.5, 'rgba(255,250,240,0.18)');
+    grd.addColorStop(1, 'rgba(60,52,42,0.42)');
+    g.fillStyle = grd;
+    g.fillRect(x, 0, 8, 128);
+  }
+  const shade = g.createLinearGradient(0, 0, 0, 128);
+  shade.addColorStop(0, 'rgba(0,0,0,0.0)');
+  shade.addColorStop(1, 'rgba(0,0,0,0.22)');
+  g.fillStyle = shade;
+  g.fillRect(0, 0, 128, 128);
+  return tex(c, { aniso: 4 });
+}
+
+/** foliage for the tree crowns: many small leaflets on a transparent ground (alpha-tested; tile = 1.6 m). withFlowers: bougainvillea */
+export function leafTexture(withFlowers = false) {
+  const N = 256;
+  const [c, g] = mk(N, N);
+  g.clearRect(0, 0, N, N);
+  const r = rng(withFlowers ? 133 : 131);
+  const wrap = (fn, x, y) => {
+    for (const dx of [-N, 0, N]) for (const dy of [-N, 0, N]) {
+      const px = x + dx, py = y + dy;
+      if (px > -24 && px < N + 24 && py > -24 && py < N + 24) fn(px, py);
+    }
+  };
+  // a dark mass behind, so the crown reads as dense from a distance
+  for (let i = 0; i < 70; i++) {
+    const x = r() * N, y = r() * N, rad = 14 + r() * 16;
+    wrap((px, py) => { g.fillStyle = '#2c5a22'; g.beginPath(); g.arc(px, py, rad, 0, Math.PI * 2); g.fill(); }, x, y);
+  }
+  const palette = ['#3d7a2a', '#4c8d33', '#5c9e3a', '#356b26', '#69ab43', '#2f6224', '#8bbd4e'];
+  for (let i = 0; i < 950; i++) {
+    const x = r() * N, y = r() * N, a = r() * Math.PI, len = 10 + r() * 7, wid = 4 + r() * 3;
+    const col = palette[Math.floor(r() * palette.length)];
+    wrap((px, py) => {
+      g.fillStyle = col;
+      g.beginPath();
+      g.ellipse(px, py, len / 2, wid / 2, a, 0, Math.PI * 2);
+      g.fill();
+    }, x, y);
+  }
+  if (withFlowers) {
+    for (let i = 0; i < 60; i++) {
+      const x = r() * N, y = r() * N;
+      wrap((px, py) => {
+        g.fillStyle = r() > 0.35 ? '#f4efe6' : '#f0d5e0';
+        for (let k = 0; k < 4; k++) {
+          g.beginPath();
+          g.ellipse(px + Math.cos(k * 1.57) * 2.4, py + Math.sin(k * 1.57) * 2.4, 3, 2.2, k * 1.57, 0, Math.PI * 2);
+          g.fill();
+        }
+      }, x, y);
+    }
+  }
+  return tex(c, { aniso: 4 });
+}
+
+/** bark: vertical streaks (replaced by the photographed bark when it loads) */
+export function barkTexture() {
+  const [c, g] = mk(64, 128);
+  g.fillStyle = '#8a7765';
+  g.fillRect(0, 0, 64, 128);
+  const r = rng(141);
+  for (let i = 0; i < 40; i++) {
+    g.fillStyle = r() > 0.5 ? 'rgba(60,44,32,0.35)' : 'rgba(190,170,150,0.25)';
+    g.fillRect(r() * 64, r() * 128, 1 + r() * 3, 16 + r() * 60);
+  }
   return tex(c, { aniso: 4 });
 }
 
@@ -217,6 +404,7 @@ const DECOR = {
   display: [256, 128, 128, 256],
   notice: [384, 128, 128, 128],
   window: [384, 256, 128, 128],
+  vent: [384, 384, 128, 64],
 };
 
 /** @returns {{texture:object, cells:Record<string, number[]>}} cells hold [u0, v0, u1, v1] */
@@ -320,14 +508,14 @@ export function decorAtlas() {
 
   cell('window', (w, h) => {
     // steel-framed window: frame, a bright pane, a dark curtain at one side, a grille
-    g.fillStyle = '#56707a';
+    g.fillStyle = '#434f53';
     g.fillRect(0, 0, w, h);
     const grd = g.createLinearGradient(0, 0, 0, h);
     grd.addColorStop(0, '#dff0f2');
     grd.addColorStop(1, '#b7d4d6');
     g.fillStyle = grd;
     g.fillRect(6, 6, w - 12, h - 12);
-    g.fillStyle = '#56707a';
+    g.fillStyle = '#434f53';
     g.fillRect(w / 2 - 2, 0, 4, h);
     g.fillRect(0, h * 0.32, w, 4);
     g.strokeStyle = 'rgba(70,86,92,0.85)';
@@ -338,6 +526,27 @@ export function decorAtlas() {
       g.lineTo(w - 6, h * 0.32 + 4 + i * ((h * 0.68 - 10) / 7));
       g.stroke();
     }
+  });
+
+  cell('vent', (w, h) => {
+    // a plastered lattice (jali) ventilator, as above the corridor doors and windows
+    g.fillStyle = '#ece7dc';
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = '#3d3a36';
+    g.fillRect(5, 5, w - 10, h - 10);
+    g.strokeStyle = '#ece7dc';
+    g.lineWidth = 3;
+    for (let x = -h; x < w + h; x += 14) {
+      g.beginPath();
+      g.moveTo(x, 5);
+      g.lineTo(x + h, h - 5);
+      g.moveTo(x + h, 5);
+      g.lineTo(x, h - 5);
+      g.stroke();
+    }
+    g.fillStyle = '#ece7dc';
+    g.fillRect(0, 0, w, 5);
+    g.fillRect(0, h - 5, w, 5);
   });
 
   const texture = tex(c, { repeat: false, aniso: 8 });

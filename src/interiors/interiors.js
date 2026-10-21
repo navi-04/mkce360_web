@@ -8,7 +8,7 @@ import { Collider } from '../modes/collision.js';
 import { boxGeo, signQuad, merge, paint } from '../world/geo.js';
 import { signAtlas, grassTexture } from '../world/textures.js';
 import * as IT from '../world/interior-textures.js';
-import { buildPlan, floorShortLabel, floorLabel, DOOR, WALL_T, PARAPET_H } from './plan.js';
+import { buildPlan, floorShortLabel, floorLabel, DOOR, WALL_T, PARAPET_H, PLINTH } from './plan.js';
 
 const DEG = Math.PI / 180;
 // open-air look: the courtyard shows the sky, so the fog is a light haze rather than a dark void
@@ -17,7 +17,6 @@ const PROMPT_R = 2.4;
 const EXIT_R = 3.0;
 const ENTER_R = 8; // how close to a door the "Enter" prompt appears
 const ROOM_SHOW_R = 15; // furniture of a room is built and shown within this distance
-const PLINTH = 0.45; // the verandah floor stands this far above the garden
 const TILE = { granite: 1.8, marble: 1.2, green: 2.4, concrete: 2.4 };
 const ARRIVE_YAW = { n: 0, e: -Math.PI / 2, s: Math.PI, w: Math.PI / 2 }; // which way the viewer faces after stairs or lift
 
@@ -71,7 +70,8 @@ class BoxBatch {
           p += 3;
           if (b.uvT) {
             const [ut, vt] = b.uvT;
-            if (n[0]) { uv[q] = z / ut; uv[q + 1] = y / vt; }
+            if (b.topUv && n[1]) { uv[q] = b.topUv[0]; uv[q + 1] = b.topUv[1]; }
+            else if (n[0]) { uv[q] = z / ut; uv[q + 1] = y / vt; }
             else if (n[2]) { uv[q] = x / ut; uv[q + 1] = y / vt; }
             else { uv[q] = x / ut; uv[q + 1] = z / ut; }
           }
@@ -184,6 +184,118 @@ function liftBoxes(l, H) {
   return out;
 }
 
+
+// ---------- garden geometry ----------
+
+class MeshBuf {
+  constructor() { this.pos = []; this.nor = []; this.col = []; this.uv = []; }
+
+  vert(p, n, c, u, v) {
+    this.pos.push(p[0], p[1], p[2]);
+    this.nor.push(n[0], n[1], n[2]);
+    this.col.push(c[0], c[1], c[2]);
+    this.uv.push(u, v);
+  }
+
+  build() {
+    if (!this.pos.length) return null;
+    return toGeometry(new Float32Array(this.pos), new Float32Array(this.nor), new Float32Array(this.col), new Float32Array(this.uv));
+  }
+}
+
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const norm = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+
+/** a tapered tube from p0 to p1 (smooth radial normals), uv: u round, v along */
+function tube(buf, p0, r0, p1, r1, sides, tint, uTile = 0.5, vTile = 1) {
+  const d = norm(sub(p1, p0));
+  const ref = Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+  const u = norm(cross(d, ref)), w = cross(d, u);
+  const len = Math.hypot(...sub(p1, p0));
+  const ring = (c, r, k) => {
+    const a = (k / sides) * Math.PI * 2;
+    const nrm = [u[0] * Math.cos(a) + w[0] * Math.sin(a), u[1] * Math.cos(a) + w[1] * Math.sin(a), u[2] * Math.cos(a) + w[2] * Math.sin(a)];
+    return { p: [c[0] + nrm[0] * r, c[1] + nrm[1] * r, c[2] + nrm[2] * r], n: nrm };
+  };
+  for (let k = 0; k < sides; k++) {
+    const a0 = ring(p0, r0, k), a1 = ring(p0, r0, k + 1), b0 = ring(p1, r1, k), b1 = ring(p1, r1, k + 1);
+    const cu0 = ((k / sides) * Math.PI * 2 * r0) / uTile, cu1 = (((k + 1) / sides) * Math.PI * 2 * r0) / uTile, vv = len / vTile;
+    for (const [q, uu, vq] of [[a0, cu0, 0], [a1, cu1, 0], [b1, cu1, vv], [a0, cu0, 0], [b1, cu1, vv], [b0, cu0, vv]]) buf.vert(q.p, q.n, tint, uu, vq);
+  }
+}
+
+/** a flat hexagon-ish disc of leaves, tilted, with uv in world metres so leaflets keep their size */
+function leafDisc(buf, c, radius, tiltX, tiltZ, tint, uOff, tile = 1.6, segs = 11) {
+  const ct = Math.cos(tiltX), st = Math.sin(tiltX), cz = Math.cos(tiltZ), sz = Math.sin(tiltZ);
+  const at = (a, rr) => {
+    const x = Math.cos(a) * rr, z = Math.sin(a) * rr;
+    // tilt about x then z
+    const y1 = z * st, z1 = z * ct;
+    const x2 = x * cz - y1 * sz, y2 = x * sz + y1 * cz;
+    return [c[0] + x2, c[1] + y2, c[2] + z1];
+  };
+  const n = norm([-sz * ct, cz * ct, st]);
+  const ctr = [c[0], c[1], c[2]];
+  for (let k = 0; k < segs; k++) {
+    // an uneven rim so the crowns do not read as polygons
+    const j1 = 0.8 + 0.38 * hashf(k + uOff * 13, 1.7), j2 = 0.8 + 0.38 * hashf(((k + 1) % segs) + uOff * 13, 1.7);
+    const p1 = at((k / segs) * Math.PI * 2, radius * j1), p2 = at(((k + 1) / segs) * Math.PI * 2, radius * j2);
+    for (const q of [ctr, p1, p2]) buf.vert(q, n, tint, (q[0] + uOff) / tile, (q[2] + uOff * 0.7) / tile);
+  }
+}
+
+function hashf(a, b) {
+  const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+/** the lawn as a grid of quads whose vertex colours carry the shade of the trees and the building edges, and bare soil under the trunks */
+function lawnGeo(g, y) {
+  const r = g.rect, m = 0.4, STEP = 2.5;
+  const x0 = r.x0 - m, x1 = r.x1 + m, z0 = r.z0 - m, z1 = r.z1 + m;
+  const nx = Math.ceil((x1 - x0) / STEP), nz = Math.ceil((z1 - z0) / STEP);
+  const colorAt = (x, z) => {
+    let f = 1, soil = 0;
+    for (const t of g.trees) {
+      const d = Math.hypot(x - t.x, z - t.z), R = t.s * 1.7;
+      if (d < R) { const k = 1 - d / R; f -= 0.38 * k * k * (3 - 2 * k); }
+      if (d < 1.9) soil = Math.max(soil, 1 - d / 1.9);
+    }
+    const de = Math.min(x - r.x0, r.x1 - x, z - r.z0, r.z1 - z);
+    if (de < 3.5) f *= 0.8 + 0.2 * Math.max(0, de) / 3.5;
+    f *= 0.9 + 0.2 * hashf(Math.floor(x * 0.45), Math.floor(z * 0.45));
+    f = Math.max(0.35, f);
+    return [f * (1 - 0.18 * soil), f * (1 - 0.34 * soil), f * (1 - 0.46 * soil)];
+  };
+  const buf = new MeshBuf();
+  const up = [0, 1, 0];
+  const T = 3.5; // texture tile in metres
+  for (let i = 0; i < nx; i++) {
+    for (let j = 0; j < nz; j++) {
+      const xa = x0 + (i * (x1 - x0)) / nx, xb = x0 + ((i + 1) * (x1 - x0)) / nx, za = z0 + (j * (z1 - z0)) / nz, zb = z0 + ((j + 1) * (z1 - z0)) / nz;
+      const A = [xa, za], B = [xa, zb], C = [xb, zb], D = [xb, za];
+      for (const q of [A, B, C, A, C, D]) buf.vert([q[0], y, q[1]], up, colorAt(q[0], q[1]), q[0] / T, q[1] / T);
+    }
+  }
+  return buf.build();
+}
+
+/** a horizontal quad (four corners) facing up or down, uv in world metres along (u,v) axes */
+function slopeQuad(buf, pts, up, uvOf) {
+  let order = [0, 1, 2, 3];
+  const n = cross(sub(pts[1], pts[0]), sub(pts[2], pts[1]));
+  if ((n[1] > 0) !== up) order = [3, 2, 1, 0];
+  const nn = norm(n);
+  const nrm = up ? (nn[1] > 0 ? nn : [-nn[0], -nn[1], -nn[2]]) : (nn[1] < 0 ? nn : [-nn[0], -nn[1], -nn[2]]);
+  const w = [1, 1, 1];
+  for (const k of [0, 1, 2, 0, 2, 3]) {
+    const q = pts[order[k]];
+    const [u, v] = uvOf(q);
+    buf.vert(q, nrm, w, u, v);
+  }
+}
+
 export class Interiors {
   constructor(app) {
     this.app = app;
@@ -193,6 +305,7 @@ export class Interiors {
     this.floors = new Map(); // `${buildingId}:${level}` -> built floor
     this.gardens = new Map(); // buildingId -> garden group
     this.clock = () => new Date(); // overridable in tests
+    this.quality = { trees: 1 };
     this.prompt = null;
     this._listeners = new Set();
     this._saved = null;
@@ -216,6 +329,12 @@ export class Interiors {
       concrete: lam(IT.concreteFloor()),
       ceiling: lam(IT.ceilingTile()),
       parapet: lam(IT.parapetWall()),
+      parapetOuter: lam(IT.parapetOuter()),
+      roofSheet: lam(IT.roofSheet()),
+      fascia: lam(IT.fasciaRib()),
+      bark: lam(IT.barkTexture()),
+      leaf: new THREE.MeshLambertMaterial({ map: IT.leafTexture(false), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide }),
+      shrub: new THREE.MeshLambertMaterial({ map: IT.leafTexture(true), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide }),
       facade: lam(IT.arcadeFacade()),
       paver: lam(IT.hexPaver()),
       grass: lam(grass),
@@ -223,6 +342,8 @@ export class Interiors {
       detail: new THREE.MeshLambertMaterial({ vertexColors: true }),
     };
     this.mats.ceiling.emissive.set(0x6c685f); // the ceiling only sees the ground half of the light; keep it white
+    this.mats.roofSheet.emissive.set(0x555049); // the same for the underside of the walkway roof
+    this.mats.fascia.emissive.set(0x403c36);
     this.pickMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
 
     // Hidden stand-ins so the start-up shader precompile covers every material the interiors will use.
@@ -237,9 +358,31 @@ export class Interiors {
     warm.visible = true;
   }
 
+  /** the automatic quality level: the hanging foliage of the trees is the first thing to go */
+  setQuality(q) {
+    this.quality = q;
+    for (const g of this.gardens.values()) if (g.userData.extra) g.userData.extra.visible = q.trees >= 0.7;
+  }
+
   /** upload the interior textures to the GPU at start-up (the first draw would otherwise stall) */
   warmTextures(renderer) {
     for (const m of Object.values(this.mats)) if (m.map) renderer.initTexture(m.map);
+    this._loadPhotos(renderer);
+  }
+
+  /** the lawn, the pavers and the bark are cut out of the photos of the courtyard (public/textures/interior); the canvas textures stay if they are missing */
+  _loadPhotos(renderer) {
+    const base = import.meta.env.BASE_URL + 'textures/interior/';
+    const take = (file, mat) => new THREE.TextureLoader().load(base + file, (t) => {
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      mat.map = t;
+      renderer.initTexture(t);
+    }, undefined, () => {});
+    take('lawn.jpg', this.mats.grass);
+    take('paver.jpg', this.mats.paver);
+    take('bark.jpg', this.mats.bark);
   }
 
   // ---------- data ----------
@@ -280,29 +423,111 @@ export class Interiors {
     const g = plan.garden;
     const group = new THREE.Group();
     group.name = 'garden';
-    const r = g.rect;
     const y = -PLINTH;
-    const m = 0.4; // tuck the lawn under the parapet
-    const lawn = flatRect(r.x0 - m, r.z0 - m, r.x1 + m, r.z1 + m, y, 4);
-    group.add(new THREE.Mesh(paint(lawn, 0xffffff), this.mats.grass));
-    const paths = merge(g.paths.map((p) => flatRect(p.x0, p.z0, p.x1, p.z1, y + 0.03, 1.2)));
-    group.add(new THREE.Mesh(paint(paths, 0xffffff), this.mats.paver));
-    // trees: a trunk and two low-poly crowns, merged into one mesh
-    const TONES = [0x4f8f3a, 0x5e9d40, 0x417f34, 0x6aa748];
-    const parts = [];
-    for (const t of g.trees) {
-      const trunkH = t.h * 0.55;
-      const trunk = new THREE.CylinderGeometry(0.18, 0.3, trunkH, 5).toNonIndexed();
-      trunk.translate(t.x, y + trunkH / 2, t.z);
-      parts.push(paint(trunk, 0x6b4f3a));
-      for (const [dx, dz, k, up] of [[0, 0, 1, 0.85], [t.s * 0.35, t.s * 0.2, 0.7, 0.62]]) {
-        const crown = new THREE.IcosahedronGeometry(t.s * k, 0);
-        crown.scale(1, 0.8, 1);
-        crown.translate(t.x + dx, y + trunkH + t.s * 0.5 * up, t.z + dz);
-        parts.push(paint(crown, TONES[(t.tone + (k < 1 ? 1 : 0)) % TONES.length]));
+    const mesh = (geo, mat, name) => {
+      if (!geo) return;
+      const m = new THREE.Mesh(geo, mat);
+      m.name = name;
+      group.add(m);
+    };
+
+    // lawn with baked shade, the hex-paver paths and their stone kerbs
+    mesh(lawnGeo(g, y), this.mats.grass, 'lawn');
+    mesh(merge(g.paths.map((q) => paint(flatRect(q.x0, q.z0, q.x1, q.z1, y + 0.03, 1.3), 0xffffff))), this.mats.paver, 'paths');
+    const solid = new BoxBatch();
+    for (const k of g.kerbs) solid.push({ x0: k.x0, x1: k.x1, z0: k.z0, z1: k.z1, y0: y, y1: y + 0.11, color: 0xb4b2ac });
+
+    // the roofed walkway round the yard: granite floor, curb and posts, steel columns, beams, ribbed roof and fascia, steps
+    const k = g.canopy;
+    if (k) {
+      mesh(merge(k.strips.map((q) => paint(flatRect(q.x0, q.z0, q.x1, q.z1, 0, TILE.granite), 0xffffff))), this.mats.granite, 'walkway-floor');
+      for (const q of [...k.coping, ...k.copingTop, ...k.beams, ...k.steps]) solid.push(q);
+      const cols = [];
+      for (const c of k.columns) {
+        const cyl = new THREE.CylinderGeometry(c.r, c.r, c.y1 - c.y0, 8).toNonIndexed();
+        cyl.translate(c.x, (c.y0 + c.y1) / 2, c.z);
+        cols.push(paint(cyl, 0x4a6468));
+      }
+      mesh(merge(cols), this.mats.detail, 'steel-columns');
+      mesh(new BoxBatch(k.fascia.map((q) => ({ ...q, uvT: [0.64, 0.64], color: 0xffffff }))).build(), this.mats.fascia, 'fascia');
+      const roof = new MeshBuf();
+      for (const q of k.roof) {
+        const pts = q.orient === 'h'
+          ? [[q.x0, q.ya, q.za], [q.x1, q.ya, q.za], [q.x1, q.yb, q.zb], [q.x0, q.yb, q.zb]]
+          : [[q.xa, q.ya, q.z0], [q.xa, q.ya, q.z1], [q.xb, q.yb, q.z1], [q.xb, q.yb, q.z0]];
+        const uvOf = q.orient === 'h' ? (v) => [v[0] / 1.2, v[2] / 1.2] : (v) => [v[2] / 1.2, v[0] / 1.2];
+        slopeQuad(roof, pts, true, uvOf);
+        slopeQuad(roof, pts, false, uvOf);
+      }
+      mesh(roof.build(), this.mats.roofSheet, 'roof');
+    }
+    if (k) {
+      // a strip of red laterite soil between the curb and the lawn, as in the photos
+      for (const sd of g.sides) {
+        const n = sd.orient === 'h' ? sd.nz : sd.nx;
+        const w0 = 0.15, w1 = 1.0;
+        for (const [a0, a1] of [[sd.lo, sd.mid - g.gap / 2], [sd.mid + g.gap / 2, sd.hi]]) {
+          const c0 = sd.coord - n * w0, c1 = sd.coord - n * w1;
+          const lo = Math.min(c0, c1), hi = Math.max(c0, c1);
+          solid.push(sd.orient === 'h' ? { x0: a0, x1: a1, z0: lo, z1: hi, y0: y, y1: y + 0.02, color: 0xa9603f } : { x0: lo, x1: hi, z0: a0, z1: a1, y0: y, y1: y + 0.02, color: 0xa9603f });
+        }
       }
     }
-    group.add(new THREE.Mesh(merge(parts), this.mats.detail));
+    mesh(solid.build(), this.mats.detail, 'curbs-steps');
+
+    // trees: slender leaning trunks with a few branches under layered crowns of leaves
+    const BARK = [[1, 0.96, 0.9], [0.92, 0.88, 0.84], [1.04, 1, 0.94]];
+    const GREENS = [[0.78, 0.92, 0.62], [0.86, 1, 0.68], [0.7, 0.86, 0.58], [0.92, 1, 0.7]];
+    const trunks = new MeshBuf(), crowns = new MeshBuf(), extras = new MeshBuf(), shrubs = new MeshBuf();
+    for (const t of g.trees) {
+      const rnd = (() => { let a = t.seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let x = a; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; })();
+      const ht = t.h * 0.55, shift = t.lean * ht * 0.6;
+      const dx = Math.cos(t.leanDir) * shift, dz = Math.sin(t.leanDir) * shift;
+      const P0 = [t.x, y, t.z], P1 = [t.x + dx * 0.45, y + ht * 0.55, t.z + dz * 0.45], P2 = [t.x + dx, y + ht, t.z + dz];
+      const bark = BARK[t.tone % BARK.length];
+      tube(trunks, P0, 0.21, P1, 0.15, 6, bark);
+      tube(trunks, P1, 0.15, P2, 0.11, 6, bark);
+      const tips = [];
+      for (let b = 0; b < 3; b++) {
+        const ang = rnd() * Math.PI * 2, reach = 0.9 + rnd() * 1.2, rise = 0.9 + rnd() * 1.1;
+        const from = b === 2 ? P1 : P2;
+        const tip = [from[0] + Math.cos(ang) * reach, from[1] + rise, from[2] + Math.sin(ang) * reach];
+        tube(trunks, from, 0.075, tip, 0.03, 4, bark);
+        tips.push(tip);
+      }
+      const green = GREENS[t.tone % GREENS.length];
+      const C = [P2[0], P2[1] + 0.6, P2[2]];
+      for (let d = 0; d < 7; d++) {
+        const f = d / 6;
+        const ctr = [C[0] + (rnd() - 0.5) * t.s * 1.1, C[1] + 0.1 + f * 2.1, C[2] + (rnd() - 0.5) * t.s * 1.1];
+        const rad = t.s * (1.05 - 0.3 * f) * (0.8 + rnd() * 0.35);
+        const lum = 0.66 + 0.4 * f;
+        leafDisc(crowns, ctr, rad, (rnd() - 0.5) * 0.55, (rnd() - 0.5) * 0.55, [green[0] * lum, green[1] * lum, green[2] * lum], rnd() * 5);
+      }
+      // foliage hanging round the rim of the crown
+      for (let d = 0; d < 7; d++) {
+        const ang = (d / 7) * Math.PI * 2 + rnd();
+        const rim = t.s * (0.7 + rnd() * 0.3);
+        const ctr = [C[0] + Math.cos(ang) * rim, C[1] + 0.2 + rnd() * 0.6, C[2] + Math.sin(ang) * rim];
+        const lum = 0.62 + 0.15 * rnd();
+        leafDisc(extras, ctr, t.s * (0.45 + rnd() * 0.25), Math.sin(ang) * 0.95, -Math.cos(ang) * 0.95, [green[0] * lum, green[1] * lum, green[2] * lum], rnd() * 5, 1.6, 9);
+      }
+      for (const tip of tips) leafDisc(extras, [tip[0], tip[1] + 0.1, tip[2]], t.s * 0.55, (rnd() - 0.5) * 0.5, (rnd() - 0.5) * 0.5, [green[0] * 0.85, green[1] * 0.85, green[2] * 0.85], rnd() * 5);
+    }
+    for (const sh of g.shrubs) {
+      const rnd = (() => { let a = sh.seed >>> 0; return () => { a = (a + 0x6d2b79f5) >>> 0; let x = a; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; })();
+      for (let d = 0; d < 4; d++) {
+        const f = d / 3;
+        leafDisc(shrubs, [sh.x + (rnd() - 0.5) * sh.s * 0.8, y + 0.25 + f * 0.75, sh.z + (rnd() - 0.5) * sh.s * 0.8], sh.s * (1 - 0.3 * f), (rnd() - 0.5) * 0.7, (rnd() - 0.5) * 0.7, [0.85, 1, 0.75], rnd() * 5, 1.2, 8);
+      }
+    }
+    mesh(trunks.build(), this.mats.bark, 'trunks');
+    mesh(crowns.build(), this.mats.leaf, 'crowns');
+    mesh(extras.build(), this.mats.leaf, 'crowns-extra'); // hanging foliage: dropped on slow devices
+    group.userData.extra = group.children[group.children.length - 1];
+    group.userData.extra.visible = this.quality.trees >= 0.7;
+    mesh(shrubs.build(), this.mats.shrub, 'shrubs');
+
     group.visible = false;
     this.group.add(group);
     this.gardens.set(buildingId, group);
@@ -348,7 +573,16 @@ export class Interiors {
     add(merge(plan.ceilings.map((c) => paint(flatRect(c.x0, c.z0, c.x1, c.z1, H, 2, true), 0xffffff))), this.mats.ceiling, 'ceiling');
 
     // the open arcade towards the courtyard: parapets with slots, columns and the slab edge
-    add(new BoxBatch(plan.parapets.map((p) => ({ x0: p.x0, x1: p.x1, z0: p.z0, z1: p.z1, y0: 0, y1: p.h, uvT: [2.4, 1.28] }))).build(), this.mats.parapet, 'parapets');
+    // the face towards the courtyard (and the top) is cream with X and slot openings, the face towards the verandah is brown
+    const pOut = new BoxBatch(), pIn = new BoxBatch();
+    for (const q of plan.parapets) {
+      const bit = -q.nx > 0 ? 0 : -q.nx < 0 ? 1 : -q.nz > 0 ? 4 : 5;
+      const d = { x0: q.x0, x1: q.x1, z0: q.z0, z1: q.z1, y0: 0, y1: q.h, uvT: [2.4, 1.28], topUv: [0.5, 0.95] };
+      pOut.push({ ...d, faces: (1 << bit) | (1 << 2) });
+      pIn.push({ ...d, faces: ALL_FACES & ~((1 << bit) | (1 << 2)) });
+    }
+    add(pIn.build(), this.mats.parapet, 'parapets');
+    add(pOut.build(), this.mats.parapetOuter, 'parapets-outside');
 
     const det = new BoxBatch();
     for (const col of plan.columns) det.push(box(col.x, col.z, col.w, col.d, H, 0, 0xf1ede5));
@@ -367,14 +601,15 @@ export class Interiors {
       ];
       const facade = [];
       for (const s of sides) {
-        const len = s.hi - s.lo, bays = Math.max(1, Math.round(len / 3.7));
+        const len = s.hi - s.lo, bays = 2 * Math.max(1, Math.round(len / 7.4)); // two bays per texture tile
         for (const [ya, yb] of [[botY, 0], [H, topY]]) {
+          if (plan.walkway && ya === botY) continue; // hidden under the walkway floor
           if (yb - ya < 0.01) continue;
           const va = ya / H, vb = yb / H;
           // corners left to right as seen from the court
           const [l, r] = (s.orient === 'h') === (s.face > 0) ? [s.lo, s.hi] : [s.hi, s.lo];
           const pt = (a, y) => (s.orient === 'h' ? [a, y, s.coord] : [s.coord, y, a]);
-          const ul = ((l - s.lo) / len) * bays, ur = ((r - s.lo) / len) * bays;
+          const ul = ((l - s.lo) / len) * (bays / 2), ur = ((r - s.lo) / len) * (bays / 2);
           facade.push(paint(quad([pt(l, ya), pt(r, ya), pt(r, yb), pt(l, yb)], [[ul, va], [ur, va], [ur, vb], [ul, vb]]), 0xffffff));
         }
       }
@@ -522,6 +757,7 @@ export class Interiors {
     built.group.visible = true;
     this._showGarden(built);
     walk.collider = built.collider;
+    walk.groundFn = built.plan.walkway ? built.plan.groundAt : null; // the yard is lower than the walkway
     walk.onRawTap = (e) => this._rawTap(e);
     this._place(spawn);
     app.hud.root.dataset.interior = '1';
@@ -565,6 +801,8 @@ export class Interiors {
     this.group.visible = false;
     world.setInterior(false);
     walk.collider = this._saved.collider;
+    walk.groundFn = null;
+    walk.groundY = 0;
     walk.onTap = this._saved.onTap;
     walk.onRawTap = this._saved.onRawTap ?? null;
     const f = world.doorFrames.find((d) => d.id === this.buildingId);
@@ -601,6 +839,7 @@ export class Interiors {
       built.group.visible = true;
       this._showGarden(built);
       app.walk.collider = built.collider;
+      app.walk.groundFn = built.plan.walkway ? built.plan.groundAt : null;
       this._place({ x: spot.landing.x, z: spot.landing.z, yaw: ARRIVE_YAW[spot.arrive] ?? 0 });
       this.prompt = null;
       this.emit('floor');

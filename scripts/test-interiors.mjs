@@ -42,8 +42,13 @@ for (const floor of b.floorPlans) {
     return wallAt(d.x - d.nx * WALL_T / 2 + tx * k, d.z - d.nz * WALL_T / 2 + tz * k) || wallAt(d.x - d.nx * WALL_T / 2 - tx * k, d.z - d.nz * WALL_T / 2 - tz * k);
   }));
   check('wall thickness is the standard 0.2 m', Math.abs(WALL_T - 0.2) < 1e-9);
-  check('the courtyard edge is an open arcade: four parapets and columns, no wall', plan.parapets.length === 4 && plan.columns.length > 20 && !wallAt(plan.court.x0 + 0.5, 0));
-  check('the courtyard has trees and paths, none on a path', plan.garden.trees.length > 30 && plan.garden.paths.length >= 2 && plan.garden.trees.every((t) => !plan.garden.paths.some((p) => t.x > p.x0 && t.x < p.x1 && t.z > p.z0 && t.z < p.z1)));
+  if (floor.level === 0) {
+    check('ground floor: the verandah opens onto a roofed walkway with a granite curb, posts, steel columns and steps (no parapet)', plan.walkway && plan.parapets.length === 0 && plan.garden.canopy.coping.length >= 12 && plan.garden.canopy.columns.length > 40 && plan.garden.canopy.steps.length === 8 && plan.garden.canopy.roof.length === 4);
+  } else {
+    check('the courtyard edge is an open arcade: four parapets and columns, no wall', plan.parapets.length === 4 && plan.columns.length > 20 && !wallAt(plan.court.x0 + 0.5, 0));
+  }
+  check('the courtyard has trees, shrubs and paths, none on a path', plan.garden.trees.length > 30 && plan.garden.shrubs.length > 8 && plan.garden.paths.length >= 2 && [...plan.garden.trees, ...plan.garden.shrubs].every((t) => !plan.garden.paths.some((p) => t.x > p.x0 && t.x < p.x1 && t.z > p.z0 && t.z < p.z1)));
+  check('the ground drops 0.45 m from the walkway down the steps to the lawn (and is level elsewhere)', floor.level === 0 ? Math.abs(plan.groundAt(0, 0) + 0.45) < 1e-6 && plan.groundAt(plan.yard.x1 + 1, 0) === 0 && plan.groundAt(plan.yard.x1 - 0.45, 0) < -0.2 && plan.groundAt(plan.yard.x1 - 0.45, 0) > -0.3 : plan.groundAt(0, 0) === 0);
   check('every room has furniture or is a plain room, furniture stays inside its room', floor.rooms.every((r) => (plan.furniture[r.id]?.boxes ?? []).every((f) => f.x > r.bounds.x0 && f.x < r.bounds.x1 && f.z > r.bounds.z0 && f.z < r.bounds.z1)));
 
   // flood fill on a grid from the spawn point
@@ -72,7 +77,13 @@ for (const floor of b.floorPlans) {
   const bad = plan.doors.filter((d) => d.main && !(reach(d.x - d.nx * 1.2, d.z - d.nz * 1.2) && reach(d.x + d.nx * 1.0, d.z + d.nz * 1.0)));
   check('every room can be reached from the spawn', bad.length === 0, bad.map((d) => d.roomId).join(','));
   check('all four corner stairs and the lift can be reached (the whole ring is connected)', plan.stairs.length === 4 && plan.stairs.every((s) => reach(s.landing.x, s.landing.z)) && plan.lifts.every((l) => reach(l.landing.x, l.landing.z)));
-  check('nobody can step into the courtyard or leave the building', !reach((plan.court.x0 + plan.court.x1) / 2, (plan.court.z0 + plan.court.z1) / 2) && blocked(o.x1 + 1, 0));
+  const yardCentre = reach((plan.court.x0 + plan.court.x1) / 2 + 3.7, (plan.court.z0 + plan.court.z1) / 2 + 3.7); // beside the crossing of the paths
+  if (floor.level === 0) {
+    check('ground floor: the whole yard can be reached down the steps (lawn and paths), and nobody can leave the building', yardCentre && reach(plan.yard.x1 - 3, 0) && reach(0, plan.yard.z0 + 3) && blocked(o.x1 + 1, 0));
+    check('trees and curbs block the way: a trunk and the curb are not walkable', plan.garden.trees.every((t) => blocked(t.x, t.z)) && blocked(plan.yard.x1 + 0.1, plan.yard.z0 + 6));
+  } else {
+    check('upper floors: nobody can step into the courtyard or leave the building', !yardCentre && blocked(o.x1 + 1, 0));
+  }
   if (floor.level === 0) check('the entrance door can be reached', reach(plan.entrance.x - 1.5, plan.entrance.z));
   let free = 0;
   for (let i = 0; i < seen.length; i++) free += seen[i];

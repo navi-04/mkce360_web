@@ -11,6 +11,7 @@ export const WALL_T = 0.2;
 export const DOOR = { w: 1.2, h: 2.1 };
 export const ENTRANCE_W = 2.4;
 export const PARAPET_H = 1.0;
+export const PLINTH = 0.45; // the verandah floor stands this far above the garden
 const TYPE_ROOMS = new Set(['classroom', 'lab', 'office', 'seminar', 'library', 'washroom', 'store', 'lobby', 'other']);
 const FLOOR_KIND = { classroom: 'green', lab: 'green', seminar: 'green', office: 'marble', library: 'marble', lobby: 'marble', washroom: 'marble', store: 'concrete', other: 'granite' };
 
@@ -77,6 +78,9 @@ export function buildPlan(floor) {
   const H = floorHeight(floor);
   const o = floor.outline;
   const c = floor.court ?? null;
+  // the ground floor walkway has a roofed extension (steel columns, ribbed roof) beyond the verandah, `groundCanopy` m wide
+  const gc = c ? Math.max(0, floor.groundCanopy ?? 0) : 0;
+  const walkway = gc > 0 && floor.level === 0; // only the ground floor can step out into the courtyard
   const T = WALL_T;
   const walls = []; // { x0,z0,x1,z1,y0,y1, solid, inner:[nx,nz]|null }  inner = normal of the face that looks into a room
   const colliders = [];
@@ -212,7 +216,7 @@ export function buildPlan(floor) {
     const PT = 0.25, CW = 0.42;
     for (const [side, orient, coord, lo, hi, nx, nz] of sides) {
       const len = hi - lo;
-      const bays = Math.max(1, Math.round(len / 3.7));
+      const bays = 2 * Math.max(1, Math.round(len / 7.4)); // an even number: the facade texture is two bays wide
       const step = len / bays;
       // parapet and columns stand on the verandah side of the court edge
       const band = orient === 'h'
@@ -222,8 +226,16 @@ export function buildPlan(floor) {
         const q = lo + i * step;
         columns.push(orient === 'h' ? { x: r2(q), z: r2(coord + nz * PT / 2), w: CW, d: CW } : { x: r2(coord + nx * PT / 2), z: r2(q), w: CW, d: CW });
       }
-      parapets.push({ ...band, orient, side, nx, nz, h: PARAPET_H });
       fascia.push({ ...band, y0: H - 0.5, y1: H });
+      // a ceiling beam across the verandah at every column (the corridor photos show them)
+      const VER = floor.verandahDepth ?? 3.2;
+      for (let i = 1; i < bays; i++) {
+        const q = lo + i * step;
+        const acr = orient === 'h' ? { x0: q - 0.13, x1: q + 0.13, z0: Math.min(coord, coord + nz * VER), z1: Math.max(coord, coord + nz * VER) } : { x0: Math.min(coord, coord + nx * VER), x1: Math.max(coord, coord + nx * VER), z0: q - 0.13, z1: q + 0.13 };
+        fascia.push({ ...acr, y0: H - 0.3, y1: H });
+      }
+      if (walkway) continue; // the ground floor is open down to the walkway: columns and the slab edge only
+      parapets.push({ ...band, orient, side, nx, nz, h: PARAPET_H });
       // the blocker reaches a little into the court so nobody slips past the parapet
       const reach = 0.3; // metres into the court
       addCollider(
@@ -243,10 +255,12 @@ export function buildPlan(floor) {
     return near(e.coord, o.x0) || near(e.coord, o.x1);
   };
   const oppositeSide = { n: 's', s: 'n', e: 'w', w: 'e' };
+  const ventSpots = []; // lattice ventilators above the doors and the corridor windows
   const addWindow = (b, side, centre, w, both) => {
     const e = edgeOf(b, side);
     const along = e.orient === 'h' ? { x: centre, z: e.coord } : { x: e.coord, z: centre };
     const base = { w, h: 1.5, y: 1.05 };
+    if (both) ventSpots.push({ x: along.x + e.nx * 0.012, z: along.z + e.nz * 0.012, nx: e.nx, nz: e.nz, w: w * 0.8, y: 2.72 });
     // face towards the room (inside), and when asked the face towards the corridor
     windows.push({ ...base, x: along.x - e.nx * (T + 0.012), z: along.z - e.nz * (T + 0.012), nx: -e.nx, nz: -e.nz });
     if (both) windows.push({ ...base, x: along.x + e.nx * 0.012, z: along.z + e.nz * 0.012, nx: e.nx, nz: e.nz });
@@ -289,6 +303,31 @@ export function buildPlan(floor) {
     if (along(nb) > lo && along(nb) < hi) props.decor.push({ cell: 'notice', x: r2(nb.x + e.nx * 0.012), z: r2(nb.z + e.nz * 0.012), y: 1.15, w: 0.8, h: 0.8, nx: e.nx, nz: e.nz });
     if (along(fe) > lo && along(fe) < hi) props.boxes.push({ x: r2(fe.x + e.nx * 0.1), z: r2(fe.z + e.nz * 0.1), w: 0.16, d: 0.16, h: 0.5, y: 0.95, color: 0xb02a22 });
   });
+  // a lattice ventilator above every door and corridor window, white conduit along each corridor wall (both are in the photos)
+  for (const r of floor.rooms) {
+    const main = roomDoors(r)[0];
+    if (!main || r.type === 'lobby') continue;
+    const e = edgeOf(r.bounds, main.side);
+    const at = e.orient === 'h' ? { x: main.at, z: e.coord } : { x: e.coord, z: main.at };
+    ventSpots.push({ x: at.x + e.nx * 0.012, z: at.z + e.nz * 0.012, nx: e.nx, nz: e.nz, w: 1.1, y: 2.78 });
+  }
+  for (const v of ventSpots) props.decor.push({ cell: 'vent', x: r2(v.x), z: r2(v.z), y: v.y, w: r2(v.w), h: 0.42, nx: v.nx, nz: v.nz });
+  const wings = new Map();
+  for (const r of floor.rooms) {
+    const main = roomDoors(r)[0];
+    if (!main || r.type === 'lobby') continue;
+    const e = edgeOf(r.bounds, main.side);
+    const k = `${main.side}:${r2(e.coord)}`;
+    const w = wings.get(k) ?? { e, lo: e.lo, hi: e.hi };
+    w.lo = Math.min(w.lo, e.lo);
+    w.hi = Math.max(w.hi, e.hi);
+    wings.set(k, w);
+  }
+  for (const { e, lo, hi } of wings.values()) {
+    const off = 0.32, y = H - 0.14;
+    const cx = e.orient === 'h' ? (lo + hi) / 2 : e.coord + e.nx * off, cz = e.orient === 'h' ? e.coord + e.nz * off : (lo + hi) / 2;
+    props.boxes.push({ x: r2(cx), z: r2(cz), w: e.orient === 'h' ? r2(hi - lo) : 0.05, d: e.orient === 'h' ? 0.05 : r2(hi - lo), h: 0.05, y: r2(y), color: 0xf4f3ee });
+  }
   for (const s of (floor.stairs ?? []).filter((_, i, a) => i === 0 || i === a.length - 1)) {
     // a steel water cooler beside the foot of the stairs, on the courtyard side
     const toward = Math.sign((c ?? o).x0 + ((c ?? o).x1 - (c ?? o).x0) / 2 - s.landing.x) || 1;
@@ -330,7 +369,15 @@ export function buildPlan(floor) {
   }
 
   // ---------- garden inside the courtyard ----------
-  const garden = c ? gardenOf(c) : null;
+  const garden = c ? gardenOf(c, gc, H) : null;
+  if (walkway && garden) {
+    // the ground floor opens onto the yard: curbs, posts, steel columns, trunks and shrubs block the way
+    for (const b of garden.canopy.coping) addCollider(b.x0, b.z0, b.x1, b.z1, 'curb');
+    for (const col of garden.canopy.columns) addCollider(col.x - 0.1, col.z - 0.1, col.x + 0.1, col.z + 0.1, 'column');
+    for (const t of garden.trees) addCollider(t.x - 0.25, t.z - 0.25, t.x + 0.25, t.z + 0.25, 'tree');
+    for (const sh of garden.shrubs) addCollider(sh.x - 0.45, sh.z - 0.45, sh.x + 0.45, sh.z + 0.45, 'shrub');
+  }
+  const groundAt = (x, z) => (walkway && garden ? yardGround(garden, x, z) : 0);
 
   const spawn = entrance
     ? { x: r2(entrance.x - entrance.nx * 2.6), z: r2(entrance.z - entrance.nz * 2.6), yaw: Math.atan2(entrance.nx, entrance.nz) }
@@ -338,7 +385,7 @@ export function buildPlan(floor) {
 
   return {
     height: H, slabs: walls, walls, floors, ceilings, parapets, columns, fascia, doors, signs, windows, decor, furniture, colliders, stairs, lifts, picks,
-    lights, garden, entrance, ringParts, props,
+    lights, garden, entrance, ringParts, props, walkway, groundAt, yard: garden?.yard ?? null,
     boundary: [{ x: o.x0, z: o.z0 }, { x: o.x1, z: o.z0 }, { x: o.x1, z: o.z1 }, { x: o.x0, z: o.z1 }],
     spawn, outline: o, court: c,
   };
@@ -389,27 +436,144 @@ function mulberry(seed) {
   };
 }
 
-/** trees and hex-paver paths for the courtyard (deterministic; the same on every floor) */
-export function gardenOf(c) {
+/**
+ * The courtyard garden: lawn, hex-paver paths, trees, shrubs, and (when `gc` > 0) the roofed ground-floor walkway round it:
+ * granite floor strip, curb with posts, steel columns, beams, ribbed roof and fascia, and steps down to the lawn where the
+ * paths meet it. Deterministic: the same on every floor. Coordinates are those of the ground floor (y = 0 is its floor).
+ */
+export function gardenOf(c, gc = 0, H = 3.6) {
   const r = mulberry(7001);
-  const cx = (c.x0 + c.x1) / 2, cz = (c.z0 + c.z1) / 2;
-  const pathW = 2.4;
-  const paths = [
-    { x0: c.x0, x1: c.x1, z0: cz - pathW / 2, z1: cz + pathW / 2 },
-    { x0: cx - pathW / 2, x1: cx + pathW / 2, z0: c.z0, z1: c.z1 },
+  const yard = gc > 0 ? { x0: c.x0 + gc, z0: c.z0 + gc, x1: c.x1 - gc, z1: c.z1 - gc } : { ...c };
+  const cx = (yard.x0 + yard.x1) / 2, cz = (yard.z0 + yard.z1) / 2;
+  const pathW = 2.4, GAP = pathW + 0.5, STEP = 0.9, inset = gc > 0 ? STEP : 0;
+  // [side, orientation, line of the yard edge, run from, run to, normal pointing from the yard towards the ring]
+  const edges = [
+    ['n', 'h', yard.z0, yard.x0, yard.x1, 0, -1],
+    ['s', 'h', yard.z1, yard.x0, yard.x1, 0, 1],
+    ['w', 'v', yard.x0, yard.z0, yard.z1, -1, 0],
+    ['e', 'v', yard.x1, yard.z0, yard.z1, 1, 0],
   ];
-  const onPath = (x, z, m) => paths.some((p) => x > p.x0 - m && x < p.x1 + m && z > p.z0 - m && z < p.z1 + m);
-  const trees = [];
-  const area = (c.x1 - c.x0) * (c.z1 - c.z0);
-  const want = Math.round(area / 55);
-  for (let tries = 0; tries < want * 6 && trees.length < want; tries++) {
-    const M = 5; // keep the crowns away from the verandah
-    const x = c.x0 + M + r() * (c.x1 - c.x0 - 2 * M), z = c.z0 + M + r() * (c.z1 - c.z0 - 2 * M);
-    if (onPath(x, z, 2.2)) continue;
-    if (trees.some((t) => Math.hypot(t.x - x, t.z - z) < 4.2)) continue;
-    trees.push({ x: r2(x), z: r2(z), h: r2(5 + r() * 3.5), s: r2(2.6 + r() * 1.6), tone: Math.floor(r() * 4) });
+  const sides = edges.map(([side, orient, coord, lo, hi, nx, nz]) => ({ side, orient, coord, lo, hi, nx, nz, mid: (lo + hi) / 2 }));
+  const paths = [
+    { x0: yard.x0 + inset, x1: yard.x1 - inset, z0: cz - pathW / 2, z1: cz + pathW / 2 },
+    { x0: cx - pathW / 2, x1: cx + pathW / 2, z0: yard.z0 + inset, z1: yard.z1 - inset },
+  ];
+  // stone kerbs along both edges of each path, broken where the paths cross
+  const kerbs = [];
+  const KW = 0.16;
+  for (const sgn of [-1, 1]) {
+    const zz = cz + sgn * (pathW / 2 + KW / 2), xx = cx + sgn * (pathW / 2 + KW / 2);
+    for (const [a0, a1] of [[paths[0].x0, cx - pathW / 2 - KW], [cx + pathW / 2 + KW, paths[0].x1]]) kerbs.push({ x0: a0, x1: a1, z0: zz - KW / 2, z1: zz + KW / 2 });
+    for (const [a0, a1] of [[paths[1].z0, cz - pathW / 2 - KW], [cz + pathW / 2 + KW, paths[1].z1]]) kerbs.push({ x0: xx - KW / 2, x1: xx + KW / 2, z0: a0, z1: a1 });
   }
-  return { rect: c, paths, trees };
+  const onPath = (x, z, m) => paths.some((q) => x > q.x0 - m && x < q.x1 + m && z > q.z0 - m && z < q.z1 + m);
+  const trees = [];
+  const area = (yard.x1 - yard.x0) * (yard.z1 - yard.z0);
+  const want = Math.round(area / 85);
+  const M = 5; // keep the crowns away from the verandah
+  for (let tries = 0; tries < want * 8 && trees.length < want; tries++) {
+    const x = yard.x0 + M + r() * (yard.x1 - yard.x0 - 2 * M), z = yard.z0 + M + r() * (yard.z1 - yard.z0 - 2 * M);
+    if (onPath(x, z, 2.3)) continue;
+    if (trees.some((t) => Math.hypot(t.x - x, t.z - z) < 5.2)) continue;
+    trees.push({ x: r2(x), z: r2(z), h: r2(5.2 + r() * 2.6), s: r2(2.2 + r() * 1.3), tone: Math.floor(r() * 4), seed: Math.floor(r() * 1e6), lean: r2((r() - 0.5) * 0.9), leanDir: r2(r() * Math.PI * 2) });
+  }
+
+  // shrubs (bougainvillea) beside the steps and along the edges
+  const shrubs = [];
+  const tryShrub = (x, z, sc) => {
+    if (onPath(x, z, 0.8) || trees.some((t) => Math.hypot(t.x - x, t.z - z) < 1.5) || shrubs.some((q) => Math.hypot(q.x - x, q.z - z) < 1.6)) return;
+    if (x < yard.x0 + 0.8 || x > yard.x1 - 0.8 || z < yard.z0 + 0.8 || z > yard.z1 - 0.8) return;
+    shrubs.push({ x: r2(x), z: r2(z), s: r2(sc), seed: Math.floor(r() * 1e6) });
+  };
+  for (const sd of sides) {
+    const along = (t, d) => (sd.orient === 'h' ? { x: sd.mid + t, z: sd.coord - sd.nz * d } : { x: sd.coord - sd.nx * d, z: sd.mid + t });
+    for (const t of [-(GAP / 2 + 1.1), GAP / 2 + 1.1]) {
+      const q = along(t, 1.6);
+      tryShrub(q.x, q.z, 0.85 + r() * 0.3);
+    }
+    for (let i = 0; i < 3; i++) {
+      const t = (r() - 0.5) * (sd.hi - sd.lo - 8);
+      if (Math.abs(t) < GAP / 2 + 3) continue;
+      const q = along(t, 1.2 + r() * 0.8);
+      tryShrub(q.x, q.z, 0.8 + r() * 0.35);
+    }
+  }
+
+  const canopy = gc > 0 ? canopyOf(c, yard, sides, GAP, pathW, H) : null;
+  return { rect: c, yard, paths, kerbs, trees, shrubs, sides, canopy, pathW, gap: GAP, stepDepth: STEP };
+}
+
+/** the roofed walkway round the yard (see gardenOf) */
+function canopyOf(c, yard, sides, GAP, pathW, H) {
+  const CURB = 0.28, TOP = 0.3, POST = 0.36;
+  const strips = [
+    { x0: c.x0, z0: c.z0, x1: c.x1, z1: yard.z0 },
+    { x0: c.x0, z0: yard.z1, x1: c.x1, z1: c.z1 },
+    { x0: c.x0, z0: yard.z0, x1: yard.x0, z1: yard.z1 },
+    { x0: yard.x1, z0: yard.z0, x1: c.x1, z1: yard.z1 },
+  ];
+  const coping = [], copingTop = [], columns = [], beams = [], fascia = [], roof = [], steps = [];
+  const BASE = 0x7a463c, TOPC = 0x23383b; // red-brown granite sides, dark green-black polished tops
+  const rect = (orient, coord, n, a0, a1, w) => {
+    // a box of width w on the ring side of the yard edge (n = normal towards the ring), along [a0, a1]
+    const c0 = Math.min(coord, coord + n * w), c1 = Math.max(coord, coord + n * w);
+    return orient === 'h' ? { x0: a0, x1: a1, z0: c0, z1: c1 } : { x0: c0, x1: c1, z0: a0, z1: a1 };
+  };
+  const wallLine = { n: c.z0, s: c.z1, w: c.x0, e: c.x1 };
+  for (const sd of sides) {
+    const { orient, coord, lo, hi, nx, nz, mid, side } = sd;
+    const n = orient === 'h' ? nz : nx;
+    const ext = orient === 'h' ? CURB : 0;
+    const g0 = mid - GAP / 2, g1 = mid + GAP / 2;
+    for (const [a0, a1] of [[lo - ext, g0], [g1, hi + ext]]) {
+      const b = rect(orient, coord, n, a0, a1, CURB);
+      coping.push({ ...b, y0: -PLINTH, y1: TOP - 0.04, color: BASE });
+      copingTop.push({ x0: b.x0 - 0.02, x1: b.x1 + 0.02, z0: b.z0 - 0.02, z1: b.z1 + 0.02, y0: TOP - 0.04, y1: TOP, color: TOPC });
+    }
+    // granite posts at both ends of the opening
+    for (const e of [g0 - POST / 2, g1 + POST / 2]) {
+      const b = rect(orient, coord, n, e - POST / 2, e + POST / 2, POST);
+      coping.push({ ...b, y0: -PLINTH, y1: 0.58, color: BASE });
+      copingTop.push({ x0: b.x0 - 0.02, x1: b.x1 + 0.02, z0: b.z0 - 0.02, z1: b.z1 + 0.02, y0: 0.58, y1: 0.62, color: TOPC });
+    }
+    // steel columns along the curb, none in the opening
+    const nb = Math.max(2, Math.round((hi - lo) / 3.7));
+    for (let i = 0; i <= nb; i++) {
+      if (orient === 'v' && (i === 0 || i === nb)) continue; // the corner columns belong to the horizontal sides
+      const t = lo + (i * (hi - lo)) / nb;
+      if (Math.abs(t - mid) < GAP / 2 + 0.5) continue;
+      columns.push(orient === 'h' ? { x: r2(t), z: r2(coord + nz * CURB / 2), y0: TOP, y1: 2.95, r: 0.075 } : { x: r2(coord + nx * CURB / 2), z: r2(t), y0: TOP, y1: 2.95, r: 0.075 });
+    }
+    beams.push({ ...rect(orient, coord, n, lo - ext, hi + ext, CURB), y0: 2.9, y1: 3.02, color: 0x3d5558 });
+    // the curved, ribbed fascia hangs from the roof edge, on the yard side of the columns
+    const fext = orient === 'h' ? CURB + 0.3 : 0;
+    fascia.push({ ...rect(orient, coord - n * 0.2, -n, lo - fext, hi + fext, 0.05), y0: 2.42, y1: 3.0 });
+    // roof sheet from the wall of the wing (3.15 m) to the eave (3.0 m), reaching 0.35 m beyond the curb
+    const eave = coord - n * 0.35, wall = wallLine[side];
+    if (orient === 'h') roof.push({ x0: c.x0, x1: c.x1, za: wall, zb: eave, ya: 3.15, yb: 3.0, orient });
+    else roof.push({ z0: yard.z0 + 0.35, z1: yard.z1 - 0.35, xa: wall, xb: eave, ya: 3.15, yb: 3.0, orient });
+    // two steps down to the lawn where the path meets the walkway
+    for (let i = 0; i < 2; i++) {
+      const a = coord - n * (i * 0.3), b2 = coord - n * ((i + 1) * 0.3);
+      const bx = orient === 'h'
+        ? { x0: mid - pathW / 2, x1: mid + pathW / 2, z0: Math.min(a, b2), z1: Math.max(a, b2) }
+        : { x0: Math.min(a, b2), x1: Math.max(a, b2), z0: mid - pathW / 2, z1: mid + pathW / 2 };
+      steps.push({ ...bx, y0: -PLINTH, y1: -0.15 * (i + 1), color: 0xa3a09a });
+    }
+  }
+  return { strips, coping, copingTop, columns, beams, fascia, roof, steps, roofHeights: { wall: 3.15, eave: 3.0 } };
+}
+
+/** height of the ground under (x, z) on the ground floor: 0 on the walkway, -PLINTH on the lawn, a slope over the steps */
+export function yardGround(garden, x, z) {
+  const y = garden.yard;
+  if (!(x > y.x0 && x < y.x1 && z > y.z0 && z < y.z1)) return 0;
+  for (const sd of garden.sides) {
+    const d = sd.orient === 'h' ? -sd.nz * (z - sd.coord) : -sd.nx * (x - sd.coord); // distance in from this edge
+    const lateral = Math.abs((sd.orient === 'h' ? x : z) - sd.mid);
+    if (d < garden.stepDepth && lateral < garden.pathW / 2 + 0.3) return (-PLINTH * Math.max(0, d)) / garden.stepDepth;
+  }
+  return -PLINTH;
 }
 
 // ---------- furniture ----------

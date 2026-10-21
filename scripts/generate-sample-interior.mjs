@@ -120,6 +120,8 @@ function buildFloor(level) {
     sample: true,
     height: 3.6,
     corridorFloor: level === 3 ? 'concrete' : 'granite',
+    verandahDepth: VD,
+    groundCanopy: 3, // the ground floor walkway has a roofed extension (steel columns, ribbed roof) towards the courtyard
     outline: { ...O },
     court: { ...C },
     rooms,

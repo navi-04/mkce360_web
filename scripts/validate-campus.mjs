@@ -182,6 +182,7 @@ function validateFloor(f, where) {
     if (!rectOk(court)) err(`${where} floor ${f.level}: court needs {x0,z0,x1,z1}`);
     else if (outlineOk && !(inRect({ x: court.x0, z: court.z0 }, f.outline) && inRect({ x: court.x1, z: court.z1 }, f.outline))) err(`${where} floor ${f.level}: court leaves the outline`);
   }
+  if (f.groundCanopy != null && !(isNum(f.groundCanopy) && f.groundCanopy >= 0 && f.groundCanopy < 6)) err(`${where} floor ${f.level}: groundCanopy must be 0 to 6 metres`);
   if (f.corridorFloor != null && !FLOOR_KINDS.includes(f.corridorFloor)) err(`${where} floor ${f.level}: corridorFloor must be one of ${FLOOR_KINDS.join('|')}`);
   const parts = [];
   const roomIds = new Set();

@@ -29,6 +29,8 @@ export class WalkMode {
     this.yaw = 0;
     this.pitch = 0;
     this.speed = 0; // actual speed this frame (m/s)
+    this.groundY = 0; // height of the ground under the viewer (the courtyard lawn is lower than the walkway)
+    this.groundFn = null; // (x, z) => ground height; set by the interiors
 
     this.run = false;
     this.headBob = !reducedMotion;
@@ -142,7 +144,7 @@ export class WalkMode {
     this.collider.resolve(p, PLAYER.radius + 0.1);
     this.target = p;
     this.turnAssist = !this.gyroOn;
-    this.marker.position.set(p.x, 0.08, p.z);
+    this.marker.position.set(p.x, this.groundY + 0.08, p.z);
     this.marker.visible = true;
   }
 
@@ -158,7 +160,7 @@ export class WalkMode {
     this._ray.setFromCamera(this._ndc, this.camera);
     const { origin, direction } = this._ray.ray;
     if (direction.y > -0.005) return null;
-    const t = -origin.y / direction.y;
+    const t = (this.groundY - origin.y) / direction.y;
     if (t > maxDist) return null;
     return { x: origin.x + direction.x * t, z: origin.z + direction.z * t };
   }
@@ -249,7 +251,9 @@ export class WalkMode {
       bob = Math.sin(this.bobPhase) * PLAYER.bobAmplitude * f;
       sway = Math.cos(this.bobPhase * 0.5) * 0.012 * f;
     }
-    this.camera.position.set(this.pos.x, PLAYER.eyeHeight + bob, this.pos.z);
+    const gy = this.groundFn ? this.groundFn(this.pos.x, this.pos.z) : 0;
+    this.groundY = dt > 0 ? this.groundY + (gy - this.groundY) * Math.min(1, 12 * dt) : gy; // eased, so steps are not jolts
+    this.camera.position.set(this.pos.x, this.groundY + PLAYER.eyeHeight + bob, this.pos.z);
     this.camera.rotation.set(this.pitch, this.yaw, sway, 'YXZ');
   }
 

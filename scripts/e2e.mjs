@@ -429,8 +429,19 @@ async function main() {
     await sleep(2000);
     s = await st();
     check('tapping the prompt goes inside, at the entrance hall', s.active && s.level === 0 && s.x > 42, `${s.x.toFixed(1)}, ${s.z.toFixed(1)}`);
+    // the ground floor opens onto the courtyard: down the steps and along the paver path
+    await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = 33; w.pos.z = 0; w.yaw = Math.PI / 2; w.pitch = 0; w.vel.x = w.vel.z = 0; w.cancelTarget(); });
+    await sleep(500);
+    const eye0 = await page.evaluate(() => window.__mkce.app.camera.position.y);
+    await page.evaluate(() => window.__mkce.input({ forward: 1 }));
+    await sleep(4000);
+    await page.evaluate(() => window.__mkce.input(null));
+    await sleep(400);
+    const yard = await page.evaluate(() => ({ x: window.__mkce.app.walk.pos.x, y: window.__mkce.app.camera.position.y }));
+    check('the ground floor opens onto the courtyard: down the steps onto the lawn path, the eye drops 0.45 m', yard.x < 29.5 && Math.abs(eye0 - yard.y - 0.45) < 0.08, `x ${yard.x.toFixed(1)}, eye ${eye0.toFixed(2)} -> ${yard.y.toFixed(2)}`);
     await page.tap('.iexit');
     await sleep(1500);
+    check('leaving from the courtyard puts the eye back at 1.6 m', Math.abs((await page.evaluate(() => window.__mkce.app.camera.position.y)) - 1.6) < 0.06);
     await page.evaluate(() => { const w = window.__mkce.app.walk; w.pos.x = -20; w.pos.z = 150; w.cancelTarget(); });
     await sleep(400);
     check('away from every door the Enter prompt is gone', await page.evaluate(() => !document.querySelector('.iprompt.on')));

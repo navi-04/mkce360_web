@@ -985,6 +985,8 @@
           "sample": true,
           "height": 3.6,
           "corridorFloor": "granite",
+          "verandahDepth": 3.2,
+          "groundCanopy": 3,
           "outline": {
             "x0": -46,
             "z0": -56.5,
@@ -2198,6 +2200,8 @@
           "sample": true,
           "height": 3.6,
           "corridorFloor": "granite",
+          "verandahDepth": 3.2,
+          "groundCanopy": 3,
           "outline": {
             "x0": -46,
             "z0": -56.5,
@@ -3327,6 +3331,8 @@
           "sample": true,
           "height": 3.6,
           "corridorFloor": "granite",
+          "verandahDepth": 3.2,
+          "groundCanopy": 3,
           "outline": {
             "x0": -46,
             "z0": -56.5,
@@ -4456,6 +4462,8 @@
           "sample": true,
           "height": 3.6,
           "corridorFloor": "concrete",
+          "verandahDepth": 3.2,
+          "groundCanopy": 3,
           "outline": {
             "x0": -46,
             "z0": -56.5,

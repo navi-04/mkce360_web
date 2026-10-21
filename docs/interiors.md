@@ -20,8 +20,11 @@ is not empty. Nothing else is needed.
 
 | Seen in the photos | In the model |
 | --- | --- |
-| A ring of wings round a courtyard full of trees; hexagonal grey pavers on the paths; lawn | `court` rectangle with a lawn, two crossing paver paths and about 100 low-poly trees; sky overhead; the other wings are drawn across the courtyard, storey by storey |
-| Open verandah on the courtyard side of every wing: white columns, brown parapet 1 m high with square and slot openings, slab edge above | parapet and columns along the `court` edge, no wall; the viewer cannot step into the courtyard |
+| A ring of wings round a courtyard full of trees; grey hexagonal pavers with stone kerbs on the paths; lawn with fallen leaves and bare soil under the trees; bougainvillea shrubs; red soil beside the curb | `court` rectangle: a lawn cut from photo 2.34.15 PM (with baked tree shade and soil patches), two crossing paver paths cut from photo 2.34.13 PM (1) and straightened, kerbs, about 60 trees (slender leaning trunks with bark from photo 2.34.14 PM (1) under layered crowns of leaf cards), shrubs; sky overhead |
+| The wings seen across the courtyard: cream parapets with X-shaped and slot openings, thick white slab edges, white columns, shaded verandahs with doors and windows | the facade texture on the far wings, storey by storey; the parapet is cream with X and slots on the courtyard side and brown on the verandah side |
+| Ground floor, courtyard side (photos 2.34.12 PM, 2.34.13 PM, 2.34.14 PM): polished granite floor, a dark green granite curb with red-brown sides, round steel-pipe columns, a dark steel beam and a white ribbed roof sheet with a curved, finely ribbed fascia | `groundCanopy` (3 m): a roofed walkway beyond the verandah, curb with granite posts, steel columns, beam, sloped roof (also seen from the upper floors) and fascia; two steps down to the lawn where each path meets it; **the viewer can walk out onto the lawn** |
+| Open verandah on the courtyard side of every upper wing: white columns, brown parapet 1 m high with square and slot openings, slab edge above | parapet and columns along the `court` edge, no wall; the viewer cannot step into the courtyard from the upper floors |
+| Lattice ventilators above the doors and windows, white conduit along the corridor walls, cross beams at every column | ventilator pictures, conduit boxes and ceiling beams |
 | Polished red granite in the corridors (concrete grey on one upper corridor) | `corridorFloor`: `granite` (default) or `concrete` |
 | White corridor walls with a tan dado, steel-blue doors, steel windows with grilles, notice boards, fire extinguisher, water coolers | corridor wall texture, door leaf and jambs, window pictures, notice boards, extinguishers, coolers |
 | Entrance hall: pale marble, brown honour boards, rows of steel seats, wall display, black directory board, ceiling fans | the `lobby` room type |
@@ -29,7 +32,15 @@ is not empty. Nothing else is needed.
 | Wood-panelled lift with a steel door, wide straight stair flights with brown parapets and blue nosings | `lifts` and `stairs` blocks (a flight rises into a wall; the stairs prompt moves one floor) |
 
 Shapes follow the satellite footprint of block 1 (92 x 113 m ring). Dimensions inside (room depth 9 m, verandah 3.2 m, storey
-3.6 m) are estimates from the photos.
+3.6 m, canopy 3 m) are estimates from the photos.
+
+**Assumption to confirm:** the photos show the steel-column walkway on at least one wing, but not which. The sample puts it on all
+four wings of the ground floor (`groundCanopy`), in front of the ground verandah. Likewise the wings are all four storeys high, while
+one photo shows a three-storey wing next to a two-storey one. Tell me which wings differ and the model changes with it.
+
+**Photo textures.** `scripts/make-interior-photo-textures.py` cuts the lawn, the pavers and the bark out of the (git-ignored) photos
+and writes three small JPEGs to `public/textures/interior/` (about 50 KB in all; no people, no text). The app loads them at
+start-up and keeps its canvas textures if they are missing.
 
 ## Where things are
 
@@ -39,7 +50,8 @@ Shapes follow the satellite footprint of block 1 (92 x 113 m ring). Dimensions i
 | `scripts/generate-sample-interior.mjs` | writes the SAMPLE floors of block 1 into campus.json (delete it when real plans exist) |
 | `src/interiors/plan.js` | floor plan to walls, doors, windows, furniture, stairs and garden (pure functions, no three.js) |
 | `src/interiors/interiors.js` | builds the meshes, enter/exit, floors, stairs and lift, taps, prompts |
-| `src/world/interior-textures.js` | canvas textures: granite, marble, green floor, walls, parapet, arcade, pavers, decor atlas |
+| `src/world/interior-textures.js` | canvas textures: granite, marble, green floor, walls, parapets, facade, roof sheet, leaves, pavers, decor atlas |
+| `scripts/make-interior-photo-textures.py` | cuts lawn, pavers and bark out of the courtyard photos (needs Python + OpenCV) |
 | `src/ui/interior-ui.js` | floor selector, exit button, prompts (enter, exit, stairs, lift), room card |
 | `scripts/test-interiors.mjs` | `npm run test:interiors`: walls, doors, walkability of the whole ring, courtyard, timetable |
 
@@ -56,6 +68,8 @@ the outdoor scene is hidden, so the two never meet.
     "sample": true,                   // true while the content is placeholder data
     "height": 3.6,                    // storey height in metres (default 3.6)
     "corridorFloor": "granite",       // granite | marble | green | concrete (default granite)
+    "verandahDepth": 3.2,             // width of the verandah between the courtyard edge and the rooms (default 3.2)
+    "groundCanopy": 3,                // metres of roofed walkway beyond the verandah on the ground floor (0 = none); put it on every floor
     "outline": { "x0": -46, "z0": -56.5, "x1": 46, "z1": 56.5 },   // outer rectangle
     "court":   { "x0": -33.8, "z0": -44.3, "x1": 33.8, "z1": 44.3 },// optional open courtyard (a hole in the ring)
     "entrance": { "x": 46, "z": -37.15, "facing": "east" },        // the exit door; ground floor only
@@ -84,8 +98,9 @@ How the rectangles become a building:
   is cream, the face towards the corridor carries the white wall with the tan dado. Door openings are 1.2 m wide and 2.1 m high.
 - What is inside `outline`, outside `court` and outside every room is **verandah, corridor or lobby**: granite floor, ceiling,
   and an outer wall wherever no room stands on the outline.
-- The edge of `court` is an **open arcade** (parapet, columns, slab edge). Nothing blocks the view of the garden, but the
-  viewer cannot walk into it.
+- The edge of `court` is an **open arcade** (parapet, columns, slab edge). Nothing blocks the view of the garden, but on the
+  upper floors the viewer cannot walk into it. With `groundCanopy` the ground floor has no parapet: the walkway reaches out
+  `groundCanopy` metres to a curb, and the yard inside it is walkable. The ground under the viewer follows the steps (0.45 m down).
 - Furniture follows the room type and the door: for a classroom the front wall is the end wall nearer the door, with a dais,
   two boards and a panel; benches are in rows facing it with an aisle between the two groups. A clear path stays in front of the door.
 - Stairs: `rise` is the direction the flight climbs (`n s e w`), `landing` is the spot where the prompt appears and where
