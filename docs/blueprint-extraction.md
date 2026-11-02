@@ -419,4 +419,23 @@ The user supplied Google Maps satellite imagery with live POI pins and road netw
 - **Dr. Muthulakshmi Reddy Hostel (Block 7) Courtyard Centering:**
   - Balanced the 4 perimeter wings (North: 12 m, South: 13 m, West: 13 m, East: 18 m with solar roof) to center the central square courtyard matching satellite roofs.
 
+## 17. Revision 10: Mechanical & Electrical Lab Workshops and Road Extension to Block 2
+
+The user confirmed the exact location of the Mechanical Lab Workshop and Electrical Lab Workshop from high-resolution satellite imagery (`media_1793599851771.png`) and instructed to extend the road past the Cafe Shop along the workshops down to Dr. S. Radhakrishnan Block (Block 2).
+
+- **Mechanical Lab Workshop (Laboratories Shed I, item 3):**
+  - Outer/west workshop shed facing the extended road.
+  - Placed at `position: { x: -222.0, z: 66.0 }`, `size: { w: 14.0, d: 88.0 }`, `rotationDeg: 8.5`, `form: "shed"`, `heightM: 6.5`.
+  - Door at north gable end `doorPosition: { x: -215.5, z: 22.5 }`, `doorFacing: "north"`.
+- **Electrical Lab Workshop (Laboratories Shed II, item 4):**
+  - Inner/east workshop shed running parallel to Mechanical Lab, between Mechanical Lab and Block 1.
+  - Placed at `position: { x: -204.0, z: 68.0 }`, `size: { w: 14.0, d: 88.0 }`, `rotationDeg: 8.5`, `form: "shed"`, `heightM: 6.5`.
+  - Door at north gable end `doorPosition: { x: -197.5, z: 24.5 }`, `doorFacing: "north"`.
+- **Road Network Extension:**
+  - Extended road from `p64 (-215.2, -9.2)` past the Cafe Shop plaza down to `p78 / wd (-240, 122)` at Block 2 via new nodes `p-ws-n (-215, 14)`, `p-ws-nw (-232, 14)`, `p-ws-mid (-242, 66)`, and `p-ws-sw (-242, 114)`.
+  - Width: 6 m asphalt road with pedestrian walkways connecting to the north workshop entrances.
+- **Scenery Clearance:**
+  - Added `workshop-corridor` to `openAreas` (`position: { x: -216, z: 67 }, size: { w: 46, d: 110 }`) to keep the workshop buildings and road corridor clear of auto-spawned palms.
+
+
 
