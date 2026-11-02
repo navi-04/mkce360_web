@@ -379,3 +379,25 @@ had wings 20 m thick (an early estimate); the interior, built from the photos, h
 rectified satellite crop (`assets/satellite/apj block.png` in the block's own frame) shows a courtyard of about 66 x 85 m, which is the
 interior's 67.6 x 88.6 m, so `ring.thickness` is now 12.2 and `heightM` 14.4 (four storeys of 3.6 m). The courtyard seen from Overview is
 larger and matches the satellite photo better.
+
+## 15. Revision 8: Cafe Shop (Snack Corner, item 27) placed at NW junction plaza
+
+The user identified a small cafe shop in satellite imagery and overview 3D views located in the paved junction plaza northwest of Dr. A.P.J. Abdul Kalam Block (Block 1), near the southwest corner of the sports field / running track.
+
+- **Identity & Blueprint Legend:** Board item 27 (`SNACK CORNER`, shortName "Cafe Shop"). Moved from `unplaced` back into active `buildings`.
+- **Location:** `position: { x: -194, z: -8 }`, `size: { w: 8, d: 6 }`, `heightM: 3.5`, `doorPosition: { x: -194, z: -5 }`, `doorFacing: "south"`.
+- **Plaza & Scenery Clearance:** Added `cafe-plaza` to `openAreas` (`position: { x: -194, z: -1.25 }, size: { w: 20, d: 24 }`) to clear auto-generated trees and palms from the paved terrace.
+- **Road Network Adjustments:**
+  - Node `r3` moved slightly north to `(-182, -16)` to skirt the north edge of the plaza.
+  - Added bypass node `p-cafe-nw (-204, -16)` and plaza east entrance node `p-plaza-east (-182, -5)`.
+  - Added door connection node `door-snack-corner (-194, -5)` linked by walkway from the east entrance.
+  - Re-routed edges `e4`, `e-cafe-north`, `e5`, `e-cafe-east`, and `e-cafe-door` to prevent any collisions with building colliders.
+- **World Model Details (`src/world/buildings.js`):**
+  - Rendered as an outdoor cafe kiosk (`cafeKiosk`): stucco kiosk building with espresso fascia and elevated rooftop signboard.
+  - Front service counter with teak wood counter top, chalkboard menu board, espresso coffee machine, and glass pastry case.
+  - Terracotta and ivory striped weather awning on steel support struts.
+  - Raised paved patio slab (`16 x 16 m`) with alternating black/yellow kerbstones along the perimeter.
+  - 4 round cafe tables with umbrellas (forest green, terracotta, navy, golden amber) and 16 cafe stools.
+  - Perimeter shrub planters, sidewalk A-frame menu easel board, and entrance lanterns.
+  - Solid collider on kiosk body with open walkable patio.
+

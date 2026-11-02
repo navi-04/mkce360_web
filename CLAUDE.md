@@ -4,7 +4,7 @@ Frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering (
 Core experience: a mobile-first, first-person walkthrough of the campus. It must run well in a mobile browser and inside an Android WebView. Desktop must also work.
 
 App name shown everywhere in the UI: **MKCE 360**.
-
+  
 ## Hard constraints
 
 - Static frontend only: no backend, no database, no login, no API calls.

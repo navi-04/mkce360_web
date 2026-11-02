@@ -91,6 +91,19 @@
         "d": 99
       },
       "source": "satellite: bare brown field, south-west of the crop"
+    },
+    {
+      "id": "cafe-plaza",
+      "name": "Cafe Forecourt and Patio",
+      "position": {
+        "x": -194,
+        "z": -1.25
+      },
+      "size": {
+        "w": 20,
+        "d": 24
+      },
+      "source": "satellite candidate (paved plaza north-west of block 1)"
     }
   ],
   "gates": [
@@ -156,8 +169,8 @@
       },
       {
         "id": "r3",
-        "x": -200,
-        "z": -10,
+        "x": -182,
+        "z": -16,
         "kind": "path"
       },
       {
@@ -501,6 +514,24 @@
         "x": -114.5,
         "z": -7.4,
         "kind": "path"
+      },
+      {
+        "id": "p-cafe-nw",
+        "x": -204,
+        "z": -16,
+        "kind": "path"
+      },
+      {
+        "id": "p-plaza-east",
+        "x": -182,
+        "z": -5,
+        "kind": "path"
+      },
+      {
+        "id": "door-snack-corner",
+        "x": -194,
+        "z": -5,
+        "kind": "door"
       }
     ],
     "edges": [
@@ -534,7 +565,7 @@
       },
       {
         "id": "e5",
-        "from": "r3",
+        "from": "p-cafe-nw",
         "to": "p64",
         "type": "road",
         "width": 7
@@ -930,6 +961,27 @@
         "to": "door-apj-block",
         "type": "walkway",
         "width": 2.5
+      },
+      {
+        "id": "e-cafe-north",
+        "from": "r3",
+        "to": "p-cafe-nw",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e-cafe-east",
+        "from": "r3",
+        "to": "p-plaza-east",
+        "type": "road",
+        "width": 6
+      },
+      {
+        "id": "e-cafe-door",
+        "from": "p-plaza-east",
+        "to": "door-snack-corner",
+        "type": "walkway",
+        "width": 3
       }
     ]
   },
@@ -6147,6 +6199,42 @@
       "source": "board + satellite (paved apron with two pump islands)",
       "doorFacing": "north",
       "doorNode": "door-fuel-station"
+    },
+    {
+      "id": "snack-corner",
+      "number": 27,
+      "name": "CAFE SHOP",
+      "shortName": "Cafe Shop",
+      "type": "canteen",
+      "form": "kiosk",
+      "position": {
+        "x": -194,
+        "z": -8
+      },
+      "size": {
+        "w": 8,
+        "d": 6
+      },
+      "rotationDeg": 0,
+      "heightM": 3.5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -194,
+        "z": -5
+      },
+      "description": "Campus cafe and snack corner with outdoor patio seating, located at the junction north-west of Dr. A.P.J. Abdul Kalam Block.",
+      "floorPlans": [],
+      "verified": {
+        "position": true,
+        "size": true,
+        "door": true,
+        "floors": true,
+        "height": false
+      },
+      "confidence": "high",
+      "source": "user confirmed via satellite photos (north-west junction plaza)",
+      "doorFacing": "south",
+      "doorNode": "door-snack-corner"
     }
   ],
   "points": [
@@ -6507,29 +6595,6 @@
         "rotationDeg": 0,
         "heightM": 6,
         "source": "board + satellite candidate (small compound)"
-      }
-    },
-    {
-      "id": "snack-corner",
-      "number": 27,
-      "name": "SNACK CORNER",
-      "shortName": "Snack Corner",
-      "kind": "building",
-      "type": "canteen",
-      "form": "kiosk",
-      "reason": "Listed on the college layout board, but no structure for it is marked in docs/satellite-candidates.png. Location to be confirmed.",
-      "lastEstimate": {
-        "position": {
-          "x": -214,
-          "z": 4
-        },
-        "size": {
-          "w": 8,
-          "d": 6
-        },
-        "rotationDeg": 0,
-        "heightM": 3.5,
-        "source": "board only"
       }
     },
     {

@@ -17,7 +17,7 @@ const check = (name, ok, detail = '') => {
 };
 
 console.log('Map content (docs/satellite-candidates.png is the reference)');
-const IMAGE_SET = ['apj-block', 'radhakrishnan-block', 'laboratories-shed-1', 'laboratories-shed-2', 'veda-hostel', 'muthulakshmi-reddy-hostel', 'play-ground', 'basket-ball-court', 'volley-ball-court', 'tennis-court', 'olympia-block', 'unlabelled-6', 'four-wheeler-parking', 'two-wheeler-parking', 'fuel-station'].sort();
+const IMAGE_SET = ['apj-block', 'radhakrishnan-block', 'laboratories-shed-1', 'laboratories-shed-2', 'veda-hostel', 'muthulakshmi-reddy-hostel', 'play-ground', 'basket-ball-court', 'volley-ball-court', 'tennis-court', 'olympia-block', 'unlabelled-6', 'four-wheeler-parking', 'two-wheeler-parking', 'fuel-station', 'snack-corner'].sort();
 check('only structures marked in the satellite candidate image are on the map', JSON.stringify(data.buildings.map((b) => b.id).sort()) === JSON.stringify(IMAGE_SET), data.buildings.map((b) => b.id).filter((i) => !IMAGE_SET.includes(i)).join(','));
 check('image labels: 5 = west C-shaped block, 3 and 4 = the twin wings, Unlabelled-6 has no legend number', (() => {
   const g = (id) => data.buildings.find((b) => b.id === id);
