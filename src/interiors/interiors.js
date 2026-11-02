@@ -300,7 +300,6 @@ export class Interiors {
     this.active = false; // the viewer is inside a building that has floor plans
     this.buildingId = null;
     this.level = 0; // the floor they are on
-    this.clock = () => new Date(); // overridable in tests
     this.quality = { trees: 1 };
     this._listeners = new Set();
     this.units = new Map(); // building id -> { id, phys, group, floors: Map(level -> built), garden, queue, ready }
@@ -424,7 +423,7 @@ export class Interiors {
     }
   }
 
-  /** build everything of a building now (tests, or a viewer who got there before the idle frames did) */
+  /** build everything of a building now if a viewer reaches it before the idle frames do */
   ensureBuilt(id) {
     const u = this.units.get(id);
     while (u && !u.ready) this._buildNext(u);

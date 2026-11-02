@@ -68,24 +68,9 @@ async function boot() {
   if (debug) (await import('./tools/debug.js')).initDebug(app);
   if (calibrate) (await import('./tools/calibrate.js')).initCalibrate(app, rawData);
 
-  // test / automation hook (see scripts/perf-test.mjs)
-  window.__mkce = {
-    app,
-    nav: app.nav,
-    interiors: app.interiors,
-    ready: Promise.resolve(true),
-    setMode: (m) => app.setMode(m, { instant: true }),
-    stats: () => app.stats(),
-    drive: app.drive,
-    input: (v) => {
-      if (app.mode === 'drive') app.drive.sim = v; // { throttle, brake, steer, handbrake }
-      else app.walk.sim = v; // { forward, strafe, turn }
-    },
-  };
-
   loader.classList.add('done');
   setTimeout(() => loader.remove(), 500);
-  // first visit: the welcome screen (skipped for tests and tools with ?welcome=0)
+  // first visit: the welcome screen (?welcome=0 is useful for direct feature checks)
   if (params.get('welcome') !== '0') showWelcome(app);
 }
 

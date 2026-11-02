@@ -42,7 +42,6 @@ export class WalkMode {
     this.keys = new Set();
     this.joy = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
     this.look = { id: null, lx: 0, ly: 0, sx: 0, sy: 0, t: 0, moved: 0, mouse: false };
-    this.sim = null; // test/automation input {forward, strafe, turn}
     this.target = null;
     this.turnAssist = false;
     this.driver = null; // guided walk (src/nav/navigator.js): { step(dt), interrupt(reason) } moves the player along a route
@@ -187,7 +186,7 @@ export class WalkMode {
 
     // keyboard turning
     const turnKey = (this.keys.has('ArrowLeft') ? 1 : 0) - (this.keys.has('ArrowRight') ? 1 : 0);
-    const turn = turnKey + (this.sim?.turn ?? 0);
+    const turn = turnKey;
     if (turn) this._addLook(turn * 1.7 * dt, 0);
 
     // gyro drives yaw/pitch
@@ -200,8 +199,8 @@ export class WalkMode {
     // movement intent
     const kf = (this.keys.has('KeyW') || this.keys.has('ArrowUp') ? 1 : 0) - (this.keys.has('KeyS') || this.keys.has('ArrowDown') ? 1 : 0);
     const ks = (this.keys.has('KeyD') ? 1 : 0) - (this.keys.has('KeyA') ? 1 : 0);
-    let fwd = this.joy.y + kf + (this.sim?.forward ?? 0);
-    let str = this.joy.x + ks + (this.sim?.strafe ?? 0);
+    let fwd = this.joy.y + kf;
+    let str = this.joy.x + ks;
     let mag = Math.hypot(fwd, str);
     const manual = mag > 0.06;
     if (this.driver) {

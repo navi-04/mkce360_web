@@ -1,6 +1,6 @@
 // Where a viewer (walking or driving) stands in the world: the height of the ground under them, which floor of a building they
 // are on, and the walls that stop them. A building is part of the world; there is no entering or leaving, only a floor under
-// your feet. Pure code (no three.js), so it runs in the Node tests and in the browser.
+// your feet. Pure code (no three.js), shared by walking, driving and the scene.
 import { buildPlan, PLINTH } from './plan.js';
 import { Collider } from '../modes/collision.js';
 

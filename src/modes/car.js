@@ -1,5 +1,5 @@
 // Arcade car physics: a bicycle model for the steering and three circles for the collisions. Pure code (no three.js, no DOM),
-// so it runs in the Node tests as well as in the browser. Units are metres and seconds. `yaw` is the one of the walking viewer:
+// Units are metres and seconds. `yaw` is the one of the walking viewer:
 // the car moves along (-sin yaw, -cos yaw), so yaw 0 faces north and a positive yaw turns to the left (x east, z south).
 
 export const CAR = {

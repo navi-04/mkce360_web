@@ -379,3 +379,63 @@ had wings 20 m thick (an early estimate); the interior, built from the photos, h
 rectified satellite crop (`assets/satellite/apj block.png` in the block's own frame) shows a courtyard of about 66 x 85 m, which is the
 interior's 67.6 x 88.6 m, so `ring.thickness` is now 12.2 and `heightM` 14.4 (four storeys of 3.6 m). The courtyard seen from Overview is
 larger and matches the satellite photo better.
+
+## 15. Revision 8: Cafe Shop (Snack Corner, item 27) placed at NW junction plaza
+
+The user identified a small cafe shop in satellite imagery and overview 3D views located in the paved junction plaza northwest of Dr. A.P.J. Abdul Kalam Block (Block 1), near the southwest corner of the sports field / running track.
+
+- **Identity & Blueprint Legend:** Board item 27 (`SNACK CORNER`, shortName "Cafe Shop"). Moved from `unplaced` back into active `buildings`.
+- **Location:** `position: { x: -194, z: -8 }`, `size: { w: 8, d: 6 }`, `heightM: 3.5`, `doorPosition: { x: -194, z: -5 }`, `doorFacing: "south"`.
+- **Plaza & Scenery Clearance:** Added `cafe-plaza` to `openAreas` (`position: { x: -194, z: -1.25 }, size: { w: 20, d: 24 }`) to clear auto-generated trees and palms from the paved terrace.
+- **Road Network Adjustments:**
+  - Node `r3` moved slightly north to `(-182, -16)` to skirt the north edge of the plaza.
+  - Added bypass node `p-cafe-nw (-204, -16)` and plaza east entrance node `p-plaza-east (-182, -5)`.
+  - Added door connection node `door-snack-corner (-194, -5)` linked by walkway from the east entrance.
+  - Re-routed edges `e4`, `e-cafe-north`, `e5`, `e-cafe-east`, and `e-cafe-door` to prevent any collisions with building colliders.
+- **World Model Details (`src/world/buildings.js`):**
+  - Rendered as an outdoor cafe kiosk (`cafeKiosk`): stucco kiosk building with espresso fascia and elevated rooftop signboard.
+  - Front service counter with teak wood counter top, chalkboard menu board, espresso coffee machine, and glass pastry case.
+  - Terracotta and ivory striped weather awning on steel support struts.
+  - Raised paved patio slab (`16 x 16 m`) with alternating black/yellow kerbstones along the perimeter.
+  - 4 round cafe tables with umbrellas (forest green, terracotta, navy, golden amber) and 16 cafe stools.
+  - Perimeter shrub planters, sidewalk A-frame menu easel board, and entrance lanterns.
+  - Solid collider on kiosk body with open walkable patio.
+
+## 16. Revision 9: Google Maps satellite view alignment (MKCE New Canteen, SBI ATM, courtyard refinements)
+
+The user supplied Google Maps satellite imagery with live POI pins and road networks (`MKCE NEW CANTEEN`, `SBI ATM`, `M.Kumarasamy College of Engineering`, `College Play Ground`).
+
+- **MKCE New Canteen (legend item 20):**
+  - The previously unlabelled grey building (`unlabelled-6`), which previously displayed an unconfirmed `?` badge in Overview mode, is confirmed as **MKCE NEW CANTEEN** (`மெக்ஸ் நியூ கேண்டீன்`).
+  - Updated in `campus.json` to `id: "canteen"`, `number: 20`, `name: "MKCE NEW CANTEEN"`, `shortName: "New Canteen"`, `type: "canteen"`. Removed from `unplaced`.
+  - Door node updated to `door-canteen` and linked to road network.
+- **SBI ATM (legend item 18):**
+  - Pinned on Google Maps at the front/east face of Dr. S. Radhakrishnan Block (Block 2).
+  - Placed at `x: -152.0, z: 148.0` with `form: "kiosk"`, `doorPosition: {-150.0, 148.0}`, linked by walkway to node `e1`.
+  - Rendered with iconic SBI blue fascia band, glass entrance door frame, dispenser unit, glowing ATM screen, and rooftop ATM sign.
+- **Dr. S. Radhakrishnan Block (Block 2) Multi-Courtyard Refinement:**
+  - Satellite imagery reveals three distinct interior lightwells/courtyards (north-east courtyard, south-east atrium, and west atrium) separated by a central dividing spine.
+  - Replaced the solid south slab with articulated wings (`parts`) opening up all three courtyards to view.
+- **Dr. Muthulakshmi Reddy Hostel (Block 7) Courtyard Centering:**
+  - Balanced the 4 perimeter wings (North: 12 m, South: 13 m, West: 13 m, East: 18 m with solar roof) to center the central square courtyard matching satellite roofs.
+
+## 17. Revision 10: Mechanical & Electrical Lab Workshops and Road Extension to Block 2
+
+The user confirmed the exact location of the Mechanical Lab Workshop and Electrical Lab Workshop from high-resolution satellite imagery (`media_1793599851771.png`) and instructed to extend the road past the Cafe Shop along the workshops down to Dr. S. Radhakrishnan Block (Block 2).
+
+- **Mechanical Lab Workshop (Laboratories Shed I, item 3):**
+  - Outer/west workshop shed facing the extended road.
+  - Placed at `position: { x: -222.0, z: 66.0 }`, `size: { w: 14.0, d: 88.0 }`, `rotationDeg: 8.5`, `form: "shed"`, `heightM: 6.5`.
+  - Door at north gable end `doorPosition: { x: -215.5, z: 22.5 }`, `doorFacing: "north"`.
+- **Electrical Lab Workshop (Laboratories Shed II, item 4):**
+  - Inner/east workshop shed running parallel to Mechanical Lab, between Mechanical Lab and Block 1.
+  - Placed at `position: { x: -204.0, z: 68.0 }`, `size: { w: 14.0, d: 88.0 }`, `rotationDeg: 8.5`, `form: "shed"`, `heightM: 6.5`.
+  - Door at north gable end `doorPosition: { x: -197.5, z: 24.5 }`, `doorFacing: "north"`.
+- **Road Network Extension:**
+  - Extended road from `p64 (-215.2, -9.2)` past the Cafe Shop plaza down to `p78 / wd (-240, 122)` at Block 2 via new nodes `p-ws-n (-215, 14)`, `p-ws-nw (-232, 14)`, `p-ws-mid (-242, 66)`, and `p-ws-sw (-242, 114)`.
+  - Width: 6 m asphalt road with pedestrian walkways connecting to the north workshop entrances.
+- **Scenery Clearance:**
+  - Added `workshop-corridor` to `openAreas` (`position: { x: -216, z: 67 }, size: { w: 46, d: 110 }`) to keep the workshop buildings and road corridor clear of auto-spawned palms.
+
+
+

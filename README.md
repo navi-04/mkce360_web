@@ -48,25 +48,12 @@ Walking speed is about 1.4 m/s (run about 3.2 m/s) at an eye height of 1.6 m. Th
 ## Developer tools (query flags)
 
 - `?debug=1`: draws the extracted footprints, paths, doors and gates over the satellite ground, shows live stats (fps, draw calls, triangles) and offers a **2D alignment map** that overlays everything on the satellite image and on the signboard photo.
-- `?welcome=0`: skips the welcome screen (used by the test scripts).
+- `?welcome=0`: skips the welcome screen for direct feature checks.
 - `?calibrate=1`: tap the ground to read `x / z`, tap a building to select it, then nudge, rotate, resize, set its centre or door, undo, and **Export** a corrected `campus.json` (also copied to the clipboard). Edits are applied live and kept in this browser's local storage; to make them permanent, replace `src/data/campus.json` with the exported file.
 
 Both can be combined: `?debug=1&calibrate=1`.
 
-## Tests
-
-```bash
-npm run build
-npm run test:nav  # search and routing on the real campus.json, no browser (36 checks)
-npm run test:interiors  # floor plans: walls, doors, stair wells, a viewer who walks in and up all four stairs, courtyard, timetable (100 checks)
-npm run test:car  # car physics and an autopilot that drives in through the entrance and round the verandahs, no browser (16 checks)
-npm run e2e       # checks with real touch events: speed, joystick + look together, tap-to-walk, walking in and up the stairs, driving with pedals,
-                  # collisions, gyro (simulated), search, directions, guided walk, calibration, debug map.
-                  # Needs Microsoft Edge or Chrome.
-npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU slowdown)
-```
-
-`npm run build` also runs `npm run validate`, which fails the build if `campus.json` is invalid (unknown types, broken path graph, doors not on the building outline, and so on).
+`npm run build` runs `npm run validate` before building. The validator checks `campus.json` for invalid types, broken path graph data, misplaced doors, and other structural issues.
 
 ## Project layout
 
@@ -75,7 +62,7 @@ npm run perf      # frame rate at 390x844 (GPU WebGL, with and without a 4x CPU 
 | `assets/` | Source images: satellite map and signboard photos (inputs only). Reference photos of the real campus are kept local and are git-ignored |
 | `docs/` | Blueprint extraction notes (`blueprint-extraction.md`), alignment check image |
 | `public/` | Static files: satellite texture, signboard photo for the debug overlay, `CNAME`, favicon |
-| `scripts/` | `validate-campus.mjs`, `e2e.mjs`, `perf-test.mjs`, `satellite-mosaic.py` (optional dev tool that rebuilds the overview ground texture from the satellite crops; needs Python and OpenCV) |
+| `scripts/` | `validate-campus.mjs` (build gate), `generate-sample-interior.mjs`, `make-interior-photo-textures.py`, `satellite-mosaic.py` (optional asset generation tools) |
 | `src/data/campus.json` | All campus content; code contains no campus facts |
 | `src/world/` | Scene: textures, buildings, roads, scenery, sky and lighting |
 | `src/modes/` | Overview orbit, first-person walk, drive (car, car physics), collision, gyro |
@@ -103,11 +90,10 @@ shows for unknown addresses.
 
 `netlify.toml` is included: build command `npm run build`, publish folder `dist`, Node 22, long-lived caching for the hashed files and
 security headers (a strict Content-Security-Policy, Permissions-Policy that allows device motion for the page itself, no referrer).
-Connect the repository in Netlify and deploy; no other settings are needed. The whole test suite also passes when the build is
-served with these headers. GitHub Pages cannot set response headers, so the policy only applies on Netlify.
+Connect the repository in Netlify and deploy; no other settings are needed. GitHub Pages cannot set response headers, so the policy only applies on Netlify.
 
 ### Android
 
 See [docs/android-webview.md](docs/android-webview.md): the WebView settings the app needs (JavaScript, DOM storage, hardware
-acceleration, fullscreen, orientation, sensors), a Kotlin sample for loading the live site or the bundled files, and a test checklist.
+acceleration, fullscreen, orientation, sensors), a Kotlin sample for loading the live site or the bundled files, and a device checklist.
 The page hides its own Fullscreen button when it detects a WebView (`; wv)` in the user agent, or `?embedded=1`). Before publishing, replace the two highlighted placeholders (contact email, operator name) at the bottom of `privacy-policy/index.html`.

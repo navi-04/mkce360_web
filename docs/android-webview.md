@@ -1,7 +1,7 @@
 # MKCE 360 in an Android WebView
 
 MKCE 360 is a static web app, so an Android app only has to show it in a `WebView`. This page lists the settings the app
-needs, two ways to load it (live site or bundled files), and what to test. Nothing here needs a backend.
+needs, two ways to load it (live site or bundled files), and a device checklist. Nothing here needs a backend.
 
 The app already adapts to a WebView: it detects `; wv)` in the user agent (or `?embedded=1`) and hides its own
 **Full** button, because the Fullscreen API does nothing in a WebView unless the host implements `onShowCustomView`.

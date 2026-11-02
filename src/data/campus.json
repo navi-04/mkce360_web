@@ -91,6 +91,32 @@
         "d": 99
       },
       "source": "satellite: bare brown field, south-west of the crop"
+    },
+    {
+      "id": "cafe-plaza",
+      "name": "Cafe Forecourt and Patio",
+      "position": {
+        "x": -194,
+        "z": -1.25
+      },
+      "size": {
+        "w": 20,
+        "d": 24
+      },
+      "source": "satellite candidate (paved plaza north-west of block 1)"
+    },
+    {
+      "id": "workshop-corridor",
+      "name": "Mechanical and Electrical Lab Workshops Corridor",
+      "position": {
+        "x": -216.0,
+        "z": 67.0
+      },
+      "size": {
+        "w": 46.0,
+        "d": 110.0
+      },
+      "source": "satellite candidate (workshop zone between Block 1 and road)"
     }
   ],
   "gates": [
@@ -156,8 +182,8 @@
       },
       {
         "id": "r3",
-        "x": -200,
-        "z": -10,
+        "x": -182,
+        "z": -16,
         "kind": "path"
       },
       {
@@ -426,18 +452,18 @@
       },
       {
         "id": "door-laboratories-shed-1",
-        "x": -121.6,
-        "z": 241.3,
+        "x": -215.5,
+        "z": 22.5,
         "kind": "door"
       },
       {
         "id": "door-laboratories-shed-2",
-        "x": -91.5,
-        "z": 243.3,
+        "x": -197.5,
+        "z": 24.5,
         "kind": "door"
       },
       {
-        "id": "door-unlabelled-6",
+        "id": "door-canteen",
         "x": -150,
         "z": 268,
         "kind": "door"
@@ -501,6 +527,54 @@
         "x": -114.5,
         "z": -7.4,
         "kind": "path"
+      },
+      {
+        "id": "p-cafe-nw",
+        "x": -204,
+        "z": -16,
+        "kind": "path"
+      },
+      {
+        "id": "p-plaza-east",
+        "x": -182,
+        "z": -5,
+        "kind": "path"
+      },
+      {
+        "id": "door-snack-corner",
+        "x": -194,
+        "z": -5,
+        "kind": "door"
+      },
+      {
+        "id": "door-sbi-atm",
+        "x": -150.0,
+        "z": 148.0,
+        "kind": "door"
+      },
+      {
+        "id": "p-ws-n",
+        "x": -215.0,
+        "z": 14.0,
+        "kind": "path"
+      },
+      {
+        "id": "p-ws-mid",
+        "x": -242.0,
+        "z": 66.0,
+        "kind": "path"
+      },
+      {
+        "id": "p-ws-sw",
+        "x": -242.0,
+        "z": 114.0,
+        "kind": "path"
+      },
+      {
+        "id": "p-ws-nw",
+        "x": -232.0,
+        "z": 14.0,
+        "kind": "path"
       }
     ],
     "edges": [
@@ -534,7 +608,7 @@
       },
       {
         "id": "e5",
-        "from": "r3",
+        "from": "p-cafe-nw",
         "to": "p64",
         "type": "road",
         "width": 7
@@ -807,22 +881,22 @@
       },
       {
         "id": "e96",
-        "from": "p34",
+        "from": "p-ws-n",
         "to": "door-laboratories-shed-1",
         "type": "walkway",
-        "width": 2.5
+        "width": 3
       },
       {
         "id": "e97",
-        "from": "t3",
+        "from": "p-ws-n",
         "to": "door-laboratories-shed-2",
         "type": "walkway",
-        "width": 2.5
+        "width": 3
       },
       {
         "id": "e98",
         "from": "m1",
-        "to": "door-unlabelled-6",
+        "to": "door-canteen",
         "type": "walkway",
         "width": 2.5
       },
@@ -930,6 +1004,69 @@
         "to": "door-apj-block",
         "type": "walkway",
         "width": 2.5
+      },
+      {
+        "id": "e-cafe-north",
+        "from": "r3",
+        "to": "p-cafe-nw",
+        "type": "road",
+        "width": 7
+      },
+      {
+        "id": "e-cafe-east",
+        "from": "r3",
+        "to": "p-plaza-east",
+        "type": "road",
+        "width": 6
+      },
+      {
+        "id": "e-cafe-door",
+        "from": "p-plaza-east",
+        "to": "door-snack-corner",
+        "type": "walkway",
+        "width": 3
+      },
+      {
+        "id": "e-sbi-atm",
+        "from": "e1",
+        "to": "door-sbi-atm",
+        "type": "walkway",
+        "width": 2.5
+      },
+      {
+        "id": "e-road-ws-1",
+        "from": "p64",
+        "to": "p-ws-n",
+        "type": "road",
+        "width": 6
+      },
+      {
+        "id": "e-road-ws-2",
+        "from": "p-ws-n",
+        "to": "p-ws-nw",
+        "type": "road",
+        "width": 6
+      },
+      {
+        "id": "e-road-ws-3",
+        "from": "p-ws-mid",
+        "to": "p-ws-sw",
+        "type": "road",
+        "width": 6
+      },
+      {
+        "id": "e-road-ws-4",
+        "from": "p-ws-sw",
+        "to": "wd",
+        "type": "road",
+        "width": 6
+      },
+      {
+        "id": "e-road-ws-2b",
+        "from": "p-ws-nw",
+        "to": "p-ws-mid",
+        "type": "road",
+        "width": 6
       }
     ]
   },
@@ -5578,99 +5715,111 @@
       "parts": [
         {
           "x": 0,
-          "z": -44.4,
+          "z": -44.55,
           "w": 66.3,
-          "d": 12.3
+          "d": 12.0
         },
         {
           "x": 0,
-          "z": 23.3,
+          "z": 44.55,
           "w": 66.3,
-          "d": 54.6
+          "d": 12.0
         },
         {
-          "x": -12.4,
-          "z": -21.1,
-          "w": 41.5,
-          "d": 34.2
+          "x": -27.15,
+          "z": 0,
+          "w": 12.0,
+          "d": 77.1
         },
         {
-          "x": 26.7,
-          "z": -21.1,
-          "w": 12.8,
-          "d": 34.2
+          "x": 27.15,
+          "z": 0,
+          "w": 12.0,
+          "d": 77.1
+        },
+        {
+          "x": 0,
+          "z": 0,
+          "w": 10.0,
+          "d": 77.1
+        },
+        {
+          "x": 13.6,
+          "z": 0,
+          "w": 15.15,
+          "d": 11.0
         }
       ]
     },
     {
       "id": "laboratories-shed-1",
       "number": 3,
-      "name": "LABORATORIES SHED I",
-      "shortName": "Laboratories Shed I",
+      "name": "MECHANICAL LAB WORKSHOP (LABORATORIES SHED I)",
+      "shortName": "Mechanical Lab",
       "type": "lab",
       "form": "block",
       "position": {
-        "x": -121.6,
-        "z": 293.5
+        "x": -222.0,
+        "z": 66.0
       },
       "size": {
-        "w": 19.3,
-        "d": 104.5
+        "w": 14.0,
+        "d": 88.0
       },
-      "rotationDeg": 0,
-      "heightM": 8,
+      "rotationDeg": 8.5,
+      "heightM": 6.5,
       "floors": 1,
       "doorPosition": {
-        "x": -121.6,
-        "z": 241.3
+        "x": -215.5,
+        "z": 22.5
       },
-      "description": "Academic area, legend item 3. Placeholder: description to be provided by the college.",
+      "description": "Mechanical engineering department laboratory workshop (Laboratories Shed I).",
       "floorPlans": [],
       "verified": {
-        "position": false,
-        "size": false,
+        "position": true,
+        "size": true,
         "door": false,
         "floors": false,
         "height": false
       },
       "confidence": "medium",
-      "source": "docs/satellite-candidates.png (\"3? west wing\", one of the two parallel solar-roof wings)",
+      "source": "Google Maps satellite view and user confirmation: workshop corridor west of Block 1",
       "doorFacing": "north",
       "doorNode": "door-laboratories-shed-1"
     },
     {
       "id": "laboratories-shed-2",
       "number": 4,
-      "name": "LABORATORIES SHED II",
-      "shortName": "Laboratories Shed II",
+      "name": "ELECTRICAL LAB WORKSHOP (LABORATORIES SHED II)",
+      "shortName": "Electrical Lab",
       "type": "lab",
       "form": "block",
       "position": {
-        "x": -91.5,
-        "z": 295.5
+        "x": -204.0,
+        "z": 68.0
       },
       "size": {
-        "w": 17,
-        "d": 104.5
+        "w": 14.0,
+        "d": 88.0
       },
-      "rotationDeg": 0,
-      "heightM": 8,
+      "rotationDeg": 8.5,
+      "heightM": 6.5,
       "floors": 1,
       "doorPosition": {
-        "x": -91.5,
-        "z": 243.3
+        "x": -197.5,
+        "z": 24.5
       },
-      "description": "Academic area, legend item 4. Placeholder: description to be provided by the college.",
+      "description": "Electrical and electronics engineering department laboratory workshop (Laboratories Shed II).",
       "floorPlans": [],
       "verified": {
-        "position": false,
-        "size": false,
+        "position": true,
+        "size": true,
         "door": false,
         "floors": false,
         "height": false
       },
       "confidence": "medium",
-      "source": "docs/satellite-candidates.png (\"4? east wing\", one of the two parallel solar-roof wings)",
+      "source": "Google Maps satellite view and user confirmation: workshop corridor west of Block 1",
       "doorFacing": "north",
       "doorNode": "door-laboratories-shed-2"
     },
@@ -5775,27 +5924,27 @@
       "parts": [
         {
           "x": 0,
-          "z": -28.6,
+          "z": -27.6,
           "w": 81.7,
-          "d": 10
+          "d": 12.0
         },
         {
           "x": 0,
-          "z": 28.1,
+          "z": 27.1,
           "w": 81.7,
-          "d": 11
+          "d": 13.0
         },
         {
-          "x": -35.3,
-          "z": -0.5,
-          "w": 11,
-          "d": 46.2
+          "x": -34.35,
+          "z": 0,
+          "w": 13.0,
+          "d": 42.2
         },
         {
-          "x": 23.5,
-          "z": -0.5,
-          "w": 34.7,
-          "d": 46.2
+          "x": 31.85,
+          "z": 0,
+          "w": 18.0,
+          "d": 42.2
         }
       ],
       "identityNote": "Identity inferred from the crop name \"girl hostel\", the board position and the nearby Girls Mess; to be confirmed by the user."
@@ -6005,11 +6154,11 @@
       ]
     },
     {
-      "id": "unlabelled-6",
-      "number": null,
-      "name": "Unlabelled-6",
-      "shortName": "Unlabelled-6",
-      "type": "other",
+      "id": "canteen",
+      "number": 20,
+      "name": "MKCE NEW CANTEEN",
+      "shortName": "New Canteen",
+      "type": "canteen",
       "form": "block",
       "position": {
         "x": -169.9,
@@ -6026,19 +6175,19 @@
         "x": -150,
         "z": 268
       },
-      "description": "Grey flat-roof building seen in the satellite image. The board does not name it here; name to be provided.",
+      "description": "MKCE New Canteen, legend item 20. Main dining and food court facility for students and staff.",
       "floorPlans": [],
       "verified": {
-        "position": false,
-        "size": false,
+        "position": true,
+        "size": true,
         "door": false,
         "floors": false,
         "height": false
       },
-      "confidence": "medium",
-      "source": "docs/satellite-candidates.png (Unlabelled-6)",
+      "confidence": "high",
+      "source": "Google Maps satellite view (MKCE NEW CANTEEN) and college layout legend item 20",
       "doorFacing": "north",
-      "doorNode": "door-unlabelled-6"
+      "doorNode": "door-canteen"
     },
     {
       "id": "two-wheeler-parking",
@@ -6147,6 +6296,78 @@
       "source": "board + satellite (paved apron with two pump islands)",
       "doorFacing": "north",
       "doorNode": "door-fuel-station"
+    },
+    {
+      "id": "snack-corner",
+      "number": 27,
+      "name": "CAFE SHOP",
+      "shortName": "Cafe Shop",
+      "type": "canteen",
+      "form": "kiosk",
+      "position": {
+        "x": -194,
+        "z": -8
+      },
+      "size": {
+        "w": 8,
+        "d": 6
+      },
+      "rotationDeg": 0,
+      "heightM": 3.5,
+      "floors": 1,
+      "doorPosition": {
+        "x": -194,
+        "z": -5
+      },
+      "description": "Campus cafe and snack corner with outdoor patio seating, located at the junction north-west of Dr. A.P.J. Abdul Kalam Block.",
+      "floorPlans": [],
+      "verified": {
+        "position": true,
+        "size": true,
+        "door": true,
+        "floors": true,
+        "height": false
+      },
+      "confidence": "high",
+      "source": "user confirmed via satellite photos (north-west junction plaza)",
+      "doorFacing": "south",
+      "doorNode": "door-snack-corner"
+    },
+    {
+      "id": "sbi-atm",
+      "number": 18,
+      "name": "SBI ATM",
+      "shortName": "SBI ATM",
+      "type": "other",
+      "form": "kiosk",
+      "position": {
+        "x": -152.0,
+        "z": 148.0
+      },
+      "size": {
+        "w": 3.5,
+        "d": 3
+      },
+      "rotationDeg": 8.5,
+      "heightM": 3.2,
+      "doorPosition": {
+        "x": -150.0,
+        "z": 148.0
+      },
+      "doorFacing": "east",
+      "doorNode": "door-sbi-atm",
+      "description": "State Bank of India 24/7 ATM kiosk located at Dr. S. Radhakrishnan Block.",
+      "floorPlans": [],
+      "verified": {
+        "position": true,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "high",
+      "source": "Google Maps satellite view pin (SBI ATM) at Dr. S. Radhakrishnan Block",
+      "floors": 1
     }
   ],
   "points": [
@@ -6395,52 +6616,6 @@
       }
     },
     {
-      "id": "sbi-atm",
-      "number": 18,
-      "name": "SBI ATM",
-      "shortName": "SBI ATM",
-      "kind": "building",
-      "type": "other",
-      "form": "kiosk",
-      "reason": "Listed on the college layout board, but no structure for it is marked in docs/satellite-candidates.png. Location to be confirmed.",
-      "lastEstimate": {
-        "position": {
-          "x": -58,
-          "z": 30
-        },
-        "size": {
-          "w": 4,
-          "d": 4
-        },
-        "rotationDeg": 0,
-        "heightM": 3,
-        "source": "board (near the front of block 1)"
-      }
-    },
-    {
-      "id": "canteen",
-      "number": 20,
-      "name": "CANTEEN",
-      "shortName": "Canteen",
-      "kind": "building",
-      "type": "canteen",
-      "form": "block",
-      "reason": "Listed on the college layout board, but no structure for it is marked in docs/satellite-candidates.png. Location to be confirmed.",
-      "lastEstimate": {
-        "position": {
-          "x": -100,
-          "z": 141.5
-        },
-        "size": {
-          "w": 16,
-          "d": 12
-        },
-        "rotationDeg": 0,
-        "heightM": 4,
-        "source": "board marker only; footprint is a placeholder"
-      }
-    },
-    {
       "id": "staff-quarters",
       "number": 24,
       "name": "STAFF QUARTERS",
@@ -6507,29 +6682,6 @@
         "rotationDeg": 0,
         "heightM": 6,
         "source": "board + satellite candidate (small compound)"
-      }
-    },
-    {
-      "id": "snack-corner",
-      "number": 27,
-      "name": "SNACK CORNER",
-      "shortName": "Snack Corner",
-      "kind": "building",
-      "type": "canteen",
-      "form": "kiosk",
-      "reason": "Listed on the college layout board, but no structure for it is marked in docs/satellite-candidates.png. Location to be confirmed.",
-      "lastEstimate": {
-        "position": {
-          "x": -214,
-          "z": 4
-        },
-        "size": {
-          "w": 8,
-          "d": 6
-        },
-        "rotationDeg": 0,
-        "heightM": 3.5,
-        "source": "board only"
       }
     },
     {

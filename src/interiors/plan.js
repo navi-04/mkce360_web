@@ -1,4 +1,4 @@
-// Floor plan -> geometry description (pure data, no three.js) so it can be unit-tested in Node.
+// Floor plan -> geometry description (pure data, no three.js).
 //
 // A floor is { level, outline {x0,z0,x1,z1}, court?, height, entrance?, rooms[], stairs[], lifts[] } in metres (x east, z south).
 //  - `outline` is the outer rectangle, `court` an optional open courtyard inside it. What is left is the ring of wings;

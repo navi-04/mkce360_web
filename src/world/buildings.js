@@ -256,13 +256,19 @@ export function createBuildings(data, T) {
         break;
       }
       case 'kiosk': {
-        const wg = wallsGeo(w, h, d, { floorH: h, bayW: BAY_WIDTH });
-        put(acc.wallsShed, wg, wallCol);
-        const rg = boxGeo(w + 0.5, 0.3, d + 0.5, { y: h });
-        put(acc.roofFlat, rg, roofCol);
-        obbOf({ x: 0, z: 0, w, d });
-        const info = door(false);
-        postSign(b.shortName, info);
+        if (b.type === 'canteen') {
+          cafeKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol);
+        } else if (b.id === 'sbi-atm') {
+          atmKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol);
+        } else {
+          const wg = wallsGeo(w, h, d, { floorH: h, bayW: BAY_WIDTH });
+          put(acc.wallsShed, wg, wallCol);
+          const rg = boxGeo(w + 0.5, 0.3, d + 0.5, { y: h });
+          put(acc.roofFlat, rg, roofCol);
+          obbOf({ x: 0, z: 0, w, d });
+          const info = door(false);
+          postSign(b.shortName, info);
+        }
         break;
       }
       case 'canopy': {
@@ -542,3 +548,170 @@ function courtDetails(b, w, d, put, acc) {
     }
   }
 }
+
+const ni = (g) => (g.index ? g.toNonIndexed() : g);
+
+function cafeKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol) {
+  // Main building body & flat overhanging roof
+  const wg = wallsGeo(w, h, d, { floorH: h, bayW: BAY_WIDTH });
+  put(acc.wallsShed, wg, wallCol);
+
+  const rg = boxGeo(w + 0.6, 0.35, d + 0.6, { y: h });
+  put(acc.roofFlat, rg, 0x3a2e2b);
+
+  const cornice = boxGeo(w + 0.8, 0.15, d + 0.8, { y: h + 0.35 });
+  put(acc.solid, cornice, trimCol);
+
+  obbOf({ x: 0, z: 0, w, d });
+
+  // Front counter & service hatch on south facade (local +z = d / 2)
+  const counter = boxGeo(4.4, 0.12, 0.7, { y: 1.05, z: d / 2 + 0.15 });
+  put(acc.solid, counter, 0x8a4b28);
+  const cBase = boxGeo(4.2, 1.0, 0.4, { y: 0.05, z: d / 2 + 0.1 });
+  put(acc.solid, cBase, 0x52321e);
+  const cWindow = boxGeo(4.0, 1.4, 0.1, { y: 1.25, z: d / 2 - 0.05 });
+  put(acc.solid, cWindow, 0x1f2421);
+
+  // Coffee machine & pastry display case on counter
+  const cMachine = boxGeo(0.65, 0.5, 0.45, { y: 1.15, x: 1.3, z: d / 2 + 0.15 });
+  put(acc.solid, cMachine, 0xc2c7cb);
+  const pCase = boxGeo(1.2, 0.45, 0.45, { y: 1.15, x: -1.0, z: d / 2 + 0.15 });
+  put(acc.solid, pCase, 0x2a3844);
+
+  // Slanted striped awning over the service counter
+  for (let i = 0; i < 8; i++) {
+    const stripe = boxGeo(5.2 / 8, 0.08, 2.0, { y: 2.85, x: -2.6 + (i + 0.5) * (5.2 / 8), z: d / 2 + 0.95 });
+    stripe.rotateX(0.22);
+    put(acc.solid, stripe, i % 2 === 0 ? 0xb8432a : 0xfdfbf7);
+  }
+  for (const sx of [-2.5, 2.5]) {
+    const strut = cylGeo(0.03, 0.03, 1.4, 6, 1.8);
+    place(strut, sx, 0, d / 2 + 0.8, 0);
+    strut.rotateX(0.4);
+    put(acc.solid, strut, 0x2b3035);
+  }
+
+  // Paved outdoor patio platform
+  const patio = boxGeo(16, 0.08, 16, { y: 0.04, z: d / 2 + 5.5 });
+  put(acc.concrete, patio, 0xe5d8c3);
+
+  // Alternating painted kerbstones along the perimeter
+  for (let i = 0; i < 16; i++) {
+    const kerbS = boxGeo(0.9, 0.14, 0.25, { y: 0.04, x: -8 + (i + 0.5), z: d / 2 + 13.5 });
+    put(acc.solid, kerbS, i % 2 === 0 ? 0x222222 : 0xf5ecd0);
+  }
+
+  // 4 Outdoor cafe tables with parasols and stools
+  const uColors = [0x2d5a37, 0xc25336, 0x264673, 0xd9822b];
+  const tablePos = [
+    [-3.2, d / 2 + 3.0],
+    [3.2, d / 2 + 3.0],
+    [-3.2, d / 2 + 7.5],
+    [3.2, d / 2 + 7.5],
+  ];
+
+  tablePos.forEach(([tx, tz], idx) => {
+    const top = cylGeo(0.65, 0.65, 0.05, 12, 0.8);
+    place(top, tx, 0, tz);
+    put(acc.solid, top, 0xfcfbf9);
+    const pole = cylGeo(0.04, 0.04, 0.8, 6, 0);
+    place(pole, tx, 0, tz);
+    put(acc.solid, pole, 0x333333);
+    const base = cylGeo(0.35, 0.35, 0.03, 8, 0);
+    place(base, tx, 0, tz);
+    put(acc.solid, base, 0x333333);
+
+    const uPole = cylGeo(0.03, 0.03, 2.4, 6, 0);
+    place(uPole, tx, 0, tz);
+    put(acc.solid, uPole, 0x333333);
+    const cone = ni(new THREE.ConeGeometry(1.25, 0.45, 8));
+    cone.translate(0, 2.3, 0);
+    place(cone, tx, 0, tz);
+    put(acc.solid, cone, uColors[idx]);
+
+    for (let a = 0; a < 4; a++) {
+      const ang = a * Math.PI / 2 + 0.3;
+      const sx = tx + Math.cos(ang) * 1.1;
+      const sz = tz + Math.sin(ang) * 1.1;
+      const stool = cylGeo(0.2, 0.2, 0.45, 8, 0);
+      place(stool, sx, 0, sz);
+      put(acc.solid, stool, 0x6b4934);
+      const sBase = cylGeo(0.03, 0.03, 0.45, 6, 0);
+      place(sBase, sx, 0, sz);
+      put(acc.solid, sBase, 0x222222);
+    }
+  });
+
+  // Planter boxes with greenery flanking patio
+  for (const sx of [-1, 1]) {
+    const pBox = boxGeo(3.0, 0.55, 0.55, { y: 0.05, x: sx * 7.2, z: d / 2 + 5.5 });
+    put(acc.solid, pBox, 0x5a4235);
+    for (let k = -1; k <= 1; k++) {
+      const shrub = ni(new THREE.IcosahedronGeometry(0.35, 0));
+      shrub.translate(sx * 7.2 + k * 0.9, 0.75, d / 2 + 5.5);
+      put(acc.solid, shrub, 0x386b2f);
+    }
+  }
+
+  // Lantern posts at patio entrance
+  for (const sx of [-7.2, 7.2]) {
+    const pole = cylGeo(0.06, 0.08, 3.2, 6, 0);
+    place(pole, sx, 0, d / 2 + 13.0);
+    put(acc.solid, pole, 0x222222);
+    const lantern = boxGeo(0.35, 0.5, 0.35, { y: 3.2 });
+    place(lantern, sx, 0, d / 2 + 13.0);
+    put(acc.solid, lantern, 0xfff1c2);
+  }
+
+  // Sidewalk A-frame menu easel board near patio entrance
+  const aBoard1 = boxGeo(0.65, 0.95, 0.04, { y: 0.05, x: 1.8, z: d / 2 + 12.8 });
+  aBoard1.rotateX(0.18);
+  put(acc.solid, aBoard1, 0x2a201c);
+  const aBoard2 = boxGeo(0.65, 0.95, 0.04, { y: 0.05, x: 1.8, z: d / 2 + 12.6 });
+  aBoard2.rotateX(-0.18);
+  put(acc.solid, aBoard2, 0x2a201c);
+
+  // Door info and cafe signboard mounted on roof parapet
+  const info = door(false);
+  const signMount = boxGeo(4.0, 0.8, 0.1, { y: 3.7, z: d / 2 + 0.3 });
+  put(acc.solid, signMount, 0x1f2421);
+  sign(b.shortName, info, { wide: false, high: 3.7, width: 3.8, out: 0.36 });
+}
+
+function atmKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol) {
+  // Paved concrete plinth
+  const plinth = flatQuad(w + 1.2, d + 1.2, 0.04);
+  put(acc.concrete, plinth, 0xe0e2e5);
+
+  // Stucco white walls
+  const wg = wallsGeo(w, h, d, { floorH: h, bayW: w });
+  put(acc.wallsShed, wg, 0xf6f7f9);
+
+  // Iconic SBI Deep Blue fascia band across roof
+  const sbiBlue = 0x0082c6;
+  const fascia = boxGeo(w + 0.25, 0.55, d + 0.25, { y: h - 0.28 });
+  put(acc.solid, fascia, sbiBlue);
+
+  const roof = boxGeo(w + 0.35, 0.2, d + 0.35, { y: h });
+  put(acc.roofFlat, roof, 0x5a636c);
+
+  // Front glass door entrance frame on east side (local +x = w / 2)
+  const doorFrame = boxGeo(0.12, 2.3, 1.4, { y: 1.15, x: w / 2 + 0.02 });
+  put(acc.solid, doorFrame, 0x1f2429);
+
+  const doorGlass = boxGeo(0.04, 2.0, 1.1, { y: 1.15, x: w / 2 + 0.04 });
+  put(acc.solid, doorGlass, 0x64b5f6);
+
+  // ATM machine dispenser inside
+  const atmUnit = boxGeo(0.4, 1.4, 0.7, { y: 0.7, x: w / 2 - 0.5 });
+  put(acc.solid, atmUnit, 0x2c3437);
+
+  // Glowing screen/keypad indicator
+  const screen = boxGeo(0.04, 0.25, 0.35, { y: 1.05, x: w / 2 - 0.28 });
+  put(acc.solid, screen, 0x81d4fa);
+
+  obbOf({ x: 0, z: 0, w, d });
+  const info = door(false);
+  sign('SBI 24/7 ATM', info, { wide: false, high: h + 0.15, width: 2.6, out: 0.22 });
+}
+

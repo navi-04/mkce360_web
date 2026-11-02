@@ -68,7 +68,7 @@ start-up and keeps its canvas textures if they are missing.
   ground floor on a 0.45 m plinth. `buildings.js` builds the *outside* of the building as a skin (outer walls with the doorway cut
   open, the roof, the porch, and in Overview the inner skin of the courtyard); `interiors.js` builds the *inside* (every floor and
   the garden). The skin has no collider; the walls come from the floor plans.
-- **Where you stand.** `src/interiors/ground.js` (pure code, also used by the Node tests): `BuildingPhysics` gives the height of the
+- **Where you stand.** `src/interiors/ground.js` (pure code): `BuildingPhysics` gives the height of the
   ground under a spot for a viewer at some height (the floor, the yard of the ground floor, the steps and landings of the stairs;
   the highest surface within 0.6 m above the viewer is taken), the floor the viewer is on, and the obstacles of that floor in
   world coordinates; `WorldGround` adds the campus, the steps of the porch and a list of obstacles that come and go (a parked car).
@@ -91,7 +91,6 @@ start-up and keeps its canvas textures if they are missing.
 | `src/world/interior-textures.js` | canvas textures: granite, marble, green floor, walls, parapets, roof sheet, leaves, pavers, decor atlas |
 | `scripts/make-interior-photo-textures.py` | cuts lawn, pavers and bark out of the courtyard photos (needs Python + OpenCV) |
 | `src/ui/interior-ui.js` | the room card |
-| `scripts/test-interiors.mjs` | `npm run test:interiors`: walls, doors, stair wells, holes, a viewer who walks in and up all four stairs and back down, courtyard, timetable |
 
 ## Format
 
@@ -157,7 +156,7 @@ How the rectangles become a building:
 ## Timetable and "Now in session"
 
 `day` is `Mon` to `Sun`, `start` and `end` are `HH:MM` (24 hour). The card compares them with the day and time of the
-device. In tests the clock can be replaced: `window.__mkce.interiors.clock = () => new Date(...)`.
+device clock determines whether a session is currently in progress.
 
 ## Rules the validator enforces (`npm run validate`)
 
@@ -176,8 +175,7 @@ entrance on any floor, sample data, the wings outside as thick as the plan's, `h
    `porch` (or leave it out: the doorway then is as wide as `entrance.width`, with no porch) and a `ring.thickness` equal to the plan's wings.
 3. Remove `"sample": true` per floor once the data is verified, and `interiorNote` on the building. Delete
    `scripts/generate-sample-interior.mjs`.
-4. Run `npm run validate` and `npm run test:interiors` (the latter asserts that exactly one building has floor plans and
-   that the ring is fully connected; update those lines when the data changes).
+4. Run `npm run validate` to check the campus data structure and geometry.
 
 ## Performance
 

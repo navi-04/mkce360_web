@@ -4,17 +4,17 @@ Frontend-only 3D campus digital twin of **M. Kumarasamy College of Engineering (
 Core experience: a mobile-first, first-person walkthrough of the campus. It must run well in a mobile browser and inside an Android WebView. Desktop must also work.
 
 App name shown everywhere in the UI: **MKCE 360**.
-
+  
 ## Hard constraints
 
 - Static frontend only: no backend, no database, no login, no API calls.
 - Stack: Vite + vanilla JavaScript + Three.js. No heavy UI framework (no React/Vue/etc.).
 - All campus content lives in `src/data/campus.json`. Code never contains campus facts.
-- Only structures marked in `docs/satellite-candidates.png` (confirmed correct by the user) are placed on the map. Other legend items live under `unplaced` in campus.json (no position) until the user says where they are; `scripts/test-nav.mjs` guards this list.
+- Only structures marked in `docs/satellite-candidates.png` (confirmed correct by the user) are placed on the map. Other legend items live under `unplaced` in campus.json (no position) until the user says where they are.
 - Never invent real campus details (building names, room names, faculty, timetables, floor counts). Use clearly labelled placeholders and flag unverified values (for example `"floors": 1` with `"floorsVerified": false`).
 - If something is unclear, ask the user before assuming. Do not guess scale, door sides, or building identities.
 - Work step by step. After each step: run the build, fix errors, summarise, commit. Respect the STOP points; do not continue past one until the user replies.
-- Test at a 390x844 mobile viewport and report the frame rate.
+- The project keeps a campus data validator as a build gate (`npm run validate`).
 
 ## Source material (inputs, read-only)
 
@@ -35,7 +35,7 @@ assets/                 Input images (satellite map, signboard photos). Not serv
                         Reference photos of the real campus live here too but are git-ignored (they show people).
 docs/                   blueprint-extraction.md, interiors.md, android-webview.md, satellite-candidates.png
 public/                 Static files copied as-is: textures/campus-map.jpg (mosaic), debug/signboard.jpg, CNAME, favicon
-scripts/                validate-campus.mjs (build gate), e2e.mjs, perf-test.mjs, generate-sample-interior.mjs (writes the SAMPLE floors of block 1), satellite-mosaic.py (dev tool, needs Python + OpenCV)
+scripts/                validate-campus.mjs (build gate), generate-sample-interior.mjs (writes the SAMPLE floors of block 1), asset generators
 privacy-policy/         Static page served at /privacy-policy
 src/
   data/campus.json     The only place campus facts live
@@ -65,21 +65,16 @@ npm run dev        dev server (reachable on LAN for phone testing), http://local
 npm run build      validate campus.json, then production build into dist/
 npm run validate   campus.json validation only
 npm run preview    serve the production build locally
-npm run test:nav   search and routing unit checks on the real campus.json (no browser)
-npm run test:interiors   floor plan checks (walls, doors, stair wells, a viewer who walks in and up every stair, courtyard, timetable) on the real campus.json (about 60 s)
-npm run test:car   car physics and an autopilot that drives in through the entrance of block 1 and round its verandahs (no browser)
-npm run e2e        end-to-end checks with real touch events (needs Edge/Chrome; run build first)
-npm run perf       frame-rate measurement at 390x844
 ```
 
-Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export), `?welcome=0` (skip the welcome screen).
-Test hook: `window.__mkce` (`setMode`, `stats`, `input`, `nav`, `app`), used by the scripts.
+`npm run build` runs the campus data validator before Vite builds the static site.
 
+Debug query flags: `?debug=1` (alignment overlay, stats, 2D map), `?calibrate=1` (position calibration and export), `?welcome=0` (skip the welcome screen).
 Interiors (step 7, then made part of the world): `buildings[].floorPlans` in campus.json (format in docs/interiors.md). Only block 1 has them. Its look follows the photos supplied for the block (courtyard ring, open verandahs, granite corridors, marble hall, green classrooms) but which room is where is unknown, so layout, room names and timetables are SAMPLE data (flagged `sample: true`, shown as such on the room card); regenerate with `node scripts/generate-sample-interior.mjs`. The courtyard is built from the user's photos (photo-cut lawn, pavers and bark in `public/textures/interior`, made by `scripts/make-interior-photo-textures.py`; ground floor walkway with steel columns and a ribbed roof; the yard can be walked). **There is no Enter, Exit, floor or stairs button (the user asked for none): the building is part of the world.** Its floors stand in the scene at the place of the building on a 0.45 m plinth; the outside is a skin built in `world/buildings.js` (doorway cut open, no collider); `interiors/ground.js` (pure) gives a viewer the height of the ground (floors, steps, stairs), the floor they are on and the walls of that floor; `walk.groundFn` and the car use it; the light and fog blend with how far inside the viewer is (`world.setIndoor`). The stairs are real flights in a walled well in each corner (wells stack, floors have holes). The door of block 1 is in the middle of its north face (the side facing the play ground; told by the user, the porch is visible in the satellite crop): `doorFacing`, `porch {w,d,h,doorW,doorH}` and `doorNote` in campus.json, and `floor.entrance` faces the same way and is as wide and high. The wings outside (`ring.thickness` 12.2) and `heightM` (4 x 3.6) follow the plan (the satellite shows 12 m wings). No new shader programs (the interior materials are precompiled at start-up and their textures uploaded then).
 
 Driving (docs/driving.md): `Drive` is a third mode (`DriveMode`, `Car` physics in `modes/car.js`, controls in `ui/drive-ui.js`). The car goes anywhere the walker goes, into block 1 too, bumps into walls, trees, lamp posts, benches and columns, follows the ground height, parks where the driver gets out. Keys on a computer (W A S D / arrows, Space, C), pedals and steering buttons on a phone (two thumbs at once). The car mirrors its place into `walk.pos/yaw/groundY`, so anything that reads the walker (mini-map, route, buildings) works for a driver (`app.inWorld` is true for walk and drive).
 
-Mobile UX (step 8): every control is at least 48 px (an e2e check audits this in each screen), the welcome screen stores optional email/college/location only in localStorage (`mkce360.profile.v1`), the mini-map and expanded map draw the satellite texture on a 2D canvas (floor plan indoors), the brand pill opens About and updates (read from `campus.json` `updates`), `prefers-reduced-motion` turns off camera flights, route and beacon animation and head bob.
+Mobile UX (step 8): every control is at least 48 px, the welcome screen stores optional email/college/location only in localStorage (`mkce360.profile.v1`), the mini-map and expanded map draw the satellite texture on a 2D canvas (floor plan indoors), the brand pill opens About and updates (read from `campus.json` `updates`), `prefers-reduced-motion` turns off camera flights, route and beacon animation and head bob.
 
 Navigation (step 6): `Navigator` states are none, preview, guided, paused, manual, arrived. The guided walk drives `WalkMode` through its `driver` hook; joystick, keys or a tap hand control back. Routes only run on `campus.paths` edges and the validator warns when an edge crosses a building. Guidance never invents campus facts: turn hints use building names from campus.json.
 
