@@ -258,6 +258,8 @@ export function createBuildings(data, T) {
       case 'kiosk': {
         if (b.type === 'canteen') {
           cafeKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol);
+        } else if (b.id === 'sbi-atm') {
+          atmKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol);
         } else {
           const wg = wallsGeo(w, h, d, { floorH: h, bayW: BAY_WIDTH });
           put(acc.wallsShed, wg, wallCol);
@@ -674,5 +676,42 @@ function cafeKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, tr
   const signMount = boxGeo(4.0, 0.8, 0.1, { y: 3.7, z: d / 2 + 0.3 });
   put(acc.solid, signMount, 0x1f2421);
   sign(b.shortName, info, { wide: false, high: 3.7, width: 3.8, out: 0.36 });
+}
+
+function atmKiosk(b, w, d, h, put, acc, obbOf, door, sign, wallCol, roofCol, trimCol) {
+  // Paved concrete plinth
+  const plinth = flatQuad(w + 1.2, d + 1.2, 0.04);
+  put(acc.concrete, plinth, 0xe0e2e5);
+
+  // Stucco white walls
+  const wg = wallsGeo(w, h, d, { floorH: h, bayW: w });
+  put(acc.wallsShed, wg, 0xf6f7f9);
+
+  // Iconic SBI Deep Blue fascia band across roof
+  const sbiBlue = 0x0082c6;
+  const fascia = boxGeo(w + 0.25, 0.55, d + 0.25, { y: h - 0.28 });
+  put(acc.solid, fascia, sbiBlue);
+
+  const roof = boxGeo(w + 0.35, 0.2, d + 0.35, { y: h });
+  put(acc.roofFlat, roof, 0x5a636c);
+
+  // Front glass door entrance frame on east side (local +x = w / 2)
+  const doorFrame = boxGeo(0.12, 2.3, 1.4, { y: 1.15, x: w / 2 + 0.02 });
+  put(acc.solid, doorFrame, 0x1f2429);
+
+  const doorGlass = boxGeo(0.04, 2.0, 1.1, { y: 1.15, x: w / 2 + 0.04 });
+  put(acc.solid, doorGlass, 0x64b5f6);
+
+  // ATM machine dispenser inside
+  const atmUnit = boxGeo(0.4, 1.4, 0.7, { y: 0.7, x: w / 2 - 0.5 });
+  put(acc.solid, atmUnit, 0x2c3437);
+
+  // Glowing screen/keypad indicator
+  const screen = boxGeo(0.04, 0.25, 0.35, { y: 1.05, x: w / 2 - 0.28 });
+  put(acc.solid, screen, 0x81d4fa);
+
+  obbOf({ x: 0, z: 0, w, d });
+  const info = door(false);
+  sign('SBI 24/7 ATM', info, { wide: false, high: h + 0.15, width: 2.6, out: 0.22 });
 }
 

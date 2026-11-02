@@ -17,11 +17,11 @@ const check = (name, ok, detail = '') => {
 };
 
 console.log('Map content (docs/satellite-candidates.png is the reference)');
-const IMAGE_SET = ['apj-block', 'radhakrishnan-block', 'laboratories-shed-1', 'laboratories-shed-2', 'veda-hostel', 'muthulakshmi-reddy-hostel', 'play-ground', 'basket-ball-court', 'volley-ball-court', 'tennis-court', 'olympia-block', 'unlabelled-6', 'four-wheeler-parking', 'two-wheeler-parking', 'fuel-station', 'snack-corner'].sort();
+const IMAGE_SET = ['apj-block', 'radhakrishnan-block', 'laboratories-shed-1', 'laboratories-shed-2', 'veda-hostel', 'muthulakshmi-reddy-hostel', 'play-ground', 'basket-ball-court', 'volley-ball-court', 'tennis-court', 'olympia-block', 'canteen', 'sbi-atm', 'four-wheeler-parking', 'two-wheeler-parking', 'fuel-station', 'snack-corner'].sort();
 check('only structures marked in the satellite candidate image are on the map', JSON.stringify(data.buildings.map((b) => b.id).sort()) === JSON.stringify(IMAGE_SET), data.buildings.map((b) => b.id).filter((i) => !IMAGE_SET.includes(i)).join(','));
-check('image labels: 5 = west C-shaped block, 3 and 4 = the twin wings, Unlabelled-6 has no legend number', (() => {
+check('image labels: 5 = west C-shaped block, 3 and 4 = the twin wings, 20 = MKCE New Canteen, 18 = SBI ATM', (() => {
   const g = (id) => data.buildings.find((b) => b.id === id);
-  return g('veda-hostel').number === 5 && g('veda-hostel').position.x < -300 && g('laboratories-shed-1').number === 3 && g('laboratories-shed-2').number === 4 && g('laboratories-shed-1').position.x < g('laboratories-shed-2').position.x && g('unlabelled-6').number == null;
+  return g('veda-hostel').number === 5 && g('veda-hostel').position.x < -300 && g('laboratories-shed-1').number === 3 && g('laboratories-shed-2').number === 4 && g('laboratories-shed-1').position.x < g('laboratories-shed-2').position.x && g('canteen').number === 20 && g('sbi-atm').number === 18;
 })());
 check('everything else from the board is listed as unplaced, none of it has a position', data.unplaced.length >= 20 && data.unplaced.every((u) => u.position === undefined));
 check('all legend numbers 1 to 33 are accounted for (mapped or unplaced)', (() => {
@@ -49,7 +49,7 @@ check('unmapped items have no distance and sort after mapped places', (() => {
   const firstU = r.findIndex((x) => x.item.kind === 'unplaced');
   return r.filter((x) => x.item.kind === 'unplaced').every((x) => x.distance === null) && r.slice(firstU).every((x) => x.item.kind === 'unplaced');
 })());
-check('no route can be planned to an unmapped item', planRoute(data, { gate: 'main-gate' }, { pointId: 'well-48' }) === null && planRoute(data, { gate: 'main-gate' }, { buildingId: 'canteen' }) === null);
+check('no route can be planned to an unmapped item', planRoute(data, { gate: 'main-gate' }, { pointId: 'well-48' }) === null && planRoute(data, { gate: 'main-gate' }, { buildingId: 'octa-hostel' }) === null);
 check('no match gives an empty list', searchIndex(index, 'zzzzqq').length === 0);
 check('empty query lists everything, nearest first when a position is given', (() => {
   const r = searchIndex(index, '', { from: { x: -3, z: 0 }, limit: 500 });

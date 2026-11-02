@@ -450,7 +450,7 @@
         "kind": "door"
       },
       {
-        "id": "door-unlabelled-6",
+        "id": "door-canteen",
         "x": -150,
         "z": 268,
         "kind": "door"
@@ -531,6 +531,12 @@
         "id": "door-snack-corner",
         "x": -194,
         "z": -5,
+        "kind": "door"
+      },
+      {
+        "id": "door-sbi-atm",
+        "x": -150.0,
+        "z": 148.0,
         "kind": "door"
       }
     ],
@@ -853,7 +859,7 @@
       {
         "id": "e98",
         "from": "m1",
-        "to": "door-unlabelled-6",
+        "to": "door-canteen",
         "type": "walkway",
         "width": 2.5
       },
@@ -982,6 +988,13 @@
         "to": "door-snack-corner",
         "type": "walkway",
         "width": 3
+      },
+      {
+        "id": "e-sbi-atm",
+        "from": "e1",
+        "to": "door-sbi-atm",
+        "type": "walkway",
+        "width": 2.5
       }
     ]
   },
@@ -5630,27 +5643,39 @@
       "parts": [
         {
           "x": 0,
-          "z": -44.4,
+          "z": -44.55,
           "w": 66.3,
-          "d": 12.3
+          "d": 12.0
         },
         {
           "x": 0,
-          "z": 23.3,
+          "z": 44.55,
           "w": 66.3,
-          "d": 54.6
+          "d": 12.0
         },
         {
-          "x": -12.4,
-          "z": -21.1,
-          "w": 41.5,
-          "d": 34.2
+          "x": -27.15,
+          "z": 0,
+          "w": 12.0,
+          "d": 77.1
         },
         {
-          "x": 26.7,
-          "z": -21.1,
-          "w": 12.8,
-          "d": 34.2
+          "x": 27.15,
+          "z": 0,
+          "w": 12.0,
+          "d": 77.1
+        },
+        {
+          "x": 0,
+          "z": 0,
+          "w": 10.0,
+          "d": 77.1
+        },
+        {
+          "x": 13.6,
+          "z": 0,
+          "w": 15.15,
+          "d": 11.0
         }
       ]
     },
@@ -5827,27 +5852,27 @@
       "parts": [
         {
           "x": 0,
-          "z": -28.6,
+          "z": -27.6,
           "w": 81.7,
-          "d": 10
+          "d": 12.0
         },
         {
           "x": 0,
-          "z": 28.1,
+          "z": 27.1,
           "w": 81.7,
-          "d": 11
+          "d": 13.0
         },
         {
-          "x": -35.3,
-          "z": -0.5,
-          "w": 11,
-          "d": 46.2
+          "x": -34.35,
+          "z": 0,
+          "w": 13.0,
+          "d": 42.2
         },
         {
-          "x": 23.5,
-          "z": -0.5,
-          "w": 34.7,
-          "d": 46.2
+          "x": 31.85,
+          "z": 0,
+          "w": 18.0,
+          "d": 42.2
         }
       ],
       "identityNote": "Identity inferred from the crop name \"girl hostel\", the board position and the nearby Girls Mess; to be confirmed by the user."
@@ -6057,11 +6082,11 @@
       ]
     },
     {
-      "id": "unlabelled-6",
-      "number": null,
-      "name": "Unlabelled-6",
-      "shortName": "Unlabelled-6",
-      "type": "other",
+      "id": "canteen",
+      "number": 20,
+      "name": "MKCE NEW CANTEEN",
+      "shortName": "New Canteen",
+      "type": "canteen",
       "form": "block",
       "position": {
         "x": -169.9,
@@ -6078,19 +6103,19 @@
         "x": -150,
         "z": 268
       },
-      "description": "Grey flat-roof building seen in the satellite image. The board does not name it here; name to be provided.",
+      "description": "MKCE New Canteen, legend item 20. Main dining and food court facility for students and staff.",
       "floorPlans": [],
       "verified": {
-        "position": false,
-        "size": false,
+        "position": true,
+        "size": true,
         "door": false,
         "floors": false,
         "height": false
       },
-      "confidence": "medium",
-      "source": "docs/satellite-candidates.png (Unlabelled-6)",
+      "confidence": "high",
+      "source": "Google Maps satellite view (MKCE NEW CANTEEN) and college layout legend item 20",
       "doorFacing": "north",
-      "doorNode": "door-unlabelled-6"
+      "doorNode": "door-canteen"
     },
     {
       "id": "two-wheeler-parking",
@@ -6235,6 +6260,42 @@
       "source": "user confirmed via satellite photos (north-west junction plaza)",
       "doorFacing": "south",
       "doorNode": "door-snack-corner"
+    },
+    {
+      "id": "sbi-atm",
+      "number": 18,
+      "name": "SBI ATM",
+      "shortName": "SBI ATM",
+      "type": "other",
+      "form": "kiosk",
+      "position": {
+        "x": -152.0,
+        "z": 148.0
+      },
+      "size": {
+        "w": 3.5,
+        "d": 3
+      },
+      "rotationDeg": 8.5,
+      "heightM": 3.2,
+      "doorPosition": {
+        "x": -150.0,
+        "z": 148.0
+      },
+      "doorFacing": "east",
+      "doorNode": "door-sbi-atm",
+      "description": "State Bank of India 24/7 ATM kiosk located at Dr. S. Radhakrishnan Block.",
+      "floorPlans": [],
+      "verified": {
+        "position": true,
+        "size": false,
+        "door": false,
+        "floors": false,
+        "height": false
+      },
+      "confidence": "high",
+      "source": "Google Maps satellite view pin (SBI ATM) at Dr. S. Radhakrishnan Block",
+      "floors": 1
     }
   ],
   "points": [
@@ -6480,52 +6541,6 @@
         "rotationDeg": 0,
         "heightM": 3,
         "source": "board (front wall between 30 and 31)"
-      }
-    },
-    {
-      "id": "sbi-atm",
-      "number": 18,
-      "name": "SBI ATM",
-      "shortName": "SBI ATM",
-      "kind": "building",
-      "type": "other",
-      "form": "kiosk",
-      "reason": "Listed on the college layout board, but no structure for it is marked in docs/satellite-candidates.png. Location to be confirmed.",
-      "lastEstimate": {
-        "position": {
-          "x": -58,
-          "z": 30
-        },
-        "size": {
-          "w": 4,
-          "d": 4
-        },
-        "rotationDeg": 0,
-        "heightM": 3,
-        "source": "board (near the front of block 1)"
-      }
-    },
-    {
-      "id": "canteen",
-      "number": 20,
-      "name": "CANTEEN",
-      "shortName": "Canteen",
-      "kind": "building",
-      "type": "canteen",
-      "form": "block",
-      "reason": "Listed on the college layout board, but no structure for it is marked in docs/satellite-candidates.png. Location to be confirmed.",
-      "lastEstimate": {
-        "position": {
-          "x": -100,
-          "z": 141.5
-        },
-        "size": {
-          "w": 16,
-          "d": 12
-        },
-        "rotationDeg": 0,
-        "heightM": 4,
-        "source": "board marker only; footprint is a placeholder"
       }
     },
     {

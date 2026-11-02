@@ -401,3 +401,22 @@ The user identified a small cafe shop in satellite imagery and overview 3D views
   - Perimeter shrub planters, sidewalk A-frame menu easel board, and entrance lanterns.
   - Solid collider on kiosk body with open walkable patio.
 
+## 16. Revision 9: Google Maps satellite view alignment (MKCE New Canteen, SBI ATM, courtyard refinements)
+
+The user supplied Google Maps satellite imagery with live POI pins and road networks (`MKCE NEW CANTEEN`, `SBI ATM`, `M.Kumarasamy College of Engineering`, `College Play Ground`).
+
+- **MKCE New Canteen (legend item 20):**
+  - The previously unlabelled grey building (`unlabelled-6`), which previously displayed an unconfirmed `?` badge in Overview mode, is confirmed as **MKCE NEW CANTEEN** (`மெக்ஸ் நியூ கேண்டீன்`).
+  - Updated in `campus.json` to `id: "canteen"`, `number: 20`, `name: "MKCE NEW CANTEEN"`, `shortName: "New Canteen"`, `type: "canteen"`. Removed from `unplaced`.
+  - Door node updated to `door-canteen` and linked to road network.
+- **SBI ATM (legend item 18):**
+  - Pinned on Google Maps at the front/east face of Dr. S. Radhakrishnan Block (Block 2).
+  - Placed at `x: -152.0, z: 148.0` with `form: "kiosk"`, `doorPosition: {-150.0, 148.0}`, linked by walkway to node `e1`.
+  - Rendered with iconic SBI blue fascia band, glass entrance door frame, dispenser unit, glowing ATM screen, and rooftop ATM sign.
+- **Dr. S. Radhakrishnan Block (Block 2) Multi-Courtyard Refinement:**
+  - Satellite imagery reveals three distinct interior lightwells/courtyards (north-east courtyard, south-east atrium, and west atrium) separated by a central dividing spine.
+  - Replaced the solid south slab with articulated wings (`parts`) opening up all three courtyards to view.
+- **Dr. Muthulakshmi Reddy Hostel (Block 7) Courtyard Centering:**
+  - Balanced the 4 perimeter wings (North: 12 m, South: 13 m, West: 13 m, East: 18 m with solar roof) to center the central square courtyard matching satellite roofs.
+
+
