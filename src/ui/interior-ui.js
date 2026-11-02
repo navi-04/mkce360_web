@@ -21,7 +21,7 @@ export function createInteriorUi(app) {
       root.appendChild(el('p', 'cwarn sample', 'Sample data. This room is a placeholder that demonstrates the interior; the real details will come from the college.'));
     }
 
-    const now = interiors.clock();
+    const now = new Date();
     const s = sessionNow(room, now);
     const status = el('div', 'status ' + (s.current ? 'in' : 'out'));
     status.append(el('i'));

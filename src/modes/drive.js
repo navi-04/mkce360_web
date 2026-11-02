@@ -76,7 +76,6 @@ export class DriveMode {
     this.view = 'chase'; // 'chase' | 'cockpit'
     this.keys = new Set();
     this.pad = { gas: false, brake: false, left: false, right: false, hand: false }; // the pedals and buttons of a phone
-    this.sim = null; // test input { throttle, brake, steer, handbrake }
     this.ceilingAt = null; // (x, z, y) => height of the ceiling above that spot (or null in the open): keeps the camera under it
     this._cam = { yaw: 0, x: 0, y: 0, z: 0, fresh: true };
     this._baseFov = 60;
@@ -150,14 +149,14 @@ export class DriveMode {
 
   // ---------- per frame ----------
 
-  /** what the driver asks for this frame, from the keys, the pedals of a phone and (in tests) the simulated input */
+  /** what the driver asks for this frame, from the keys and the pedals of a phone */
   inputs() {
-    const k = this.keys, p = this.pad, s = this.sim ?? {};
-    const throttle = k.has('KeyW') || k.has('ArrowUp') || p.gas ? 1 : s.throttle ?? 0;
-    const brake = k.has('KeyS') || k.has('ArrowDown') || p.brake ? 1 : s.brake ?? 0;
+    const k = this.keys, p = this.pad;
+    const throttle = k.has('KeyW') || k.has('ArrowUp') || p.gas ? 1 : 0;
+    const brake = k.has('KeyS') || k.has('ArrowDown') || p.brake ? 1 : 0;
     const left = k.has('KeyA') || k.has('ArrowLeft') || p.left ? 1 : 0, right = k.has('KeyD') || k.has('ArrowRight') || p.right ? 1 : 0;
-    const steer = Math.max(-1, Math.min(1, left - right + (s.steer ?? 0)));
-    return { throttle, brake, steer, handbrake: k.has('Space') || p.hand || !!s.handbrake };
+    const steer = left - right;
+    return { throttle, brake, steer, handbrake: k.has('Space') || p.hand };
   }
 
   update(dt) {

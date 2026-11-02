@@ -1,5 +1,4 @@
-// Route planning on the campus path graph (Dijkstra), turn detection and live guidance hints. Pure functions,
-// no DOM and no three.js, so they can be tested in Node (scripts/test-nav.mjs).
+// Route planning on the campus path graph (Dijkstra), turn detection and live guidance hints.
 import { buildGraph, dijkstra } from '../data/graph.js';
 import { distToBounds } from '../data/footprint.js';
 import { PLAYER } from '../config.js';

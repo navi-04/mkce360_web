@@ -37,9 +37,8 @@ The speed is shown in km/h. The mode tabs at the top switch between Overview, Wa
 
 ## How it is built
 
-- `src/modes/car.js`: the physics, pure code (a bicycle model for steering, three circles for collisions, a nose and side tilt from the
-  ground). `scripts/test-car.mjs` (`npm run test:car`) checks it and drives a simple autopilot from the forecourt, through the porch,
-  the hall and the verandah, down onto the courtyard lawn, and 330 m round the ground-floor verandahs, with no browser.
+- `src/modes/car.js`: the physics (a bicycle model for steering, three circles for collisions, a nose and side tilt from the
+  ground).
 - `src/modes/drive.js`: the mode (car mesh, keys, camera, parking). The car mirrors its place into the walking viewer
   (`walk.pos`, `yaw`, `groundY`), so the mini-map, routes and buildings treat a driver like a walker.
 - `src/ui/drive-ui.js` and the `.drive` rules in `style.css`: the phone controls.

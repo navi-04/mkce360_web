@@ -22,6 +22,7 @@ Thumbs.db
 
 # local scratch
 tmp/
+scratch/
 .claude/settings.local.json
 
 # Reference photos of the real campus (contain students/staff, large). Kept local only.
